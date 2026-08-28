@@ -4,16 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Personalizado</title>
+    <title>Control e Inspección Vehicular</title>
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --bg: #0f172a;
             --card-bg: #1e293b;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --border: #334155;
+            --ok: #22c55e;
+            --warn: #eab308;
+            --danger: #ef4444;
         }
 
         * {
@@ -30,31 +33,44 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 16px;
         }
 
         .form-container {
             background: var(--card-bg);
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             border-radius: 16px;
-            padding: 32px;
+            padding: 24px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
+        }
+
+        .header-badge {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
         }
 
         .progress-bar-container {
             background: var(--border);
             height: 6px;
             border-radius: 999px;
-            margin-bottom: 24px;
+            margin: 16px 0 24px 0;
             overflow: hidden;
         }
 
         .progress-bar {
             background: var(--primary);
             height: 100%;
-            width: 33%;
+            width: 33.33%;
             transition: width 0.3s ease;
         }
 
@@ -64,13 +80,13 @@
 
         .step.active {
             display: block;
-            animation: fadeIn 0.4s ease forwards;
+            animation: fadeIn 0.3s ease forwards;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(8px);
+                transform: translateY(6px);
             }
 
             to {
@@ -80,37 +96,38 @@
         }
 
         h2 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
+            font-size: 1.35rem;
+            margin-bottom: 4px;
         }
 
-        p {
+        p.sub {
             color: var(--text-muted);
             margin-bottom: 20px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #cbd5e1;
         }
 
         input,
         select,
         textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 14px;
             background: #0f172a;
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text);
-            font-size: 1rem;
+            font-size: 0.95rem;
             outline: none;
             transition: border-color 0.2s;
         }
@@ -119,6 +136,70 @@
         select:focus,
         textarea:focus {
             border-color: var(--primary);
+        }
+
+        /* Checklist interactivo */
+        .checklist-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .check-item {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .check-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .options-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .radio-pill {
+            display: none;
+        }
+
+        .radio-pill+label {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            margin-bottom: 0;
+        }
+
+        .radio-pill:checked+label.ok {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--ok);
+            border-color: var(--ok);
+        }
+
+        .radio-pill:checked+label.obs {
+            background: rgba(234, 179, 8, 0.2);
+            color: var(--warn);
+            border-color: var(--warn);
+        }
+
+        .radio-pill:checked+label.bad {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border-color: var(--danger);
         }
 
         .btn-group {
@@ -134,6 +215,7 @@
             font-weight: 600;
             cursor: pointer;
             border: none;
+            font-size: 0.95rem;
             transition: background-color 0.2s;
         }
 
@@ -159,6 +241,13 @@
         .feedback {
             text-align: center;
             display: none;
+            padding: 20px 0;
+        }
+
+        .feedback h2 {
+            font-size: 1.6rem;
+            color: #4ade80;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -166,74 +255,164 @@
 <body>
 
     <div class="form-container">
+        <span class="header-badge">Sistema de Inspección</span>
+
         <div class="progress-bar-container">
             <div class="progress-bar" id="progressBar"></div>
         </div>
 
-        <form id="customForm">
-            <!-- Paso 1 -->
+        <form id="vehicleForm">
+            <!-- PASO 1: Datos Generales -->
             <div class="step active" data-step="1">
-                <h2>Contanos sobre vos</h2>
-                <p>Comencemos con tus datos básicos.</p>
+                <h2>Datos del Vehículo</h2>
+                <p class="sub">Identificación de la unidad y responsable.</p>
+
                 <div class="input-group">
-                    <label>Nombre y Apellido</label>
-                    <input type="text" name="nombre" placeholder="Ej: Juan Pérez" required />
+                    <label>Inspector / Operador a cargo</label>
+                    <input type="text" name="inspector" placeholder="Tu nombre" required />
                 </div>
+
                 <div class="input-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" name="email" placeholder="juan@ejemplo.com" required />
+                    <label>Patente / Dominio</label>
+                    <input type="text" name="patente" placeholder="Ej: AB123CD o ABC123"
+                        style="text-transform: uppercase;" required />
                 </div>
+
+                <div class="input-group">
+                    <label>Marca y Modelo</label>
+                    <input type="text" name="vehiculo" placeholder="Ej: Toyota Hilux / VW Suran" required />
+                </div>
+
+                <div class="input-group">
+                    <label>Kilometraje Actual</label>
+                    <input type="number" name="kilometraje" placeholder="Ej: 145000" required />
+                </div>
+
                 <div class="btn-group">
-                    <button type="button" class="btn-primary" onclick="nextStep(1)">Siguiente</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(1)">Continuar al Checklist</button>
                 </div>
             </div>
 
-            <!-- Paso 2 -->
+            <!-- PASO 2: Checklist Técnico -->
             <div class="step" data-step="2">
-                <h2>Tipo de Solicitud</h2>
-                <p>Seleccioná qué servicio estás buscando.</p>
-                <div class="input-group">
-                    <label>Categoría</label>
-                    <select name="servicio" required>
-                        <option value="">Seleccionar una opción...</option>
-                        <option value="Desarrollo Web">Desarrollo Web</option>
-                        <option value="Diseño UI/UX">Diseño UI/UX</option>
-                        <option value="Consultoría IT">Consultoría IT</option>
-                    </select>
+                <h2>Inspección de Estado</h2>
+                <p class="sub">Seleccioná el estado de cada componente.</p>
+
+                <div class="checklist-grid">
+                    <!-- Item 1 -->
+                    <div class="check-item">
+                        <span class="check-title">Luces (Bajas, Altas, Giros)</span>
+                        <div class="options-group">
+                            <input type="radio" name="estado_luces" value="OK" id="luces_ok" class="radio-pill" checked>
+                            <label for="luces_ok" class="ok">OK</label>
+                            <input type="radio" name="estado_luces" value="Obs" id="luces_obs" class="radio-pill">
+                            <label for="luces_obs" class="obs">Obs</label>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="check-item">
+                        <span class="check-title">Frenos y Freno de Mano</span>
+                        <div class="options-group">
+                            <input type="radio" name="estado_frenos" value="OK" id="frenos_ok" class="radio-pill"
+                                checked>
+                            <label for="frenos_ok" class="ok">OK</label>
+                            <input type="radio" name="estado_frenos" value="Obs" id="frenos_obs" class="radio-pill">
+                            <label for="frenos_obs" class="obs">Obs</label>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="check-item">
+                        <span class="check-title">Cubiertas / Neumáticos</span>
+                        <div class="options-group">
+                            <input type="radio" name="estado_cubiertas" value="OK" id="cub_ok" class="radio-pill"
+                                checked>
+                            <label for="cub_ok" class="ok">OK</label>
+                            <input type="radio" name="estado_cubiertas" value="Obs" id="cub_obs" class="radio-pill">
+                            <label for="cub_obs" class="obs">Obs</label>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="check-item">
+                        <span class="check-title">Fluidos (Aceite, Agua, Frenos)</span>
+                        <div class="options-group">
+                            <input type="radio" name="estado_fluidos" value="OK" id="flu_ok" class="radio-pill" checked>
+                            <label for="flu_ok" class="ok">OK</label>
+                            <input type="radio" name="estado_fluidos" value="Obs" id="flu_obs" class="radio-pill">
+                            <label for="flu_obs" class="obs">Obs</label>
+                        </div>
+                    </div>
+
+                    <!-- Item 5 -->
+                    <div class="check-item">
+                        <span class="check-title">Matafuego y Balizas</span>
+                        <div class="options-group">
+                            <input type="radio" name="estado_seguridad" value="OK" id="seg_ok" class="radio-pill"
+                                checked>
+                            <label for="seg_ok" class="ok">OK</label>
+                            <input type="radio" name="estado_seguridad" value="Obs" id="seg_obs" class="radio-pill">
+                            <label for="seg_obs" class="obs">Obs</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>Presupuesto estimado</label>
-                    <input type="text" name="presupuesto" placeholder="Ej: $50.000 ARS / USD" />
-                </div>
+
                 <div class="btn-group">
                     <button type="button" class="btn-secondary" onclick="prevStep(2)">Atrás</button>
                     <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
                 </div>
             </div>
 
-            <!-- Paso 3 -->
+            <!-- PASO 3: Documentación y Notas -->
             <div class="step" data-step="3">
-                <h2>Detalles finales</h2>
-                <p>Agregá cualquier detalle o comentario relevante.</p>
+                <h2>Documentación y Cierre</h2>
+                <p class="sub">Revisión de papeles y notas finales.</p>
+
                 <div class="input-group">
-                    <label>Mensaje o Requerimientos</label>
-                    <textarea name="mensaje" rows="4" placeholder="Escribí acá..."></textarea>
+                    <label>Estado de la Documentación</label>
+                    <select name="documentacion" required>
+                        <option value="Completa y al día">Completa y al día (Cédula/Seguro/VTV)</option>
+                        <option value="Falta comprobante seguro">Falta comprobante de seguro</option>
+                        <option value="VTV / RTO vencida">VTV / RTO vencida</option>
+                        <option value="Incompleta">Incompleta (ver observaciones)</option>
+                    </select>
                 </div>
+
+                <div class="input-group">
+                    <label>Nivel de Combustible</label>
+                    <select name="combustible">
+                        <option value="Tanque Lleno">Lleno (100%)</option>
+                        <option value="3/4">3/4</option>
+                        <option value="1/2">Medio Tanque (50%)</option>
+                        <option value="1/4">1/4</option>
+                        <option value="Reserva">Reserva</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Detalle de Observaciones o Daños</label>
+                    <textarea name="observaciones" rows="3"
+                        placeholder="Ej: Detalle de rayón en puerta derecha, foco trasero quemado..."></textarea>
+                </div>
+
                 <div class="btn-group">
                     <button type="button" class="btn-secondary" onclick="prevStep(3)">Atrás</button>
-                    <button type="submit" class="btn-primary" id="btnSubmit">Enviar Registro</button>
+                    <button type="submit" class="btn-primary" id="btnSubmit">Finalizar y Guardar</button>
                 </div>
             </div>
         </form>
 
         <div class="feedback" id="feedbackMsg">
-            <h2>🎉 ¡Registro Completado!</h2>
-            <p>La información ya fue guardada con éxito en la planilla.</p>
+            <h2>✔ ¡Control Guardado!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">El registro se cargó correctamente en la planilla.
+            </p>
+            <button type="button" class="btn-primary" onclick="resetForm()">Cargar otro vehículo</button>
         </div>
     </div>
 
     <script>
-        // REEMPLAZAR CON TU URL DE APPS SCRIPT
+        // PEGA TU URL DE GOOGLE APPS SCRIPT ACÁ:
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoK_DKWL6-1W3cY207i8rsG79flYGsusOaHtczS1djHXbhmLrCCmsDoqsi2kQcDV5Eng/exec";
 
         const totalSteps = 3;
@@ -248,7 +427,6 @@
             const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
             const inputs = currentContainer.querySelectorAll("input, select, textarea");
 
-            // Validación básica de campos requeridos antes de avanzar
             for (let input of inputs) {
                 if (input.hasAttribute("required") && !input.value.trim()) {
                     input.focus();
@@ -269,12 +447,11 @@
             updateProgress();
         }
 
-        // Envío al Apps Script / Google Sheets
-        document.getElementById("customForm").addEventListener("submit", async (e) => {
+        document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const btn = document.getElementById("btnSubmit");
             btn.disabled = true;
-            btn.innerText = "Guardando...";
+            btn.innerText = "Registrando en planilla...";
 
             const formData = new FormData(e.target);
             const payload = Object.fromEntries(formData.entries());
@@ -286,15 +463,30 @@
                     body: JSON.stringify(payload)
                 });
 
-                document.getElementById("customForm").style.display = "none";
+                document.getElementById("vehicleForm").style.display = "none";
                 document.getElementById("feedbackMsg").style.display = "block";
             } catch (err) {
                 console.error(err);
-                alert("Hubo un error al guardar. Revisá la consola.");
+                alert("Error al conectar con la planilla. Revisá la conexión.");
                 btn.disabled = false;
-                btn.innerText = "Enviar Registro";
+                btn.innerText = "Finalizar y Guardar";
             }
         });
+
+        function resetForm() {
+            document.getElementById("vehicleForm").reset();
+            document.getElementById("vehicleForm").style.display = "block";
+            document.getElementById("feedbackMsg").style.display = "none";
+
+            document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+            currentStep = 1;
+            document.querySelector('.step[data-step="1"]').classList.add("active");
+            updateProgress();
+
+            const btn = document.getElementById("btnSubmit");
+            btn.disabled = false;
+            btn.innerText = "Finalizar y Guardar";
+        }
     </script>
 </body>
 
