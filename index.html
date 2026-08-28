@@ -249,13 +249,50 @@
             color: #4ade80;
             margin-bottom: 8px;
         }
+
+        .card-footer {
+            text-align: center;
+            padding-top: 12px;
+            margin-bottom: -10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            user-select: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 40px 12px 14px;
+            /* 40px a la derecha para dejar aire */
+            background-color: #0f172a;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            /* 14px despegado del borde derecho */
+            background-size: 16px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+        }
     </style>
 </head>
 
 <body>
 
     <div class="form-container">
-        <span class="header-badge">Sistema de Inspección</span>
+        <span class="header-badge">Sistema de Control de Vehiculos - DEA</span>
 
         <div class="progress-bar-container">
             <div class="progress-bar" id="progressBar"></div>
@@ -267,25 +304,44 @@
                 <h2>Datos del Vehículo</h2>
                 <p class="sub">Identificación de la unidad y responsable.</p>
 
+                <!-- 1. Inspector / Operador -->
                 <div class="input-group">
-                    <label>Inspector / Operador a cargo</label>
-                    <input type="text" name="inspector" placeholder="Tu nombre" required />
+                    <label>Inspector</label>
+                    <select name="inspector" required>
+                        <option value="">Seleccionar inspector...</option>
+                        <option value="Juan Matias Pinat">Juan Matias Pinat</option>
+                        <option value="Adrian Cesar Gonzalez">Adrian Cesar Gonzalez</option>
+                    </select>
                 </div>
 
+                <!-- 2. Fecha y Hora con botón "Hoy / Ahora" -->
                 <div class="input-group">
-                    <label>Patente / Dominio</label>
-                    <input type="text" name="patente" placeholder="Ej: AB123CD o ABC123"
-                        style="text-transform: uppercase;" required />
+                    <label>Fecha y Hora</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="datetime-local" id="fechaHora" name="fecha_hora" required />
+                        <button type="button" class="btn-secondary"
+                            style="flex: 0 0 auto; padding: 0 16px; font-size: 0.85rem;"
+                            onclick="setFechaHoraActual()">Hoy</button>
+                    </div>
                 </div>
 
+                <!-- 3. Marca y Modelo -->
                 <div class="input-group">
                     <label>Marca y Modelo</label>
-                    <input type="text" name="vehiculo" placeholder="Ej: Toyota Hilux / VW Suran" required />
+                    <select name="vehiculo" id="selectVehiculo" onchange="autocompletarPatente()" required>
+                        <option value="">Seleccionar vehículo...</option>
+                        <option value="Renault - Duster">Renault - Duster</option>
+                        <option value="Chevrolet - Montana">Chevrolet - Montana</option>
+                        <option value="Ford - Ecosport">Ford - Ecosport</option>
+                    </select>
                 </div>
 
+                <!-- 4. Patente / Dominio (Autocompletado automático) -->
                 <div class="input-group">
-                    <label>Kilometraje Actual</label>
-                    <input type="number" name="kilometraje" placeholder="Ej: 145000" required />
+                    <label>Patente</label>
+                    <input type="text" name="patente" id="inputPatente" placeholder="Se completará automáticamente"
+                        readonly required
+                        style="background: #1e293b; color: #94a3b8; font-weight: bold; letter-spacing: 1px;" />
                 </div>
 
                 <div class="btn-group">
@@ -409,6 +465,11 @@
             </p>
             <button type="button" class="btn-primary" onclick="resetForm()">Cargar otro vehículo</button>
         </div>
+
+        <!-- Pie con tu firma -->
+        <div class="card-footer">
+            By: PINAT, Juan Matias 😎
+        </div>
     </div>
 
     <script>
@@ -487,6 +548,33 @@
             btn.disabled = false;
             btn.innerText = "Finalizar y Guardar";
         }
+
+        // Diccionario de patentes asociadas
+        const patentes = {
+            "Renault - Duster": "AB299UW",
+            "Chevrolet - Montana": "LDU005",
+            "Ford - Ecosport": "OQF461"
+        };
+
+        // Autocompleta la patente según el vehículo elegido
+        function autocompletarPatente() {
+            const select = document.getElementById("selectVehiculo");
+            const inputPatente = document.getElementById("inputPatente");
+            inputPatente.value = patentes[select.value] || "";
+        }
+
+        // Carga la fecha y hora actual en el input
+        function setFechaHoraActual() {
+            const now = new Date();
+            // Formatea al estándar requerido por datetime-local (YYYY-MM-DDTHH:mm)
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById("fechaHora").value = now.toISOString().slice(0, 16);
+        }
+
+        // Carga la fecha/hora actual por defecto apenas abre la página
+        document.addEventListener("DOMContentLoaded", () => {
+            setFechaHoraActual();
+        });
     </script>
 </body>
 
