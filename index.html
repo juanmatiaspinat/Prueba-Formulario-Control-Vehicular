@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Personalizado</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .form-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+        }
+
+        .progress-bar-container {
+            background: var(--border);
+            height: 6px;
+            border-radius: 999px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            height: 100%;
+            width: 33%;
+            transition: width 0.3s ease;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .feedback {
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="form-container">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <form id="customForm">
+            <!-- Paso 1 -->
+            <div class="step active" data-step="1">
+                <h2>Contanos sobre vos</h2>
+                <p>Comencemos con tus datos básicos.</p>
+                <div class="input-group">
+                    <label>Nombre y Apellido</label>
+                    <input type="text" name="nombre" placeholder="Ej: Juan Pérez" required />
+                </div>
+                <div class="input-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" placeholder="juan@ejemplo.com" required />
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn-primary" onclick="nextStep(1)">Siguiente</button>
+                </div>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="step" data-step="2">
+                <h2>Tipo de Solicitud</h2>
+                <p>Seleccioná qué servicio estás buscando.</p>
+                <div class="input-group">
+                    <label>Categoría</label>
+                    <select name="servicio" required>
+                        <option value="">Seleccionar una opción...</option>
+                        <option value="Desarrollo Web">Desarrollo Web</option>
+                        <option value="Diseño UI/UX">Diseño UI/UX</option>
+                        <option value="Consultoría IT">Consultoría IT</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Presupuesto estimado</label>
+                    <input type="text" name="presupuesto" placeholder="Ej: $50.000 ARS / USD" />
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(2)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
+                </div>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="step" data-step="3">
+                <h2>Detalles finales</h2>
+                <p>Agregá cualquier detalle o comentario relevante.</p>
+                <div class="input-group">
+                    <label>Mensaje o Requerimientos</label>
+                    <textarea name="mensaje" rows="4" placeholder="Escribí acá..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(3)">Atrás</button>
+                    <button type="submit" class="btn-primary" id="btnSubmit">Enviar Registro</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="feedback" id="feedbackMsg">
+            <h2>🎉 ¡Registro Completado!</h2>
+            <p>La información ya fue guardada con éxito en la planilla.</p>
+        </div>
+    </div>
+
+    <script>
+        // REEMPLAZAR CON TU URL DE APPS SCRIPT
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoK_DKWL6-1W3cY207i8rsG79flYGsusOaHtczS1djHXbhmLrCCmsDoqsi2kQcDV5Eng/exec";
+
+        const totalSteps = 3;
+        let currentStep = 1;
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById("progressBar").style.width = `${progress}%`;
+        }
+
+        function nextStep(step) {
+            const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
+            const inputs = currentContainer.querySelectorAll("input, select, textarea");
+
+            // Validación básica de campos requeridos antes de avanzar
+            for (let input of inputs) {
+                if (input.hasAttribute("required") && !input.value.trim()) {
+                    input.focus();
+                    return;
+                }
+            }
+
+            currentContainer.classList.remove("active");
+            currentStep = step + 1;
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
+            updateProgress();
+        }
+
+        function prevStep(step) {
+            document.querySelector(`.step[data-step="${step}"]`).classList.remove("active");
+            currentStep = step - 1;
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
+            updateProgress();
+        }
+
+        // Envío al Apps Script / Google Sheets
+        document.getElementById("customForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnSubmit");
+            btn.disabled = true;
+            btn.innerText = "Guardando...";
+
+            const formData = new FormData(e.target);
+            const payload = Object.fromEntries(formData.entries());
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+
+                document.getElementById("customForm").style.display = "none";
+                document.getElementById("feedbackMsg").style.display = "block";
+            } catch (err) {
+                console.error(err);
+                alert("Hubo un error al guardar. Revisá la consola.");
+                btn.disabled = false;
+                btn.innerText = "Enviar Registro";
+            }
+        });
+    </script>
+</body>
+
+</html>
