@@ -349,6 +349,47 @@
                 </div>
             </div>
 
+            <!-- PASO 2: Inspección General -->
+            <div class="step" data-step="2">
+                <h2>Inspección General</h2>
+                <p class="sub">Estado operativo inicial del vehículo.</p>
+
+                <!-- 1. Kilometraje Actual -->
+                <div class="input-group">
+                    <label>Kilometraje Actual</label>
+                    <input type="number" name="kilometraje" placeholder="Ej: 145000" min="0" required />
+                </div>
+
+                <!-- 2. Nivel de Combustible -->
+                <div class="input-group">
+                    <label>Nivel de Combustible</label>
+                    <select name="combustible" required>
+                        <option value="">Seleccionar nivel...</option>
+                        <option value="Lleno (100%)">Lleno (100%)</option>
+                        <option value="3/4 (75%)">3/4 (75%)</option>
+                        <option value="Medio tanque (50%)">Medio tanque (50%)</option>
+                        <option value="1/4 (25%)">1/4 (25%)</option>
+                        <option value="Reserva (20% o menos)">Reserva (20% o menos)</option>
+                    </select>
+                </div>
+
+                <!-- 3. Estado de la Batería -->
+                <div class="input-group">
+                    <label>Estado de la Batería</label>
+                    <select name="estado_bateria" required>
+                        <option value="">Seleccionar estado...</option>
+                        <option value="Bien">Bien</option>
+                        <option value="Con poca carga">Con poca carga</option>
+                        <option value="Mal">Mal</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(2)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(2)">Continuar</button>
+                </div>
+            </div>
+
             <!-- PASO 2: Checklist Técnico -->
             <div class="step" data-step="2">
                 <h2>Inspección de Estado</h2>
