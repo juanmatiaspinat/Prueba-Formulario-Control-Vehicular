@@ -286,6 +286,45 @@
         select:focus {
             border-color: var(--primary);
         }
+
+        /* Caja del campo de observación desplegable */
+        .obs-detail-container {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+            animation: slideDown 0.25s ease-out forwards;
+        }
+
+        .obs-detail-container.visible {
+            display: block;
+        }
+
+        .obs-detail-container textarea {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+            background: #090d16;
+            border-color: #475569;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Modificación de color para el botón 'Revisar' */
+        .radio-pill:checked+label.revisar {
+            background: rgba(234, 179, 8, 0.2);
+            color: var(--warn);
+            border-color: var(--warn);
+        }
     </style>
 </head>
 
@@ -390,134 +429,112 @@
                 </div>
             </div>
 
-            <!-- PASO 2: Checklist Técnico -->
-            <div class="step" data-step="2">
-                <h2>Inspección de Estado</h2>
-                <p class="sub">Seleccioná el estado de cada componente.</p>
+            <!-- PASO 3: Inspección de Luces -->
+            <div class="step" data-step="3">
+                <h2>Inspección de Luces</h2>
+                <p class="sub">Revisá cada circuito de iluminación exterior.</p>
 
                 <div class="checklist-grid">
-                    <!-- Item 1 -->
-                    <div class="check-item">
-                        <span class="check-title">Luces (Bajas, Altas, Giros)</span>
-                        <div class="options-group">
-                            <input type="radio" name="estado_luces" value="OK" id="luces_ok" class="radio-pill" checked>
-                            <label for="luces_ok" class="ok">OK</label>
-                            <input type="radio" name="estado_luces" value="Obs" id="luces_obs" class="radio-pill">
-                            <label for="luces_obs" class="obs">Obs</label>
+
+                    <!-- 1. Luces Bajas -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Luces Bajas</span>
+                            <div class="options-group">
+                                <input type="radio" name="luces_bajas_estado" value="OK" id="bajas_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('bajas_obs_box', false)">
+                                <label for="bajas_ok" class="ok">OK</label>
+
+                                <input type="radio" name="luces_bajas_estado" value="Revisar" id="bajas_rev"
+                                    class="radio-pill" onchange="toggleObsField('bajas_obs_box', true)">
+                                <label for="bajas_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="bajas_obs_box">
+                            <textarea name="luces_bajas_detalle" rows="2"
+                                placeholder="Detalle: ej. Foco delantero izquierdo quemado..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Item 2 -->
-                    <div class="check-item">
-                        <span class="check-title">Frenos y Freno de Mano</span>
-                        <div class="options-group">
-                            <input type="radio" name="estado_frenos" value="OK" id="frenos_ok" class="radio-pill"
-                                checked>
-                            <label for="frenos_ok" class="ok">OK</label>
-                            <input type="radio" name="estado_frenos" value="Obs" id="frenos_obs" class="radio-pill">
-                            <label for="frenos_obs" class="obs">Obs</label>
+                    <!-- 2. Luces Altas -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Luces Altas</span>
+                            <div class="options-group">
+                                <input type="radio" name="luces_altas_estado" value="OK" id="altas_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('altas_obs_box', false)">
+                                <label for="altas_ok" class="ok">OK</label>
+
+                                <input type="radio" name="luces_altas_estado" value="Revisar" id="altas_rev"
+                                    class="radio-pill" onchange="toggleObsField('altas_obs_box', true)">
+                                <label for="altas_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="altas_obs_box">
+                            <textarea name="luces_altas_detalle" rows="2"
+                                placeholder="Detalle: ej. Falta regulación de altura..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Item 3 -->
-                    <div class="check-item">
-                        <span class="check-title">Cubiertas / Neumáticos</span>
-                        <div class="options-group">
-                            <input type="radio" name="estado_cubiertas" value="OK" id="cub_ok" class="radio-pill"
-                                checked>
-                            <label for="cub_ok" class="ok">OK</label>
-                            <input type="radio" name="estado_cubiertas" value="Obs" id="cub_obs" class="radio-pill">
-                            <label for="cub_obs" class="obs">Obs</label>
+                    <!-- 3. Luces de Giro -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Luces de Giro (Guiños)</span>
+                            <div class="options-group">
+                                <input type="radio" name="luces_giros_estado" value="OK" id="giros_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('giros_obs_box', false)">
+                                <label for="giros_ok" class="ok">OK</label>
+
+                                <input type="radio" name="luces_giros_estado" value="Revisar" id="giros_rev"
+                                    class="radio-pill" onchange="toggleObsField('giros_obs_box', true)">
+                                <label for="giros_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="giros_obs_box">
+                            <textarea name="luces_giros_detalle" rows="2"
+                                placeholder="Detalle: ej. Destello rápido en guiño derecho..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Item 4 -->
-                    <div class="check-item">
-                        <span class="check-title">Fluidos (Aceite, Agua, Frenos)</span>
-                        <div class="options-group">
-                            <input type="radio" name="estado_fluidos" value="OK" id="flu_ok" class="radio-pill" checked>
-                            <label for="flu_ok" class="ok">OK</label>
-                            <input type="radio" name="estado_fluidos" value="Obs" id="flu_obs" class="radio-pill">
-                            <label for="flu_obs" class="obs">Obs</label>
+                    <!-- 4. Balizas (Luces de Emergencia) -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Balizas (Luces de Emergencia)</span>
+                            <div class="options-group">
+                                <input type="radio" name="luces_balizas_estado" value="OK" id="balizas_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('balizas_obs_box', false)">
+                                <label for="balizas_ok" class="ok">OK</label>
+
+                                <input type="radio" name="luces_balizas_estado" value="Revisar" id="balizas_rev"
+                                    class="radio-pill" onchange="toggleObsField('balizas_obs_box', true)">
+                                <label for="balizas_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="balizas_obs_box">
+                            <textarea name="luces_balizas_detalle" rows="2"
+                                placeholder="Detalle: ej. Tecla trabada o no destellan todas..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Item 5 -->
-                    <div class="check-item">
-                        <span class="check-title">Matafuego y Balizas</span>
-                        <div class="options-group">
-                            <input type="radio" name="estado_seguridad" value="OK" id="seg_ok" class="radio-pill"
-                                checked>
-                            <label for="seg_ok" class="ok">OK</label>
-                            <input type="radio" name="estado_seguridad" value="Obs" id="seg_obs" class="radio-pill">
-                            <label for="seg_obs" class="obs">Obs</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="btn-group">
-                    <button type="button" class="btn-secondary" onclick="prevStep(2)">Atrás</button>
-                    <button type="button" class="btn-primary" onclick="nextStep(2)">Siguiente</button>
-                </div>
-            </div>
-
-            <!-- PASO 3: Documentación y Notas -->
-            <div class="step" data-step="3">
-                <h2>Documentación y Cierre</h2>
-                <p class="sub">Revisión de papeles y notas finales.</p>
-
-                <div class="input-group">
-                    <label>Estado de la Documentación</label>
-                    <select name="documentacion" required>
-                        <option value="Completa y al día">Completa y al día (Cédula/Seguro/VTV)</option>
-                        <option value="Falta comprobante seguro">Falta comprobante de seguro</option>
-                        <option value="VTV / RTO vencida">VTV / RTO vencida</option>
-                        <option value="Incompleta">Incompleta (ver observaciones)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Nivel de Combustible</label>
-                    <select name="combustible">
-                        <option value="Tanque Lleno">Lleno (100%)</option>
-                        <option value="3/4">3/4</option>
-                        <option value="1/2">Medio Tanque (50%)</option>
-                        <option value="1/4">1/4</option>
-                        <option value="Reserva">Reserva</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Detalle de Observaciones o Daños</label>
-                    <textarea name="observaciones" rows="3"
-                        placeholder="Ej: Detalle de rayón en puerta derecha, foco trasero quemado..."></textarea>
                 </div>
 
                 <div class="btn-group">
                     <button type="button" class="btn-secondary" onclick="prevStep(3)">Atrás</button>
-                    <button type="submit" class="btn-primary" id="btnSubmit">Finalizar y Guardar</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(3)">Siguiente</button>
                 </div>
             </div>
-        </form>
 
-        <div class="feedback" id="feedbackMsg">
-            <h2>✔ ¡Control Guardado!</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">El registro se cargó correctamente en la planilla.
-            </p>
-            <button type="button" class="btn-primary" onclick="resetForm()">Cargar otro vehículo</button>
-        </div>
-
-        <!-- Pie con tu firma -->
-        <div class="card-footer">
-            By: PINAT, Juan Matias 😎
-        </div>
+            <!-- Pie con tu firma -->
+            <div class="card-footer">
+                By: PINAT, Juan Matias 😎
+            </div>
     </div>
 
     <script>
         // PEGA TU URL DE GOOGLE APPS SCRIPT ACÁ:
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoK_DKWL6-1W3cY207i8rsG79flYGsusOaHtczS1djHXbhmLrCCmsDoqsi2kQcDV5Eng/exec";
 
-        const totalSteps = 3;
+        const totalSteps = 5;
         let currentStep = 1;
 
         function updateProgress() {
@@ -616,6 +633,28 @@
         document.addEventListener("DOMContentLoaded", () => {
             setFechaHoraActual();
         });
+
+        // Muestra u oculta la caja de detalle según la opción marcada
+        function toggleObsField(boxId, show) {
+            const box = document.getElementById(boxId);
+            if (show) {
+                box.classList.add("visible");
+                const textarea = box.querySelector("textarea");
+                if (textarea) textarea.focus();
+            } else {
+                box.classList.remove("visible");
+                const textarea = box.querySelector("textarea");
+                if (textarea) textarea.value = ""; // Limpia el texto si vuelven a marcar OK
+            }
+        }
+
+        // Cálculo automático de la barra de progreso
+        function updateProgress() {
+            const totalSteps = document.querySelectorAll(".step").length;
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById("progressBar").style.width = `${progress}%`;
+        }
+
     </script>
 </body>
 
