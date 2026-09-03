@@ -579,6 +579,101 @@
                 </div>
             </div>
 
+            <!-- PASO 5: Inspección de Cubiertas -->
+            <div class="step" data-step="5">
+                <h2>Inspección de Cubiertas</h2>
+                <p class="sub">Revisión de desgaste, presión y estado de cada neumático.</p>
+
+                <div class="checklist-grid">
+
+                    <!-- Cubierta 1: Delantera Izquierda -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Cubierta 1 (delantera izquierda)</span>
+                            <div class="options-group">
+                                <input type="radio" name="cubierta_di_estado" value="OK" id="cub_di_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('cub_di_obs_box', false)">
+                                <label for="cub_di_ok" class="ok">OK</label>
+
+                                <input type="radio" name="cubierta_di_estado" value="Revisar" id="cub_di_rev"
+                                    class="radio-pill" onchange="toggleObsField('cub_di_obs_box', true)">
+                                <label for="cub_di_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="cub_di_obs_box">
+                            <textarea name="cubierta_di_detalle" rows="2"
+                                placeholder="Detalle: ej. Baja presión, dibujo desgastado, corte lateral..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Cubierta 2: Delantera Derecha -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Cubierta 2 (delantera derecha)</span>
+                            <div class="options-group">
+                                <input type="radio" name="cubierta_dd_estado" value="OK" id="cub_dd_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('cub_dd_obs_box', false)">
+                                <label for="cub_dd_ok" class="ok">OK</label>
+
+                                <input type="radio" name="cubierta_dd_estado" value="Revisar" id="cub_dd_rev"
+                                    class="radio-pill" onchange="toggleObsField('cub_dd_obs_box', true)">
+                                <label for="cub_dd_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="cub_dd_obs_box">
+                            <textarea name="cubierta_dd_detalle" rows="2"
+                                placeholder="Detalle: ej. Baja presión, desgaste irregular..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Cubierta 3: Trasera Izquierda -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Cubierta 3 (trasera izquierda)</span>
+                            <div class="options-group">
+                                <input type="radio" name="cubierta_ti_estado" value="OK" id="cub_ti_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('cub_ti_obs_box', false)">
+                                <label for="cub_ti_ok" class="ok">OK</label>
+
+                                <input type="radio" name="cubierta_ti_estado" value="Revisar" id="cub_ti_rev"
+                                    class="radio-pill" onchange="toggleObsField('cub_ti_obs_box', true)">
+                                <label for="cub_ti_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="cub_ti_obs_box">
+                            <textarea name="cubierta_ti_detalle" rows="2"
+                                placeholder="Detalle: ej. Presión baja, clavos visibles..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Cubierta 4: Trasera Derecha -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Cubierta 4 (trasera derecha)</span>
+                            <div class="options-group">
+                                <input type="radio" name="cubierta_td_estado" value="OK" id="cub_td_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('cub_td_obs_box', false)">
+                                <label for="cub_td_ok" class="ok">OK</label>
+
+                                <input type="radio" name="cubierta_td_estado" value="Revisar" id="cub_td_rev"
+                                    class="radio-pill" onchange="toggleObsField('cub_td_obs_box', true)">
+                                <label for="cub_td_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="cub_td_obs_box">
+                            <textarea name="cubierta_td_detalle" rows="2"
+                                placeholder="Detalle: ej. Llanta deformada, corte o desinflada..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(5)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(5)">Siguiente</button>
+                </div>
+            </div>
+
             <!-- Pie con tu firma -->
             <div class="card-footer">
                 By: PINAT, Juan Matias 😎
