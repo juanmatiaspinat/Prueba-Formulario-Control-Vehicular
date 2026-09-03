@@ -524,6 +524,61 @@
                 </div>
             </div>
 
+            <!-- PASO 4: Inspección de Frenos -->
+            <div class="step" data-step="4">
+                <h2>Inspección de Frenos</h2>
+                <p class="sub">Revisión del sistema de frenado y retención.</p>
+
+                <div class="checklist-grid">
+
+                    <!-- 1. Frenos de Servicio (Pedal) -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Frenos</span>
+                            <div class="options-group">
+                                <input type="radio" name="frenos_servicio_estado" value="OK" id="frenos_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('frenos_obs_box', false)">
+                                <label for="frenos_ok" class="ok">OK</label>
+
+                                <input type="radio" name="frenos_servicio_estado" value="Revisar" id="frenos_rev"
+                                    class="radio-pill" onchange="toggleObsField('frenos_obs_box', true)">
+                                <label for="frenos_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="frenos_obs_box">
+                            <textarea name="frenos_servicio_detalle" rows="2"
+                                placeholder="Detalle: ej. Pedal esponjoso, ruidos al frenar, poca respuesta..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 2. Freno de Mano -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Freno de mano</span>
+                            <div class="options-group">
+                                <input type="radio" name="freno_mano_estado" value="OK" id="freno_mano_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('freno_mano_obs_box', false)">
+                                <label for="freno_mano_ok" class="ok">OK</label>
+
+                                <input type="radio" name="freno_mano_estado" value="Revisar" id="freno_mano_rev"
+                                    class="radio-pill" onchange="toggleObsField('freno_mano_obs_box', true)">
+                                <label for="freno_mano_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="freno_mano_obs_box">
+                            <textarea name="freno_mano_detalle" rows="2"
+                                placeholder="Detalle: ej. Palanca larga, no retiene en pendiente..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(4)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(4)">Siguiente</button>
+                </div>
+            </div>
+
             <!-- Pie con tu firma -->
             <div class="card-footer">
                 By: PINAT, Juan Matias 😎
