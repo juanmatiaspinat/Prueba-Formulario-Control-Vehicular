@@ -784,6 +784,136 @@
                 </div>
             </div>
 
+            <!-- PASO 8: Inspección de Otros Elementos -->
+            <div class="step" data-step="8">
+                <h2>Inspección de Otros Elementos</h2>
+                <p class="sub">Control del estado y barrido de limpiaparabrisas.</p>
+
+                <div class="checklist-grid">
+
+                    <!-- 1. Escobillas Delanteras -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Escobillas Limpiaparabrisas (delanteras)</span>
+                            <div class="options-group">
+                                <input type="radio" name="escobillas_delanteras_estado" value="OK" id="esco_del_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('esco_del_obs_box', false)">
+                                <label for="esco_del_ok" class="ok">OK</label>
+
+                                <input type="radio" name="escobillas_delanteras_estado" value="Revisar"
+                                    id="esco_del_rev" class="radio-pill"
+                                    onchange="toggleObsField('esco_del_obs_box', true)">
+                                <label for="esco_del_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="esco_del_obs_box">
+                            <textarea name="escobillas_delanteras_detalle" rows="2"
+                                placeholder="Detalle: ej. Goma reseca, raya el vidrio, no barre bien..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 2. Escobilla Trasera -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Escobilla Limpiaparabrisas (trasera)</span>
+                            <div class="options-group">
+                                <input type="radio" name="escobilla_trasera_estado" value="OK" id="esco_tras_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('esco_tras_obs_box', false)">
+                                <label for="esco_tras_ok" class="ok">OK</label>
+
+                                <input type="radio" name="escobilla_trasera_estado" value="Revisar" id="esco_tras_rev"
+                                    class="radio-pill" onchange="toggleObsField('esco_tras_obs_box', true)">
+                                <label for="esco_tras_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="esco_tras_obs_box">
+                            <textarea name="escobilla_trasera_detalle" rows="2"
+                                placeholder="Detalle: ej. Rota, falta goma, brazo flojo..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(8)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(8)">Siguiente</button>
+                </div>
+            </div>
+
+            <!-- PASO 9: Inspección de la Documentación -->
+            <div class="step" data-step="9">
+                <h2>Inspección de la Documentación</h2>
+                <p class="sub">Control de papeles reglamentarios para circular.</p>
+
+                <div class="checklist-grid">
+
+                    <!-- 1. Cédula del Vehículo -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Cédula de Identificación (Verde)</span>
+                            <div class="options-group">
+                                <input type="radio" name="doc_cedula_estado" value="OK" id="doc_ced_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('doc_ced_obs_box', false)">
+                                <label for="doc_ced_ok" class="ok">OK</label>
+                                <input type="radio" name="doc_cedula_estado" value="Revisar" id="doc_ced_rev"
+                                    class="radio-pill" onchange="toggleObsField('doc_ced_obs_box', true)">
+                                <label for="doc_ced_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="doc_ced_obs_box">
+                            <textarea name="doc_cedula_detalle" rows="2"
+                                placeholder="Detalle: ej. No se encuentra en la guantera, ilegible..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 2. Seguro Obligatorio -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Comprobante de Seguro Vigente (Póliza / Tarjeta)</span>
+                            <div class="options-group">
+                                <input type="radio" name="doc_seguro_estado" value="OK" id="doc_seg_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('doc_seg_obs_box', false)">
+                                <label for="doc_seg_ok" class="ok">OK</label>
+                                <input type="radio" name="doc_seguro_estado" value="Revisar" id="doc_seg_rev"
+                                    class="radio-pill" onchange="toggleObsField('doc_seg_obs_box', true)">
+                                <label for="doc_seg_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="doc_seg_obs_box">
+                            <textarea name="doc_seguro_detalle" rows="2"
+                                placeholder="Detalle: ej. Póliza vencida el día XX, falta comprobante de pago..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 3. VTV / RTO -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Verificación Técnica Vehicular (VTV / RTO) Vigente</span>
+                            <div class="options-group">
+                                <input type="radio" name="doc_vtv_estado" value="OK" id="doc_vtv_ok" class="radio-pill"
+                                    checked onchange="toggleObsField('doc_vtv_obs_box', false)">
+                                <label for="doc_vtv_ok" class="ok">OK</label>
+                                <input type="radio" name="doc_vtv_estado" value="Revisar" id="doc_vtv_rev"
+                                    class="radio-pill" onchange="toggleObsField('doc_vtv_obs_box', true)">
+                                <label for="doc_vtv_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="doc_vtv_obs_box">
+                            <textarea name="doc_vtv_detalle" rows="2"
+                                placeholder="Detalle: ej. Oblea vencida, falta certificado físico..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(9)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(9)">Siguiente</button>
+                </div>
+            </div>
+
+            
+
             <!-- Pie con tu firma -->
             <div class="card-footer">
                 By: PINAT, Juan Matias 😎
