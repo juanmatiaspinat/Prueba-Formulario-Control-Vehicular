@@ -674,6 +674,116 @@
                 </div>
             </div>
 
+            <!-- PASO 6: Inspección de Fluidos -->
+            <div class="step" data-step="6">
+                <h2>Inspección de Fluidos</h2>
+                <p class="sub">Control de niveles básicos en el vano motor.</p>
+
+                <div class="checklist-grid">
+
+                    <!-- 1. Aceite de Motor -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Aceite</span>
+                            <div class="options-group">
+                                <input type="radio" name="fluido_aceite_estado" value="OK" id="aceite_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('aceite_obs_box', false)">
+                                <label for="aceite_ok" class="ok">OK</label>
+
+                                <input type="radio" name="fluido_aceite_estado" value="Revisar" id="aceite_rev"
+                                    class="radio-pill" onchange="toggleObsField('aceite_obs_box', true)">
+                                <label for="aceite_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="aceite_obs_box">
+                            <textarea name="fluido_aceite_detalle" rows="2"
+                                placeholder="Detalle: ej. Nivel bajo (debajo del mínimo), color muy oscuro, pérdida visible..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 2. Agua / Refrigerante -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Agua / Refrigerante</span>
+                            <div class="options-group">
+                                <input type="radio" name="fluido_agua_estado" value="OK" id="agua_ok" class="radio-pill"
+                                    checked onchange="toggleObsField('agua_obs_box', false)">
+                                <label for="agua_ok" class="ok">OK</label>
+
+                                <input type="radio" name="fluido_agua_estado" value="Revisar" id="agua_rev"
+                                    class="radio-pill" onchange="toggleObsField('agua_obs_box', true)">
+                                <label for="agua_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="agua_obs_box">
+                            <textarea name="fluido_agua_detalle" rows="2"
+                                placeholder="Detalle: ej. Tacho de expansión bajo el mínimo, manguera con pérdidas..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(6)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(6)">Siguiente</button>
+                </div>
+            </div>
+
+            <!-- PASO 7: Inspección de Elementos de Seguridad -->
+            <div class="step" data-step="7">
+                <h2>Inspección de Elementos de Seguridad</h2>
+                <p class="sub">Control del kit reglamentario para circular.</p>
+
+                <div class="checklist-grid">
+
+                    <!-- 1. Matafuego -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Matafuego</span>
+                            <div class="options-group">
+                                <input type="radio" name="seguridad_matafuego_estado" value="OK" id="matafuego_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('matafuego_obs_box', false)">
+                                <label for="matafuego_ok" class="ok">OK</label>
+
+                                <input type="radio" name="seguridad_matafuego_estado" value="Revisar" id="matafuego_rev"
+                                    class="radio-pill" onchange="toggleObsField('matafuego_obs_box', true)">
+                                <label for="matafuego_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="matafuego_obs_box">
+                            <textarea name="seguridad_matafuego_detalle" rows="2"
+                                placeholder="Detalle: ej. Vencido, manómetro en rojo (sin carga), falta soporte..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 2. Balizas portátiles -->
+                    <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="check-title">Balizas</span>
+                            <div class="options-group">
+                                <input type="radio" name="seguridad_balizas_estado" value="OK" id="balizas_seg_ok"
+                                    class="radio-pill" checked onchange="toggleObsField('balizas_seg_obs_box', false)">
+                                <label for="balizas_seg_ok" class="ok">OK</label>
+
+                                <input type="radio" name="seguridad_balizas_estado" value="Revisar" id="balizas_seg_rev"
+                                    class="radio-pill" onchange="toggleObsField('balizas_seg_obs_box', true)">
+                                <label for="balizas_seg_rev" class="revisar">Revisar</label>
+                            </div>
+                        </div>
+                        <div class="obs-detail-container" id="balizas_seg_obs_box">
+                            <textarea name="seguridad_balizas_detalle" rows="2"
+                                placeholder="Detalle: ej. Falta una baliza, patas rotas, estuche dañado..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="prevStep(7)">Atrás</button>
+                    <button type="button" class="btn-primary" onclick="nextStep(7)">Siguiente</button>
+                </div>
+            </div>
+
             <!-- Pie con tu firma -->
             <div class="card-footer">
                 By: PINAT, Juan Matias 😎
