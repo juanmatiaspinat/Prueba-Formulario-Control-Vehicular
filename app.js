@@ -240,3 +240,229 @@ function volverAlMenuDesdeFeedback() {
     resetForm(); // resetea los campos
     volverAlMenu();
 }
+
+let tipoReporteActual = "dia";
+
+// Inicializa valores por defecto al cargar
+function initReportView() {
+    const hoy = new Date().toISOString().split("T")[0];
+    const mesActual = hoy.slice(0, 7);
+
+    const inputDia = document.getElementById("filtroFechaDia");
+    const inputMes = document.getElementById("filtroFechaMes");
+
+    if (inputDia) inputDia.value = hoy;
+    if (inputMes) inputMes.value = mesActual;
+}
+initReportView();
+
+function setFechaHoyFiltro() {
+    document.getElementById("filtroFechaDia").value = new Date()
+        .toISOString()
+        .split("T")[0];
+}
+
+function cambiarTipoReporte(tipo) {
+    tipoReporteActual = tipo;
+    const btnDia = document.getElementById("btnTipoDia");
+    const btnMes = document.getElementById("btnTipoMes");
+    const grupoDia = document.getElementById("grupoFiltroDia");
+    const grupoMes = document.getElementById("grupoFiltroMes");
+
+    if (tipo === "dia") {
+        btnDia.className = "btn-primary";
+        btnMes.className = "btn-secondary";
+        grupoDia.style.display = "block";
+        grupoMes.style.display = "none";
+    } else {
+        btnDia.className = "btn-secondary";
+        btnMes.className = "btn-primary";
+        grupoDia.style.display = "none";
+        grupoMes.style.display = "block";
+    }
+}
+
+// Función auxiliar para llevar cualquier fecha (ISO, Date de Sheets o D/M/YYYY) a formato YYYY-MM-DD
+function normalizarFecha(val) {
+    if (!val) return "";
+    const str = val.toString().trim();
+
+    // Si ya empieza en formato YYYY-MM-DD (ej: "2026-09-04 10:30")
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        return str.slice(0, 10);
+    }
+
+    // Si viene en formato D/M/YYYY o DD/MM/YYYY (ej: "4/9/2026, 10:40:27")
+    const partes = str.split(",")[0].split("/");
+    if (partes.length === 3) {
+        const dia = partes[0].padStart(2, "0");
+        const mes = partes[1].padStart(2, "0");
+        const anio = partes[2];
+        return `${anio}-${mes}-${dia}`;
+    }
+
+    // Fallback con objeto Date
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    return "";
+}
+
+async function generarReportePDF() {
+    const btn = document.getElementById("btnGenerarPDF");
+    const loader = document.getElementById("reportLoading");
+
+    btn.disabled = true;
+    if (loader) loader.style.display = "block";
+
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getAll`);
+        const json = await res.json();
+
+        if (json.status !== "success" || !json.data || json.data.length === 0) {
+            alert("No se encontraron datos en la planilla.");
+            return;
+        }
+
+        const vehiculoSeleccionado =
+            document.getElementById("filtroVehiculo").value;
+        let registros = json.data;
+
+        // 1. Filtrado por Fecha (Día o Mes)
+        if (tipoReporteActual === "dia") {
+            const diaBuscado = document.getElementById("filtroFechaDia").value; // Formato: YYYY-MM-DD
+            if (!diaBuscado) {
+                alert("Por favor seleccioná una fecha.");
+                return;
+            }
+
+            registros = registros.filter((r) => {
+                // Busca en 'fecha_hora' (columna C) o en 'Fecha y Hora' (columna A)
+                const fechaRaw = r.fecha_hora || r["Fecha y Hora"] || "";
+                const fechaNormalizada = normalizarFecha(fechaRaw);
+                return fechaNormalizada === diaBuscado;
+            });
+        } else {
+            const mesBuscado = document.getElementById("filtroFechaMes").value; // Formato: YYYY-MM
+            if (!mesBuscado) {
+                alert("Por favor seleccioná un mes.");
+                return;
+            }
+
+            registros = registros.filter((r) => {
+                const fechaRaw = r.fecha_hora || r["Fecha y Hora"] || "";
+                const fechaNormalizada = normalizarFecha(fechaRaw);
+                return fechaNormalizada.startsWith(mesBuscado);
+            });
+        }
+
+        // 2. Filtrado por Vehículo si no es 'TODOS'
+        if (vehiculoSeleccionado !== "TODOS") {
+            registros = registros.filter(
+                (r) => (r.vehiculo || "").trim() === vehiculoSeleccionado.trim(),
+            );
+        }
+
+        if (registros.length === 0) {
+            alert("No hay inspecciones registradas para los filtros seleccionados.");
+            return;
+        }
+
+        // 3. Generación del documento con jsPDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: "a4",
+        });
+
+        // Título y membrete
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("SISTEMA DE CONTROL DE VEHÍCULOS - DEA", 14, 15);
+
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+
+        const periodoTexto =
+            tipoReporteActual === "dia"
+                ? `Fecha de reporte: ${document.getElementById("filtroFechaDia").value}`
+                : `Período mensual: ${document.getElementById("filtroFechaMes").value}`;
+
+        doc.text(periodoTexto, 14, 21);
+        doc.text(
+            `Unidades inspeccionadas encontradas: ${registros.length}`,
+            14,
+            26,
+        );
+
+        doc.setDrawColor(200);
+        doc.line(14, 29, 283, 29);
+
+        // Mapeo exacto de las columnas de tu planilla
+        const bodyData = registros.map((item) => [
+            item.fecha_hora || item["Fecha y Hora"] || "-",
+            item.inspector || "-",
+            item.vehiculo || "-",
+            item.patente || "-",
+            item.kilometraje ? `${item.kilometraje} km` : "-",
+            item.combustible || "-",
+            item.estado_bateria || "-",
+            item.luces_bajas_detalle ||
+            item.observaciones_generales ||
+            "Sin novedades",
+        ]);
+
+        doc.autoTable({
+            startY: 33,
+            head: [
+                [
+                    "Fecha y Hora",
+                    "Inspector",
+                    "Vehículo",
+                    "Patente",
+                    "Km",
+                    "Combustible",
+                    "Batería",
+                    "Detalle / Novedad",
+                ],
+            ],
+            body: bodyData,
+            theme: "striped",
+            headStyles: {
+                fillColor: [30, 41, 59],
+                textColor: [255, 255, 255],
+                fontStyle: "bold",
+            },
+            styles: { fontSize: 8, cellPadding: 2.5 },
+            columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 22 },
+                4: { cellWidth: 25 },
+                5: { cellWidth: 28 },
+                6: { cellWidth: 22 },
+                7: { cellWidth: 60 },
+            },
+        });
+
+        const sufijoFecha =
+            tipoReporteActual === "dia"
+                ? document.getElementById("filtroFechaDia").value
+                : document.getElementById("filtroFechaMes").value;
+        doc.save(`Reporte_Inspeccion_${sufijoFecha}.pdf`);
+    } catch (err) {
+        console.error("Error al exportar:", err);
+        alert("Ocurrió un error al procesar el reporte.");
+    } finally {
+        btn.disabled = false;
+        if (loader) loader.style.display = "none";
+    }
+}

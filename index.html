@@ -721,12 +721,62 @@
 
         </div>
 
-        <!-- ==================== VISTA DE REPORTES (Pendiente armar) ==================== -->
+        <!-- ==================== VISTA DE REPORTES ==================== -->
         <div id="reportContainerView" style="display: none;">
             <button type="button" class="btn-nav-back" onclick="volverAlMenu()">← Volver al menú principal</button>
-            <h2>Generación de Reportes</h2>
-            <p class="sub">Filtrá las inspecciones cargadas en la planilla.</p>
-            <!-- Acá armaremos los filtros de fecha y botón de descarga PDF -->
+
+            <h2>Generar Reporte</h2>
+            <p class="sub">Filtrá las inspecciones registradas para exportar a PDF.</p>
+
+            <!-- Tipo de Reporte: Diario o Mensual -->
+            <div class="input-group">
+                <label>Tipo de Período</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                    <button type="button" id="btnTipoDia" class="btn-primary" onclick="cambiarTipoReporte('dia')">Por
+                        Día</button>
+                    <button type="button" id="btnTipoMes" class="btn-secondary" onclick="cambiarTipoReporte('mes')">Por
+                        Mes</button>
+                </div>
+            </div>
+
+            <!-- Selector para Reporte Diario -->
+            <div class="input-group" id="grupoFiltroDia">
+                <label>Seleccionar Fecha</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="date" id="filtroFechaDia" />
+                    <button type="button" class="btn-secondary" style="width: auto; padding: 0 16px;"
+                        onclick="setFechaHoyFiltro()">Hoy</button>
+                </div>
+            </div>
+
+            <!-- Selector para Reporte Mensual (Oculto por defecto) -->
+            <div class="input-group" id="grupoFiltroMes" style="display: none;">
+                <label>Seleccionar Mes y Año</label>
+                <input type="month" id="filtroFechaMes" />
+            </div>
+
+            <!-- Filtro opcional por Vehículo -->
+            <div class="input-group">
+                <label>Vehículo</label>
+                <select id="filtroVehiculo">
+                    <option value="TODOS">Todos los vehículos inspeccionados</option>
+                    <option value="Renault - Duster">Renault - Duster</option>
+                    <option value="Chevrolet - Montana">Chevrolet - Montana</option>
+                    <option value="Ford - Ecosport">Ford - Ecosport</option>
+                </select>
+            </div>
+
+            <!-- Estado de carga / mensajes -->
+            <div id="reportLoading"
+                style="display: none; text-align: center; color: #60a5fa; font-size: 0.9rem; padding: 12px 0;">
+                Buscando registros y armando documento...
+            </div>
+
+            <!-- Botón de Generación -->
+            <button type="button" class="btn-primary" id="btnGenerarPDF" onclick="generarReportePDF()"
+                style="margin-top: 10px;">
+                Descargar Reporte PDF
+            </button>
         </div>
 
         <!-- Pantalla de confirmación de guardado -->
@@ -746,6 +796,10 @@
         </div>
     </div>
 
+
+    <!-- Librerías para generación de PDF y tablas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="app.js"></script>
 
 </body>
