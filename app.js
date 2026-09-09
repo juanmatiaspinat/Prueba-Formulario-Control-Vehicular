@@ -313,6 +313,16 @@ function normalizarFecha(val) {
     return "";
 }
 
+// Función para cargar la imagen en memoria antes de meterla al PDF
+function cargarImagen(ruta) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = ruta;
+        img.onload = () => resolve(img);
+        img.onerror = (err) => reject(new Error("No se pudo cargar la imagen: " + ruta));
+    });
+}
+
 async function generarReportePDF() {
     const btn = document.getElementById("btnGenerarPDF");
     const loader = document.getElementById("reportLoading");
@@ -375,89 +385,62 @@ async function generarReportePDF() {
 
         // 3. Generación del documento con jsPDF
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-            orientation: "landscape",
-            unit: "mm",
-            format: "a4",
-        });
 
-        // Título y membrete
+        // Configuramos hoja A4 Vertical (Portrait)
+        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+        // Cargamos el banner desde la carpeta assets
+        try {
+            const bannerImg = await cargarImagen("assets/pruebaBANNER.png");
+            doc.addImage(bannerImg, "PNG", 12, 10, 186, 22);
+        } catch (e) {
+            console.warn("No se encontró la imagen en assets/pruebaBANNER.png, continuando sin banner...", e);
+        }
+
+        // Línea divisoria gris debajo del banner
+        doc.setDrawColor(200, 200, 200);
+        doc.line(12, 35, 198, 35);
+
+        // Título institucional secundario
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("SISTEMA DE CONTROL DE VEHÍCULOS - DEA", 14, 15);
+        doc.setFontSize(11);
+        doc.setTextColor(30, 41, 59);
+        doc.text("INFORME DIARIO DE CONTROL VEHICULAR", 12, 42);
 
-        doc.setFontSize(9);
+        // Datos de cabecera
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(100);
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139);
 
-        const periodoTexto =
-            tipoReporteActual === "dia"
-                ? `Fecha de reporte: ${document.getElementById("filtroFechaDia").value}`
-                : `Período mensual: ${document.getElementById("filtroFechaMes").value}`;
+        const fechaFiltro = document.getElementById("filtroFechaDia").value;
+        doc.text(`Fecha de Inspección: ${fechaFiltro}`, 12, 47);
+        doc.text(`Total de registros: ${registros.length}`, 140, 47);
 
-        doc.text(periodoTexto, 14, 21);
-        doc.text(
-            `Unidades inspeccionadas encontradas: ${registros.length}`,
-            14,
-            26,
-        );
-
-        doc.setDrawColor(200);
-        doc.line(14, 29, 283, 29);
-
-        // Mapeo exacto de las columnas de tu planilla
-        const bodyData = registros.map((item) => [
+        // Tabla de prueba debajo del encabezado
+        const bodyData = registros.map(item => [
             item.fecha_hora || item["Fecha y Hora"] || "-",
             item.inspector || "-",
             item.vehiculo || "-",
             item.patente || "-",
             item.kilometraje ? `${item.kilometraje} km` : "-",
-            item.combustible || "-",
-            item.estado_bateria || "-",
-            item.luces_bajas_detalle ||
-            item.observaciones_generales ||
-            "Sin novedades",
+            item.combustible || "-"
         ]);
 
         doc.autoTable({
-            startY: 33,
-            head: [
-                [
-                    "Fecha y Hora",
-                    "Inspector",
-                    "Vehículo",
-                    "Patente",
-                    "Km",
-                    "Combustible",
-                    "Batería",
-                    "Detalle / Novedad",
-                ],
-            ],
+            startY: 52,
+            head: [["Fecha y Hora", "Inspector", "Vehículo", "Patente", "Km", "Combustible"]],
             body: bodyData,
             theme: "striped",
-            headStyles: {
-                fillColor: [30, 41, 59],
-                textColor: [255, 255, 255],
-                fontStyle: "bold",
-            },
-            styles: { fontSize: 8, cellPadding: 2.5 },
-            columnStyles: {
-                0: { cellWidth: 35 },
-                1: { cellWidth: 35 },
-                2: { cellWidth: 40 },
-                3: { cellWidth: 22 },
-                4: { cellWidth: 25 },
-                5: { cellWidth: 28 },
-                6: { cellWidth: 22 },
-                7: { cellWidth: 60 },
-            },
+            headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold" },
+            styles: { fontSize: 8, cellPadding: 2.5 }
         });
 
-        const sufijoFecha =
-            tipoReporteActual === "dia"
-                ? document.getElementById("filtroFechaDia").value
-                : document.getElementById("filtroFechaMes").value;
+        const sufijoFecha = tipoReporteActual === "dia"
+            ? document.getElementById("filtroFechaDia").value
+            : document.getElementById("filtroFechaMes").value;
+
         doc.save(`Reporte_Inspeccion_${sufijoFecha}.pdf`);
+
     } catch (err) {
         console.error("Error al exportar:", err);
         alert("Ocurrió un error al procesar el reporte.");
