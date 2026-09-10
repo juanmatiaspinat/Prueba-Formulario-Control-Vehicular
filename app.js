@@ -390,9 +390,9 @@ async function generarReportePDF() {
         // Precargamos banner
         let bannerImg = null;
         try {
-            bannerImg = await cargarImagen("assets/pruebaBANNER.png");
+            bannerImg = await cargarImagen("assets/banner.png");
         } catch (e) {
-            console.warn("Banner no encontrado en assets/pruebaBANNER.png");
+            console.warn("Banner no encontrado en assets/banner.png");
         }
 
         // Helper para limpiar fechas/horas ISO (ej: 2026-09-04T13:39:00.000Z -> 04/09/2026 10:39 hs)
