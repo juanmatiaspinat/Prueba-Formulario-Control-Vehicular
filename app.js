@@ -383,58 +383,171 @@ async function generarReportePDF() {
             return;
         }
 
-        // 3. Generación del documento con jsPDF
+        // 3. Generación del documento con jsPDF (Ficha por Vehículo)
         const { jsPDF } = window.jspdf;
-
-        // Configuramos hoja A4 Vertical (Portrait)
         const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-        // Cargamos el banner desde la carpeta assets
+        // Precargamos banner
+        let bannerImg = null;
         try {
-            const bannerImg = await cargarImagen("assets/pruebaBANNER.png");
-            doc.addImage(bannerImg, "PNG", 12, 10, 186, 22);
+            bannerImg = await cargarImagen("assets/pruebaBANNER.png");
         } catch (e) {
-            console.warn("No se encontró la imagen en assets/pruebaBANNER.png, continuando sin banner...", e);
+            console.warn("Banner no encontrado en assets/pruebaBANNER.png");
         }
 
-        // Línea divisoria gris debajo del banner
-        doc.setDrawColor(200, 200, 200);
-        doc.line(12, 35, 198, 35);
+        // Helper para limpiar fechas/horas ISO (ej: 2026-09-04T13:39:00.000Z -> 04/09/2026 10:39 hs)
+        const formatearHoraLimpia = (val) => {
+            if (!val) return "-";
+            const d = new Date(val);
+            if (isNaN(d.getTime())) return val.toString().slice(0, 16);
+            const dia = String(d.getDate()).padStart(2, "0");
+            const mes = String(d.getMonth() + 1).padStart(2, "0");
+            const anio = d.getFullYear();
+            const hora = String(d.getHours()).padStart(2, "0");
+            const min = String(d.getMinutes()).padStart(2, "0");
+            return `${dia}/${mes}/${anio} - ${hora}:${min} hs`;
+        };
 
-        // Título institucional secundario
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(30, 41, 59);
-        doc.text("INFORME DIARIO DE CONTROL VEHICULAR", 12, 42);
+        // Helper para formatear estado de componentes: si tiene novedad la agrega
+        const formatearItem = (estado, detalle) => {
+            if (!estado) return "No registrado";
+            if (estado.toString().toUpperCase() === "REVISAR") {
+                return `⚠️ REVISAR: ${detalle && detalle.trim() ? detalle : "Sin detalle especificado"}`;
+            }
+            return "✓ OK";
+        };
 
-        // Datos de cabecera
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(100, 116, 139);
+        // Iteramos cada registro encontrado: CADA UNO ES UNA PÁGINA
+        registros.forEach((item, index) => {
+            // Si no es el primer vehículo, creamos una nueva página
+            if (index > 0) {
+                doc.addPage();
+            }
 
-        const fechaFiltro = document.getElementById("filtroFechaDia").value;
-        doc.text(`Fecha de Inspección: ${fechaFiltro}`, 12, 47);
-        doc.text(`Total de registros: ${registros.length}`, 140, 47);
+            // --- ENCABEZADO INSTITUCIONAL ---
+            if (bannerImg) {
+                doc.addImage(bannerImg, "PNG", 12, 10, 186, 22);
+            }
+            doc.setDrawColor(200, 200, 200);
+            doc.line(12, 34, 198, 34);
 
-        // Tabla de prueba debajo del encabezado
-        const bodyData = registros.map(item => [
-            item.fecha_hora || item["Fecha y Hora"] || "-",
-            item.inspector || "-",
-            item.vehiculo || "-",
-            item.patente || "-",
-            item.kilometraje ? `${item.kilometraje} km` : "-",
-            item.combustible || "-"
-        ]);
+            // --- SUBTÍTULO Y METADATOS GENERALES ---
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.setTextColor(30, 41, 59);
+            doc.text("FICHA DE INSPECCIÓN TÉCNICA Y CONTROL DE FLOTA", 12, 40);
 
-        doc.autoTable({
-            startY: 52,
-            head: [["Fecha y Hora", "Inspector", "Vehículo", "Patente", "Km", "Combustible"]],
-            body: bodyData,
-            theme: "striped",
-            headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold" },
-            styles: { fontSize: 8, cellPadding: 2.5 }
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Fecha y hora de inspección: ${formatearHoraLimpia(item.fecha_hora || item["Fecha y Hora"])}`, 12, 45);
+            doc.text(`Unidad: ${index + 1} de ${registros.length}`, 170, 45);
+
+            // --- BLOQUE 1: DATOS PRINCIPALES DEL MÓVIL ---
+            doc.autoTable({
+                startY: 48,
+                head: [["VEHÍCULO", "DOMINIO / PATENTE", "KILOMETRAJE", "NIVEL DE COMBUSTIBLE"]],
+                body: [[
+                    item.vehiculo || "-",
+                    item.patente || "-",
+                    item.kilometraje ? `${item.kilometraje} km` : "-",
+                    item.combustible || "-"
+                ]],
+                theme: "plain",
+                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8, halign: "center" },
+                styles: { fontSize: 8.5, halign: "center", fontStyle: "bold", textColor: [30, 41, 59], cellPadding: 2.5 },
+                tableLineColor: [203, 213, 225],
+                tableLineWidth: 0.2
+            });
+
+            // --- BLOQUE 2: MATRIZ DE CHECKLIST TÉCNICO (SISTEMAS EVALUADOS) ---
+            const checklistData = [
+                ["Luces Bajas", formatearItem(item.luces_bajas_estado, item.luces_bajas_detalle), "Freno de Servicio", formatearItem(item.freno_servicio_estado, item.freno_servicio_detalle)],
+                ["Luces Altas", formatearItem(item.luces_altas_estado, item.luces_altas_detalle), "Freno de Mano", formatearItem(item.freno_mano_estado, item.freno_mano_detalle)],
+                ["Luces de Giro / Balizas", formatearItem(item.luces_giro_estado, item.luces_giro_detalle), "Cubiertas Delanteras", formatearItem(item.cubiertas_delanteras_estado, item.cubiertas_delanteras_detalle)],
+                ["Luces de Freno / Retroceso", formatearItem(item.luces_freno_estado, item.luces_freno_detalle), "Cubiertas Traseras", formatearItem(item.cubiertas_traseras_estado, item.cubiertas_traseras_detalle)],
+                ["Nivel de Aceite", formatearItem(item.nivel_aceite_estado, item.nivel_aceite_detalle), "Rueda de Auxilio", formatearItem(item.rueda_auxilio_estado, item.rueda_auxilio_detalle)],
+                ["Líquido Refrigerante", formatearItem(item.refrigerante_estado, item.refrigerante_detalle), "Elementos de Seguridad", formatearItem(item.seguridad_estado, item.seguridad_detalle)],
+                ["Estado de Batería", item.estado_bateria || "-", "Documentación y VTV", formatearItem(item.documentacion_estado, item.documentacion_detalle)]
+            ];
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 4,
+                head: [["SISTEMA / FLUIDOS", "ESTADO", "RODADO / SEGURIDAD", "ESTADO"]],
+                body: checklistData,
+                theme: "striped",
+                headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
+                styles: { fontSize: 7.5, cellPadding: 2 },
+                columnStyles: {
+                    0: { fontStyle: "bold", cellWidth: 42 },
+                    1: { cellWidth: 51 },
+                    2: { fontStyle: "bold", cellWidth: 42 },
+                    3: { cellWidth: 51 }
+                },
+                didParseCell: function (data) {
+                    // Si una celda tiene alerta de REVISAR, la teñimos de rojo/naranja
+                    if ((data.column.index === 1 || data.column.index === 3) && data.cell.raw && data.cell.raw.toString().includes("REVISAR")) {
+                        data.cell.styles.textColor = [185, 28, 28];
+                        data.cell.styles.fontStyle = "bold";
+                    }
+                }
+            });
+
+            // --- BLOQUE 3: HISTORIAL DE MANTENIMIENTO ---
+            const mantData = [
+                ["Batería", item.bateria_ultimo_cambio || "-", item.bateria_proximo_control || "-"],
+                ["Lavado Integral", item.lavado_ultimo || "-", item.lavado_proximo || "-"],
+                ["Service Integral (Filtros y Aceite)", item.service_ultimo || "-", item.service_proximo || "-"]
+            ];
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 4,
+                head: [["MANTENIMIENTO PROGRAMADO", "ÚLTIMO REALIZADO", "PRÓXIMO CONTROL"]],
+                body: mantData,
+                theme: "plain",
+                headStyles: { fillColor: [71, 85, 105], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
+                styles: { fontSize: 7.5, cellPadding: 2, textColor: [30, 41, 59] },
+                tableLineColor: [203, 213, 225],
+                tableLineWidth: 0.2
+            });
+
+            // --- BLOQUE 4: OBSERVACIONES GENERALES ---
+            const yObservaciones = doc.lastAutoTable.finalY + 4;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.setTextColor(30, 41, 59);
+            doc.text("OBSERVACIONES GENERALES / NOVEDADES ADICIONALES:", 12, yObservaciones);
+
+            const obsTexto = item.observaciones_generales && item.observaciones_generales.trim()
+                ? item.observaciones_generales
+                : "Sin novedades adicionales reportadas durante la jornada.";
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            doc.setTextColor(71, 85, 105);
+
+            // Rectángulo contenedor para las observaciones
+            doc.setDrawColor(203, 213, 225);
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(12, yObservaciones + 2, 186, 16, 1, 1, "FD");
+            doc.text(obsTexto, 14, yObservaciones + 7, { maxWidth: 182 });
+
+            // --- BLOQUE 5: ÁREA DE FIRMA FORMAL AL PIE ---
+            const yPie = 265;
+            doc.setDrawColor(148, 163, 184);
+            doc.setLineDashPattern([1, 1], 0);
+            doc.line(125, yPie, 185, yPie); // Línea punteada de firma
+            doc.setLineDashPattern([], 0);
+
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text("Firma y Aclaración del Inspector", 132, yPie + 4);
+            doc.setFont("helvetica", "bold");
+            doc.text(item.inspector || "Inspector a Cargo", 132, yPie + 8);
         });
 
+        // Guardado del archivo
         const sufijoFecha = tipoReporteActual === "dia"
             ? document.getElementById("filtroFechaDia").value
             : document.getElementById("filtroFechaMes").value;
