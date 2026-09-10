@@ -319,7 +319,8 @@ function cargarImagen(ruta) {
         const img = new Image();
         img.src = ruta;
         img.onload = () => resolve(img);
-        img.onerror = (err) => reject(new Error("No se pudo cargar la imagen: " + ruta));
+        img.onerror = (err) =>
+            reject(new Error("No se pudo cargar la imagen: " + ruta));
     });
 }
 
@@ -383,11 +384,15 @@ async function generarReportePDF() {
             return;
         }
 
-        // 3. Generación del documento con jsPDF (Ficha por Vehículo)
+        // 3. Generación del documento con jsPDF (Ficha por Vehículo completa)
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
 
-        // Precargamos banner
+        // Precargamos banner institucional
         let bannerImg = null;
         try {
             bannerImg = await cargarImagen("assets/banner.png");
@@ -395,165 +400,303 @@ async function generarReportePDF() {
             console.warn("Banner no encontrado en assets/banner.png");
         }
 
-        // Helper para limpiar fechas/horas ISO (ej: 2026-09-04T13:39:00.000Z -> 04/09/2026 10:39 hs)
-        const formatearHoraLimpia = (val) => {
+        // Limpieza de formato para fecha y hora de inspección
+        const formatearFechaHora = (val) => {
             if (!val) return "-";
-            const d = new Date(val);
-            if (isNaN(d.getTime())) return val.toString().slice(0, 16);
-            const dia = String(d.getDate()).padStart(2, "0");
-            const mes = String(d.getMonth() + 1).padStart(2, "0");
-            const anio = d.getFullYear();
-            const hora = String(d.getHours()).padStart(2, "0");
-            const min = String(d.getMinutes()).padStart(2, "0");
-            return `${dia}/${mes}/${anio} - ${hora}:${min} hs`;
-        };
-
-        // Helper para formatear estado de componentes: si tiene novedad la agrega
-        const formatearItem = (estado, detalle) => {
-            if (!estado) return "No registrado";
-            if (estado.toString().toUpperCase() === "REVISAR") {
-                return `⚠️ REVISAR: ${detalle && detalle.trim() ? detalle : "Sin detalle especificado"}`;
+            const str = val.toString().trim();
+            if (str.includes("T")) {
+                const d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    const dia = String(d.getDate()).padStart(2, "0");
+                    const mes = String(d.getMonth() + 1).padStart(2, "0");
+                    const anio = d.getFullYear();
+                    const hora = String(d.getHours()).padStart(2, "0");
+                    const min = String(d.getMinutes()).padStart(2, "0");
+                    return `${dia}/${mes}/${anio} - ${hora}:${min} hs`;
+                }
             }
-            return "✓ OK";
+            return str;
         };
 
-        // Iteramos cada registro encontrado: CADA UNO ES UNA PÁGINA
+        // Formateo de fechas simples (YYYY-MM-DD a DD/MM/YYYY)
+        const formatearFechaCorta = (val) => {
+            if (!val) return "-";
+            const str = val.toString().trim();
+            if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+                const [y, m, d] = str.slice(0, 10).split("-");
+                return `${d}/${m}/${y}`;
+            }
+            return str;
+        };
+
+        // Formatea el estado de cada ítem: OK limpio o Alerta con detalle
+        const fItem = (estado, detalle) => {
+            if (!estado || estado.toString().trim() === "") return "-";
+            const est = estado.toString().trim().toUpperCase();
+            if (est === "REVISAR") {
+                const det =
+                    detalle && detalle.toString().trim()
+                        ? detalle.toString().trim()
+                        : "Sin detalle";
+                return `REVISAR: ${det}`;
+            }
+            return "OK";
+        };
+
+        // Iteramos cada registro: 1 página por vehículo
         registros.forEach((item, index) => {
-            // Si no es el primer vehículo, creamos una nueva página
             if (index > 0) {
                 doc.addPage();
             }
 
             // --- ENCABEZADO INSTITUCIONAL ---
             if (bannerImg) {
-                doc.addImage(bannerImg, "PNG", 12, 10, 186, 22);
+                doc.addImage(bannerImg, "PNG", 12, 8, 186, 22);
             }
             doc.setDrawColor(200, 200, 200);
-            doc.line(12, 34, 198, 34);
+            doc.line(12, 32, 198, 32);
 
-            // --- SUBTÍTULO Y METADATOS GENERALES ---
+            // --- TÍTULO Y METADATOS DE LA INSPECCIÓN ---
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(11);
+            doc.setFontSize(10.5);
             doc.setTextColor(30, 41, 59);
-            doc.text("FICHA DE INSPECCIÓN TÉCNICA Y CONTROL DE FLOTA", 12, 40);
+            doc.text("FICHA DE INSPECCIÓN TÉCNICA VEHICULAR", 12, 38);
 
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(8.5);
+            doc.setFontSize(8);
             doc.setTextColor(100, 116, 139);
-            doc.text(`Fecha y hora de inspección: ${formatearHoraLimpia(item.fecha_hora || item["Fecha y Hora"])}`, 12, 45);
-            doc.text(`Unidad: ${index + 1} de ${registros.length}`, 170, 45);
+            doc.text(
+                `Fecha y hora: ${formatearFechaHora(item.fecha_hora || item["Fecha y Hora"])}`,
+                12,
+                43,
+            );
+            doc.text(`Inspector: ${item.inspector || "-"}`, 95, 43);
+            doc.text(`Unidad: ${index + 1} de ${registros.length}`, 172, 43);
 
-            // --- BLOQUE 1: DATOS PRINCIPALES DEL MÓVIL ---
+            // --- BLOQUE 1: DATOS BÁSICOS DEL VEHÍCULO ---
             doc.autoTable({
-                startY: 48,
-                head: [["VEHÍCULO", "DOMINIO / PATENTE", "KILOMETRAJE", "NIVEL DE COMBUSTIBLE"]],
-                body: [[
-                    item.vehiculo || "-",
-                    item.patente || "-",
-                    item.kilometraje ? `${item.kilometraje} km` : "-",
-                    item.combustible || "-"
-                ]],
+                startY: 46,
+                head: [
+                    ["VEHÍCULO", "PATENTE", "KILOMETRAJE", "COMBUSTIBLE", "BATERÍA"],
+                ],
+                body: [
+                    [
+                        item.vehiculo || "-",
+                        item.patente || "-",
+                        item.kilometraje ? `${item.kilometraje} km` : "-",
+                        item.combustible || "-",
+                        item.estado_bateria || "-",
+                    ],
+                ],
                 theme: "plain",
-                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8, halign: "center" },
-                styles: { fontSize: 8.5, halign: "center", fontStyle: "bold", textColor: [30, 41, 59], cellPadding: 2.5 },
+                headStyles: {
+                    fillColor: [30, 41, 59],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                    fontSize: 7.5,
+                    halign: "center",
+                },
+                styles: {
+                    fontSize: 8,
+                    halign: "center",
+                    fontStyle: "bold",
+                    textColor: [30, 41, 59],
+                    cellPadding: 2,
+                },
                 tableLineColor: [203, 213, 225],
-                tableLineWidth: 0.2
+                tableLineWidth: 0.2,
             });
 
-            // --- BLOQUE 2: MATRIZ DE CHECKLIST TÉCNICO (SISTEMAS EVALUADOS) ---
-            const checklistData = [
-                ["Luces Bajas", formatearItem(item.luces_bajas_estado, item.luces_bajas_detalle), "Freno de Servicio", formatearItem(item.freno_servicio_estado, item.freno_servicio_detalle)],
-                ["Luces Altas", formatearItem(item.luces_altas_estado, item.luces_altas_detalle), "Freno de Mano", formatearItem(item.freno_mano_estado, item.freno_mano_detalle)],
-                ["Luces de Giro / Balizas", formatearItem(item.luces_giro_estado, item.luces_giro_detalle), "Cubiertas Delanteras", formatearItem(item.cubiertas_delanteras_estado, item.cubiertas_delanteras_detalle)],
-                ["Luces de Freno / Retroceso", formatearItem(item.luces_freno_estado, item.luces_freno_detalle), "Cubiertas Traseras", formatearItem(item.cubiertas_traseras_estado, item.cubiertas_traseras_detalle)],
-                ["Nivel de Aceite", formatearItem(item.nivel_aceite_estado, item.nivel_aceite_detalle), "Rueda de Auxilio", formatearItem(item.rueda_auxilio_estado, item.rueda_auxilio_detalle)],
-                ["Líquido Refrigerante", formatearItem(item.refrigerante_estado, item.refrigerante_detalle), "Elementos de Seguridad", formatearItem(item.seguridad_estado, item.seguridad_detalle)],
-                ["Estado de Batería", item.estado_bateria || "-", "Documentación y VTV", formatearItem(item.documentacion_estado, item.documentacion_detalle)]
+            // --- BLOQUE 2: CHECKLIST COMPLETO EN 2 COLUMNAS (11 VISTAS) ---
+            const checklistCompleto = [
+                // Fila 1: Luces Bajas vs Frenos de Servicio
+                [
+                    "Luces Bajas",
+                    fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
+                    "Frenos",
+                    fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
+                ],
+                // Fila 2: Luces Altas vs Freno de Mano
+                [
+                    "Luces Altas",
+                    fItem(item.luces_altas_estado, item.luces_altas_detalle),
+                    "Freno de Mano",
+                    fItem(item.freno_mano_estado, item.freno_mano_detalle),
+                ],
+                // Fila 3: Giros vs Cubierta Delantera Izq.
+                [
+                    "Luces de Giro (Guiños)",
+                    fItem(item.luces_giros_estado, item.luces_giros_detalle),
+                    "Cubierta 1 (delantera izquierda)",
+                    fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
+                ],
+                // Fila 4: Balizas vs Cubierta Delantera Der.
+                [
+                    "Balizas (Luces de Emergencia)",
+                    fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
+                    "Cubierta 2 (delantera derecha)",
+                    fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
+                ],
+                // Fila 5: Aceite de Motor vs Cubierta Trasera Izq.
+                [
+                    "Aceite",
+                    fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
+                    "Cubierta 3 (trasera izquierda)",
+                    fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
+                ],
+                // Fila 6: Refrigerante / Agua vs Cubierta Trasera Der.
+                [
+                    "Agua / Refrigerante",
+                    fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
+                    "Cubierta 4 (trasera derecha)",
+                    fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
+                ],
+                // Fila 7: Matafuego vs Escobillas Delanteras
+                [
+                    "Matafuego",
+                    fItem(
+                        item.seguridad_matafuego_estado,
+                        item.seguridad_matafuego_detalle,
+                    ),
+                    "Escobillas Limpiaparabrisas (delanteras)",
+                    fItem(
+                        item.escobillas_delanteras_estado,
+                        item.escobillas_delanteras_detalle,
+                    ),
+                ],
+                // Fila 8: Balizas de Emergencia vs Escobilla Trasera
+                [
+                    "Balizas (Portátiles / Triángulos)",
+                    fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle),
+                    "Escobilla Limpiaparabrisas (trasera)",
+                    fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle),
+                ],
+                // Fila 9: Cédula del Automotor vs Póliza de Seguro
+                [
+                    "Cédula de Identificación (Verde)",
+                    fItem(item.doc_cedula_estado, item.doc_cedula_detalle),
+                    "Comprobante de Seguro Vigente (Póliza / Tarjeta)",
+                    fItem(item.doc_seguro_estado, item.doc_seguro_detalle),
+                ],
+                // Fila 10: VTV / RTO
+                [
+                    "Verificación Técnica Vehicular (VTV / RTO) Vigente",
+                    fItem(item.doc_vtv_estado, item.doc_vtv_detalle),
+                    "-",
+                    "-",
+                ],
             ];
 
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 4,
-                head: [["SISTEMA / FLUIDOS", "ESTADO", "RODADO / SEGURIDAD", "ESTADO"]],
-                body: checklistData,
+                startY: doc.lastAutoTable.finalY + 3.5,
+                head: [
+                    ["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"],
+                ],
+                body: checklistCompleto,
                 theme: "striped",
-                headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
-                styles: { fontSize: 7.5, cellPadding: 2 },
+                headStyles: {
+                    fillColor: [51, 65, 85],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                    fontSize: 7.5,
+                },
+                styles: { fontSize: 7, cellPadding: 1.8, textColor: [30, 41, 59] },
                 columnStyles: {
                     0: { fontStyle: "bold", cellWidth: 42 },
                     1: { cellWidth: 51 },
                     2: { fontStyle: "bold", cellWidth: 42 },
-                    3: { cellWidth: 51 }
+                    3: { cellWidth: 51 },
                 },
                 didParseCell: function (data) {
-                    // Si una celda tiene alerta de REVISAR, la teñimos de rojo/naranja
-                    if ((data.column.index === 1 || data.column.index === 3) && data.cell.raw && data.cell.raw.toString().includes("REVISAR")) {
-                        data.cell.styles.textColor = [185, 28, 28];
-                        data.cell.styles.fontStyle = "bold";
+                    // Evaluamos solo las columnas de estado (índices 1 y 3)
+                    if ((data.column.index === 1 || data.column.index === 3) && data.cell.raw) {
+                        const val = data.cell.raw.toString().trim();
+
+                        if (val.startsWith("REVISAR")) {
+                            // Rojo sobrio para alertas
+                            data.cell.styles.textColor = [185, 28, 28];
+                            data.cell.styles.fontStyle = "bold";
+                        } else if (val === "OK") {
+                            // Verde institucional para ítems aprobados
+                            data.cell.styles.textColor = [21, 128, 61];
+                            data.cell.styles.fontStyle = "bold";
+                        }
                     }
-                }
+                },
             });
 
-            // --- BLOQUE 3: HISTORIAL DE MANTENIMIENTO ---
-            const mantData = [
-                ["Batería", item.bateria_ultimo_cambio || "-", item.bateria_proximo_control || "-"],
-                ["Lavado Integral", item.lavado_ultimo || "-", item.lavado_proximo || "-"],
-                ["Service Integral (Filtros y Aceite)", item.service_ultimo || "-", item.service_proximo || "-"]
+            // --- BLOQUE 3: HISTORIAL Y PROGRAMACIÓN DE MANTENIMIENTO ---
+            const mantenimientos = [
+                [
+                    "Control de Batería",
+                    formatearFechaCorta(item.fecha_ult_bateria),
+                    formatearFechaCorta(item.fecha_prox_bateria),
+                ],
+                [
+                    "Lavado de Unidad",
+                    formatearFechaCorta(item.fecha_ult_lavado),
+                    formatearFechaCorta(item.fecha_prox_lavado),
+                ],
+                [
+                    "Service Mecánico",
+                    formatearFechaCorta(item.fecha_ult_service),
+                    formatearFechaCorta(item.fecha_prox_service),
+                ],
             ];
 
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 4,
-                head: [["MANTENIMIENTO PROGRAMADO", "ÚLTIMO REALIZADO", "PRÓXIMO CONTROL"]],
-                body: mantData,
+                startY: doc.lastAutoTable.finalY + 3.5,
+                head: [
+                    [
+                        "CONTROL DE MANTENIMIENTO",
+                        "ÚLTIMO REALIZADO",
+                        "PRÓXIMO PROGRAMADO",
+                    ],
+                ],
+                body: mantenimientos,
                 theme: "plain",
-                headStyles: { fillColor: [71, 85, 105], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
-                styles: { fontSize: 7.5, cellPadding: 2, textColor: [30, 41, 59] },
+                headStyles: {
+                    fillColor: [71, 85, 105],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                    fontSize: 7.5,
+                },
+                styles: { fontSize: 7.5, cellPadding: 1.8, textColor: [30, 41, 59] },
                 tableLineColor: [203, 213, 225],
-                tableLineWidth: 0.2
+                tableLineWidth: 0.2,
             });
 
-            // --- BLOQUE 4: OBSERVACIONES GENERALES ---
-            const yObservaciones = doc.lastAutoTable.finalY + 4;
+            // --- BLOQUE 4: OBSERVACIONES GENERALES DE LA UNIDAD ---
+            const yObs = doc.lastAutoTable.finalY + 4;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(8);
             doc.setTextColor(30, 41, 59);
-            doc.text("OBSERVACIONES GENERALES / NOVEDADES ADICIONALES:", 12, yObservaciones);
+            doc.text("Observaciones Generales / Novedades del Vehículo", 12, yObs);
 
-            const obsTexto = item.observaciones_generales && item.observaciones_generales.trim()
-                ? item.observaciones_generales
-                : "Sin novedades adicionales reportadas durante la jornada.";
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
-            doc.setTextColor(71, 85, 105);
-
-            // Rectángulo contenedor para las observaciones
-            doc.setDrawColor(203, 213, 225);
-            doc.setFillColor(248, 250, 252);
-            doc.roundedRect(12, yObservaciones + 2, 186, 16, 1, 1, "FD");
-            doc.text(obsTexto, 14, yObservaciones + 7, { maxWidth: 182 });
-
-            // --- BLOQUE 5: ÁREA DE FIRMA FORMAL AL PIE ---
-            const yPie = 265;
-            doc.setDrawColor(148, 163, 184);
-            doc.setLineDashPattern([1, 1], 0);
-            doc.line(125, yPie, 185, yPie); // Línea punteada de firma
-            doc.setLineDashPattern([], 0);
+            const obsFinal =
+                item.observaciones_generales &&
+                    item.observaciones_generales.toString().trim()
+                    ? item.observaciones_generales.toString().trim()
+                    : "Sin observaciones reportadas.";
 
             doc.setFont("helvetica", "normal");
             doc.setFontSize(7.5);
-            doc.setTextColor(100, 116, 139);
-            doc.text("Firma y Aclaración del Inspector", 132, yPie + 4);
-            doc.setFont("helvetica", "bold");
-            doc.text(item.inspector || "Inspector a Cargo", 132, yPie + 8);
+            doc.setTextColor(71, 85, 105);
+
+            // Cuadro contenedor prolijo hasta el final de la hoja
+            doc.setDrawColor(203, 213, 225);
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(12, yObs + 2, 186, 18, 1, 1, "FD");
+            doc.text(obsFinal, 14, yObs + 7, { maxWidth: 182 });
         });
 
-        // Guardado del archivo
-        const sufijoFecha = tipoReporteActual === "dia"
-            ? document.getElementById("filtroFechaDia").value
-            : document.getElementById("filtroFechaMes").value;
+        // Guardado y descarga del documento
+        const sufijoFecha =
+            tipoReporteActual === "dia"
+                ? document.getElementById("filtroFechaDia").value
+                : document.getElementById("filtroFechaMes").value;
 
         doc.save(`Reporte_Inspeccion_${sufijoFecha}.pdf`);
-
     } catch (err) {
         console.error("Error al exportar:", err);
         alert("Ocurrió un error al procesar el reporte.");
