@@ -2,7 +2,7 @@
 const SCRIPT_URL =
     "https://script.google.com/macros/s/AKfycbwoK_DKWL6-1W3cY207i8rsG79flYGsusOaHtczS1djHXbhmLrCCmsDoqsi2kQcDV5Eng/exec";
 
-const totalSteps = 5;
+const totalSteps = 12;
 let currentStep = 1;
 
 function updateProgress() {
@@ -507,122 +507,108 @@ async function generarReportePDF() {
                 tableLineWidth: 0.2,
             });
 
-            // --- BLOQUE 2: CHECKLIST COMPLETO EN 2 COLUMNAS (11 VISTAS) ---
-            const checklistCompleto = [
-                // Fila 1: Luces Bajas vs Frenos de Servicio
-                [
-                    "Luces Bajas",
-                    fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
-                    "Frenos",
-                    fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
-                ],
-                // Fila 2: Luces Altas vs Freno de Mano
-                [
-                    "Luces Altas",
-                    fItem(item.luces_altas_estado, item.luces_altas_detalle),
-                    "Freno de Mano",
-                    fItem(item.freno_mano_estado, item.freno_mano_detalle),
-                ],
-                // Fila 3: Giros vs Cubierta Delantera Izq.
-                [
-                    "Luces de Giro (Guiños)",
-                    fItem(item.luces_giros_estado, item.luces_giros_detalle),
-                    "Cubierta 1 (delantera izquierda)",
-                    fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
-                ],
-                // Fila 4: Balizas vs Cubierta Delantera Der.
-                [
-                    "Balizas (Luces de Emergencia)",
-                    fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
-                    "Cubierta 2 (delantera derecha)",
-                    fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
-                ],
-                // Fila 5: Aceite de Motor vs Cubierta Trasera Izq.
-                [
-                    "Aceite",
-                    fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
-                    "Cubierta 3 (trasera izquierda)",
-                    fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
-                ],
-                // Fila 6: Refrigerante / Agua vs Cubierta Trasera Der.
-                [
-                    "Agua / Refrigerante",
-                    fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
-                    "Cubierta 4 (trasera derecha)",
-                    fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
-                ],
-                // Fila 7: Matafuego vs Escobillas Delanteras
-                [
-                    "Matafuego",
-                    fItem(
-                        item.seguridad_matafuego_estado,
-                        item.seguridad_matafuego_detalle,
-                    ),
-                    "Escobillas Limpiaparabrisas (delanteras)",
-                    fItem(
-                        item.escobillas_delanteras_estado,
-                        item.escobillas_delanteras_detalle,
-                    ),
-                ],
-                // Fila 8: Balizas de Emergencia vs Escobilla Trasera
-                [
-                    "Balizas (Portátiles / Triángulos)",
-                    fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle),
-                    "Escobilla Limpiaparabrisas (trasera)",
-                    fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle),
-                ],
-                // Fila 9: Cédula del Automotor vs Póliza de Seguro
-                [
-                    "Cédula de Identificación (Verde)",
-                    fItem(item.doc_cedula_estado, item.doc_cedula_detalle),
-                    "Comprobante de Seguro Vigente (Póliza / Tarjeta)",
-                    fItem(item.doc_seguro_estado, item.doc_seguro_detalle),
-                ],
-                // Fila 10: VTV / RTO
-                [
-                    "Verificación Técnica Vehicular (VTV / RTO) Vigente",
-                    fItem(item.doc_vtv_estado, item.doc_vtv_detalle),
-                    "-",
-                    "-",
-                ],
+            // Helper para encabezados de sección que abarcan 2 columnas
+            const headerSeccion = (texto) => ({
+                content: texto,
+                colSpan: 2,
+                styles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", halign: "left" }
+            });
+
+            // --- BLOQUE 2: CHECKLIST EXACTO CON FILA ADICIONAL A LA IZQUIERDA ---
+            const checklistPorVistas = [
+                // Fila 1: Títulos
+                [headerSeccion("INSPECCIÓN DE LUCES"), headerSeccion("ELEMENTOS DE SEGURIDAD")],
+
+                // Fila 2
+                ["Luces Bajas", fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
+                    "Matafuego Reglam.", fItem(item.seguridad_matafuego_estado, item.seguridad_matafuego_detalle)],
+
+                // Fila 3
+                ["Luces Altas", fItem(item.luces_altas_estado, item.luces_altas_detalle),
+                    "Balizas Portátiles", fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle)],
+
+                // Fila 4: Continúa Luces / Título Auxilio
+                ["Luces de Giro (Guiños)", fItem(item.luces_giros_estado || item.luces_giro_estado, item.luces_giros_detalle || item.luces_giro_detalle),
+                    headerSeccion("ELEMENTOS DE AUXILIO")],
+
+                // Fila 5
+                ["Balizas (Emergencia)", fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
+                    "Gato Hidráulico", fItem(item.auxilio_gato_estado, item.auxilio_gato_detalle)],
+
+                // Fila 6: Título Frenos / Continúa Auxilio
+                [headerSeccion("INSPECCIÓN DE FRENOS"),
+                    "Llave Cruz", fItem(item.auxilio_llave_estado, item.auxilio_llave_detalle)],
+
+                // Fila 7
+                ["Frenos de Servicio (Pedal)", fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
+                    "Rueda de Auxilio", fItem(item.auxilio_rueda_estado, item.auxilio_rueda_detalle)],
+
+                // Fila 8: Continúa Frenos / Título Escobillas
+                ["Freno de Mano", fItem(item.freno_mano_estado, item.freno_mano_detalle),
+                    headerSeccion("ESCOBILLAS LIMPIAPARABRISAS")],
+
+                // Fila 9: Título Cubiertas / Continúa Escobillas
+                [headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"),
+                    "Escobillas Delanteras", fItem(item.escobillas_delanteras_estado, item.escobillas_delanteras_detalle)],
+
+                // Fila 10
+                ["Cubierta Delantera Izq.", fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
+                    "Escobilla Trasera", fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle)],
+
+                // Fila 11: Continúa Cubiertas / Título Documentación
+                ["Cubierta Delantera Der.", fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
+                    headerSeccion("DOCUMENTACIÓN OBLIGATORIA")],
+
+                // Fila 12
+                ["Cubierta Trasera Izq.", fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
+                    "Cédula Vehicular", fItem(item.doc_cedula_estado, item.doc_cedula_detalle)],
+
+                // Fila 13
+                ["Cubierta Trasera Der.", fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
+                    "Comprobante de Seguro", fItem(item.doc_seguro_estado, item.doc_seguro_detalle)],
+
+                // Fila 14: Título Fluidos / Continúa Documentación
+                [headerSeccion("INSPECCIÓN DE FLUIDOS"),
+                    "VTV / RTO Vigente", fItem(item.doc_vtv_estado, item.doc_vtv_detalle)],
+
+                // Fila 15: Aceite a la izquierda / Derecha vacía limpia (sin guiones)
+                ["Nivel de Aceite", fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
+                    "", ""],
+
+                // Fila 16: Agua / Refrigerante a la izquierda (FILA NUEVA) / Derecha vacía limpia
+                ["Agua / Refrigerante", fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
+                    "", ""]
             ];
 
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 3.5,
-                head: [
-                    ["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"],
-                ],
-                body: checklistCompleto,
-                theme: "striped",
-                headStyles: {
-                    fillColor: [51, 65, 85],
-                    textColor: [255, 255, 255],
-                    fontStyle: "bold",
-                    fontSize: 7.5,
-                },
-                styles: { fontSize: 7, cellPadding: 1.8, textColor: [30, 41, 59] },
+                startY: doc.lastAutoTable.finalY + 3,
+                margin: { left: 12, right: 12 },
+                tableWidth: 186, // 186 mm calza exacto con el ancho del banner y márgenes
+                head: [["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"]],
+                body: checklistPorVistas,
+                theme: "plain",
+                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7.2 },
+                styles: { fontSize: 6.8, cellPadding: 1.2, textColor: [30, 41, 59] },
+                tableLineColor: [226, 232, 240],
+                tableLineWidth: 0.15,
                 columnStyles: {
-                    0: { fontStyle: "bold", cellWidth: 42 },
-                    1: { cellWidth: 51 },
-                    2: { fontStyle: "bold", cellWidth: 42 },
-                    3: { cellWidth: 51 },
+                    0: { fontStyle: "bold", cellWidth: 43 },
+                    1: { cellWidth: 50 },
+                    2: { fontStyle: "bold", cellWidth: 43 },
+                    3: { cellWidth: 50 }
                 },
                 didParseCell: function (data) {
-                    // Evaluamos solo las columnas de estado (índices 1 y 3)
-                    if ((data.column.index === 1 || data.column.index === 3) && data.cell.raw) {
-                        const val = data.cell.raw.toString().trim();
-
+                    if ((data.column.index === 1 || data.column.index === 3) && data.cell.raw && typeof data.cell.raw === "string") {
+                        const val = data.cell.raw.trim();
                         if (val.startsWith("REVISAR")) {
-                            // Rojo sobrio para alertas
                             data.cell.styles.textColor = [185, 28, 28];
                             data.cell.styles.fontStyle = "bold";
                         } else if (val === "OK") {
-                            // Verde institucional para ítems aprobados
                             data.cell.styles.textColor = [21, 128, 61];
                             data.cell.styles.fontStyle = "bold";
                         }
                     }
-                },
+                }
             });
 
             // --- BLOQUE 3: HISTORIAL Y PROGRAMACIÓN DE MANTENIMIENTO ---
@@ -691,12 +677,18 @@ async function generarReportePDF() {
         });
 
         // Guardado y descarga del documento
-        const sufijoFecha =
-            tipoReporteActual === "dia"
-                ? document.getElementById("filtroFechaDia").value
-                : document.getElementById("filtroFechaMes").value;
+        // Obtener la fecha y hora exacta actual
+        const ahora = new Date();
+        const dia = String(ahora.getDate()).padStart(2, "0");
+        const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+        const anio = ahora.getFullYear();
+        const horas = String(ahora.getHours()).padStart(2, "0");
+        const minutos = String(ahora.getMinutes()).padStart(2, "0");
 
-        doc.save(`Reporte_Inspeccion_${sufijoFecha}.pdf`);
+        // Construcción del nombre final: Reporte_DEA_Inspeccion_DD-MM-YYYY_HH-mm.pdf
+        const nombreArchivo = `Reporte_DEA_Inspeccion_${dia}-${mes}-${anio}_${horas}-${minutos}.pdf`;
+
+        doc.save(nombreArchivo);
     } catch (err) {
         console.error("Error al exportar:", err);
         alert("Ocurrió un error al procesar el reporte.");

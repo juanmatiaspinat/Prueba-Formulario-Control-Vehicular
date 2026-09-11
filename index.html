@@ -498,8 +498,84 @@
                     </div>
                 </div>
 
-                <!-- PASO 8: Inspección de Otros Elementos -->
+                <!-- PASO 8: Inspección de Elementos de Auxilio -->
                 <div class="step" data-step="8">
+                    <h2>Inspección de Elementos de Auxilio</h2>
+                    <p class="sub">Control de herramientas y rueda de auxilio.</p>
+
+                    <div class="checklist-grid">
+
+                        <!-- 1. Gato Hidráulico -->
+                        <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="check-title">Gato Hidráulico</span>
+                                <div class="options-group">
+                                    <input type="radio" name="auxilio_gato_estado" value="OK" id="gato_ok"
+                                        class="radio-pill" checked onchange="toggleObsField('gato_obs_box', false)">
+                                    <label for="gato_ok" class="ok">OK</label>
+
+                                    <input type="radio" name="auxilio_gato_estado" value="Revisar" id="gato_rev"
+                                        class="radio-pill" onchange="toggleObsField('gato_obs_box', true)">
+                                    <label for="gato_rev" class="revisar">Revisar</label>
+                                </div>
+                            </div>
+                            <div class="obs-detail-container" id="gato_obs_box">
+                                <textarea name="auxilio_gato_detalle" rows="2"
+                                    placeholder="Detalle: ej. No funciona, falta palanca, sin fuerza..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 2. Llave Cruz -->
+                        <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="check-title">Llave Cruz</span>
+                                <div class="options-group">
+                                    <input type="radio" name="auxilio_llave_estado" value="OK" id="llave_ok"
+                                        class="radio-pill" checked onchange="toggleObsField('llave_obs_box', false)">
+                                    <label for="llave_ok" class="ok">OK</label>
+
+                                    <input type="radio" name="auxilio_llave_estado" value="Revisar" id="llave_rev"
+                                        class="radio-pill" onchange="toggleObsField('llave_obs_box', true)">
+                                    <label for="llave_rev" class="revisar">Revisar</label>
+                                </div>
+                            </div>
+                            <div class="obs-detail-container" id="llave_obs_box">
+                                <textarea name="auxilio_llave_detalle" rows="2"
+                                    placeholder="Detalle: ej. No es de la medida, zafada, no está en el vehículo..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 3. Rueda de Auxilio -->
+                        <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="check-title">Rueda de Auxilio</span>
+                                <div class="options-group">
+                                    <input type="radio" name="auxilio_rueda_estado" value="OK" id="rueda_aux_ok"
+                                        class="radio-pill" checked
+                                        onchange="toggleObsField('rueda_aux_obs_box', false)">
+                                    <label for="rueda_aux_ok" class="ok">OK</label>
+
+                                    <input type="radio" name="auxilio_rueda_estado" value="Revisar" id="rueda_aux_rev"
+                                        class="radio-pill" onchange="toggleObsField('rueda_aux_obs_box', true)">
+                                    <label for="rueda_aux_rev" class="revisar">Revisar</label>
+                                </div>
+                            </div>
+                            <div class="obs-detail-container" id="rueda_aux_obs_box">
+                                <textarea name="auxilio_rueda_detalle" rows="2"
+                                    placeholder="Detalle: ej. Desinflada, lisa/sin dibujo, pinchada..."></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="prevStep(8)">Atrás</button>
+                        <button type="button" class="btn-primary" onclick="nextStep(8)">Siguiente</button>
+                    </div>
+                </div>
+
+                <!-- PASO 9: Inspección de Otros Elementos -->
+                <div class="step" data-step="9">
                     <h2>Inspección de Otros Elementos</h2>
                     <p class="sub">Control del estado y barrido de limpiaparabrisas.</p>
 
@@ -551,13 +627,13 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn-secondary" onclick="prevStep(8)">Atrás</button>
-                        <button type="button" class="btn-primary" onclick="nextStep(8)">Siguiente</button>
+                        <button type="button" class="btn-secondary" onclick="prevStep(9)">Atrás</button>
+                        <button type="button" class="btn-primary" onclick="nextStep(9)">Siguiente</button>
                     </div>
                 </div>
 
-                <!-- PASO 9: Inspección de la Documentación -->
-                <div class="step" data-step="9">
+                <!-- PASO 10: Inspección de la Documentación -->
+                <div class="step" data-step="10">
                     <h2>Inspección de la Documentación</h2>
                     <p class="sub">Control de papeles reglamentarios para circular.</p>
 
@@ -623,13 +699,13 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn-secondary" onclick="prevStep(9)">Atrás</button>
-                        <button type="button" class="btn-primary" onclick="nextStep(9)">Siguiente</button>
+                        <button type="button" class="btn-secondary" onclick="prevStep(10)">Atrás</button>
+                        <button type="button" class="btn-primary" onclick="nextStep(10)">Siguiente</button>
                     </div>
                 </div>
 
-                <!-- PASO 10: Control de Fechas de Mantenimiento -->
-                <div class="step" data-step="10">
+                <!-- PASO 11: Control de Fechas de Mantenimiento -->
+                <div class="step" data-step="11">
                     <h2>Fechas de Mantenimiento</h2>
                     <p class="sub">Historial y próximos controles programados.</p>
 
@@ -695,13 +771,13 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn-secondary" onclick="prevStep(10)">Atrás</button>
-                        <button type="button" class="btn-primary" onclick="nextStep(10)">Siguiente</button>
+                        <button type="button" class="btn-secondary" onclick="prevStep(11)">Atrás</button>
+                        <button type="button" class="btn-primary" onclick="nextStep(11)">Siguiente</button>
                     </div>
                 </div>
 
-                <!-- PASO 11: Cierre y Observaciones Generales -->
-                <div class="step" data-step="11">
+                <!-- PASO 12: Cierre y Observaciones Generales -->
+                <div class="step" data-step="12">
                     <h2>Cierre de Inspección</h2>
                     <p class="sub">Comentarios adicionales y confirmación final.</p>
 
@@ -712,7 +788,7 @@
                     </div>
 
                     <div class="btn-group">
-                        <button type="button" class="btn-secondary" onclick="prevStep(11)">Atrás</button>
+                        <button type="button" class="btn-secondary" onclick="prevStep(12)">Atrás</button>
                         <button type="submit" class="btn-primary" id="btnSubmit">Finalizar y Guardar Inspección</button>
                     </div>
                 </div>
