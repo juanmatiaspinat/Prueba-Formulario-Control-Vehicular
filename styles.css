@@ -581,3 +581,62 @@ select:focus {
     cursor: not-allowed;
     border-color: #1e293b !important;
 }
+
+/* Espaciado del grupo para alinear los dos lados */
+.km-service-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.km-service-group .group-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.sub-km-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sub-km-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.3px;
+}
+
+/* Alinea la base del botón 'Hoy' exactamente con la segunda caja de KMS */
+.sub-btn-fill {
+    margin-top: auto;
+}
+
+.btn-service-hoy {
+    width: 100%;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.input-km-readonly {
+    background: #0f172a !important;
+    color: #38bdf8 !important;
+    font-weight: 700;
+    cursor: not-allowed;
+    border-color: #1e293b !important;
+}
+
+/* Indicador de último registro previo */
+.last-record-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.7rem;
+    color: #38bdf8;
+    font-style: italic;
+}

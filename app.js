@@ -23,10 +23,23 @@ function nextStep(step) {
 
     currentContainer.classList.remove("active");
     currentStep = step + 1;
-    document
-        .querySelector(`.step[data-step="${currentStep}"]`)
-        .classList.add("active");
-    updateProgress();
+
+    const nextContainer = document.querySelector(`.step[data-step="${currentStep}"]`);
+    if (nextContainer) {
+        nextContainer.classList.add("active");
+        updateProgress();
+
+        // Precarga en el Paso 11 (Fechas de Mantenimiento)
+        if (currentStep === 11) {
+            setTimeout(() => {
+                try {
+                    precargarMantenimientoPrevio();
+                } catch (err) {
+                    console.error("Error al precargar mantenimiento:", err);
+                }
+            }, 50);
+        }
+    }
 }
 
 function prevStep(step) {
@@ -49,6 +62,8 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
     const form = e.target;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
+
+    guardarMantenimientoActual();
 
     try {
         // Envío compatible 100% con Google Apps Script sin bloqueos de red
@@ -511,83 +526,161 @@ async function generarReportePDF() {
             const headerSeccion = (texto) => ({
                 content: texto,
                 colSpan: 2,
-                styles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: "bold", halign: "left" }
+                styles: {
+                    fillColor: [241, 245, 249],
+                    textColor: [30, 41, 59],
+                    fontStyle: "bold",
+                    halign: "left",
+                },
             });
 
             // --- BLOQUE 2: CHECKLIST EXACTO CON FILA ADICIONAL A LA IZQUIERDA ---
             const checklistPorVistas = [
                 // Fila 1: Títulos
-                [headerSeccion("INSPECCIÓN DE LUCES"), headerSeccion("ELEMENTOS DE SEGURIDAD")],
+                [
+                    headerSeccion("INSPECCIÓN DE LUCES"),
+                    headerSeccion("ELEMENTOS DE SEGURIDAD"),
+                ],
 
                 // Fila 2
-                ["Luces Bajas", fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
-                    "Matafuego Reglam.", fItem(item.seguridad_matafuego_estado, item.seguridad_matafuego_detalle)],
+                [
+                    "Luces Bajas",
+                    fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
+                    "Matafuego Reglam.",
+                    fItem(
+                        item.seguridad_matafuego_estado,
+                        item.seguridad_matafuego_detalle,
+                    ),
+                ],
 
                 // Fila 3
-                ["Luces Altas", fItem(item.luces_altas_estado, item.luces_altas_detalle),
-                    "Balizas Portátiles", fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle)],
+                [
+                    "Luces Altas",
+                    fItem(item.luces_altas_estado, item.luces_altas_detalle),
+                    "Balizas Portátiles",
+                    fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle),
+                ],
 
                 // Fila 4: Continúa Luces / Título Auxilio
-                ["Luces de Giro (Guiños)", fItem(item.luces_giros_estado || item.luces_giro_estado, item.luces_giros_detalle || item.luces_giro_detalle),
-                    headerSeccion("ELEMENTOS DE AUXILIO")],
+                [
+                    "Luces de Giro (Guiños)",
+                    fItem(
+                        item.luces_giros_estado || item.luces_giro_estado,
+                        item.luces_giros_detalle || item.luces_giro_detalle,
+                    ),
+                    headerSeccion("ELEMENTOS DE AUXILIO"),
+                ],
 
                 // Fila 5
-                ["Balizas (Emergencia)", fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
-                    "Gato Hidráulico", fItem(item.auxilio_gato_estado, item.auxilio_gato_detalle)],
+                [
+                    "Balizas (Emergencia)",
+                    fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
+                    "Gato Hidráulico",
+                    fItem(item.auxilio_gato_estado, item.auxilio_gato_detalle),
+                ],
 
                 // Fila 6: Título Frenos / Continúa Auxilio
-                [headerSeccion("INSPECCIÓN DE FRENOS"),
-                    "Llave Cruz", fItem(item.auxilio_llave_estado, item.auxilio_llave_detalle)],
+                [
+                    headerSeccion("INSPECCIÓN DE FRENOS"),
+                    "Llave Cruz",
+                    fItem(item.auxilio_llave_estado, item.auxilio_llave_detalle),
+                ],
 
                 // Fila 7
-                ["Frenos de Servicio (Pedal)", fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
-                    "Rueda de Auxilio", fItem(item.auxilio_rueda_estado, item.auxilio_rueda_detalle)],
+                [
+                    "Frenos de Servicio (Pedal)",
+                    fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
+                    "Rueda de Auxilio",
+                    fItem(item.auxilio_rueda_estado, item.auxilio_rueda_detalle),
+                ],
 
                 // Fila 8: Continúa Frenos / Título Escobillas
-                ["Freno de Mano", fItem(item.freno_mano_estado, item.freno_mano_detalle),
-                    headerSeccion("ESCOBILLAS LIMPIAPARABRISAS")],
+                [
+                    "Freno de Mano",
+                    fItem(item.freno_mano_estado, item.freno_mano_detalle),
+                    headerSeccion("ESCOBILLAS LIMPIAPARABRISAS"),
+                ],
 
                 // Fila 9: Título Cubiertas / Continúa Escobillas
-                [headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"),
-                    "Escobillas Delanteras", fItem(item.escobillas_delanteras_estado, item.escobillas_delanteras_detalle)],
+                [
+                    headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"),
+                    "Escobillas Delanteras",
+                    fItem(
+                        item.escobillas_delanteras_estado,
+                        item.escobillas_delanteras_detalle,
+                    ),
+                ],
 
                 // Fila 10
-                ["Cubierta Delantera Izq.", fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
-                    "Escobilla Trasera", fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle)],
+                [
+                    "Cubierta Delantera Izq.",
+                    fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
+                    "Escobilla Trasera",
+                    fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle),
+                ],
 
                 // Fila 11: Continúa Cubiertas / Título Documentación
-                ["Cubierta Delantera Der.", fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
-                    headerSeccion("DOCUMENTACIÓN OBLIGATORIA")],
+                [
+                    "Cubierta Delantera Der.",
+                    fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
+                    headerSeccion("DOCUMENTACIÓN OBLIGATORIA"),
+                ],
 
                 // Fila 12
-                ["Cubierta Trasera Izq.", fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
-                    "Cédula Vehicular", fItem(item.doc_cedula_estado, item.doc_cedula_detalle)],
+                [
+                    "Cubierta Trasera Izq.",
+                    fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
+                    "Cédula Vehicular",
+                    fItem(item.doc_cedula_estado, item.doc_cedula_detalle),
+                ],
 
                 // Fila 13
-                ["Cubierta Trasera Der.", fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
-                    "Comprobante de Seguro", fItem(item.doc_seguro_estado, item.doc_seguro_detalle)],
+                [
+                    "Cubierta Trasera Der.",
+                    fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
+                    "Comprobante de Seguro",
+                    fItem(item.doc_seguro_estado, item.doc_seguro_detalle),
+                ],
 
                 // Fila 14: Título Fluidos / Continúa Documentación
-                [headerSeccion("INSPECCIÓN DE FLUIDOS"),
-                    "VTV / RTO Vigente", fItem(item.doc_vtv_estado, item.doc_vtv_detalle)],
+                [
+                    headerSeccion("INSPECCIÓN DE FLUIDOS"),
+                    "VTV / RTO Vigente",
+                    fItem(item.doc_vtv_estado, item.doc_vtv_detalle),
+                ],
 
                 // Fila 15: Aceite a la izquierda / Derecha vacía limpia (sin guiones)
-                ["Nivel de Aceite", fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
-                    "", ""],
+                [
+                    "Nivel de Aceite",
+                    fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
+                    "",
+                    "",
+                ],
 
                 // Fila 16: Agua / Refrigerante a la izquierda (FILA NUEVA) / Derecha vacía limpia
-                ["Agua / Refrigerante", fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
-                    "", ""]
+                [
+                    "Agua / Refrigerante",
+                    fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
+                    "",
+                    "",
+                ],
             ];
 
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 3,
                 margin: { left: 12, right: 12 },
                 tableWidth: 186, // 186 mm calza exacto con el ancho del banner y márgenes
-                head: [["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"]],
+                head: [
+                    ["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"],
+                ],
                 body: checklistPorVistas,
                 theme: "plain",
-                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 7.2 },
+                headStyles: {
+                    fillColor: [30, 41, 59],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                    fontSize: 7.2,
+                },
                 styles: { fontSize: 6.8, cellPadding: 1.2, textColor: [30, 41, 59] },
                 tableLineColor: [226, 232, 240],
                 tableLineWidth: 0.15,
@@ -595,10 +688,14 @@ async function generarReportePDF() {
                     0: { fontStyle: "bold", cellWidth: 43 },
                     1: { cellWidth: 50 },
                     2: { fontStyle: "bold", cellWidth: 43 },
-                    3: { cellWidth: 50 }
+                    3: { cellWidth: 50 },
                 },
                 didParseCell: function (data) {
-                    if ((data.column.index === 1 || data.column.index === 3) && data.cell.raw && typeof data.cell.raw === "string") {
+                    if (
+                        (data.column.index === 1 || data.column.index === 3) &&
+                        data.cell.raw &&
+                        typeof data.cell.raw === "string"
+                    ) {
                         const val = data.cell.raw.trim();
                         if (val.startsWith("REVISAR")) {
                             data.cell.styles.textColor = [185, 28, 28];
@@ -608,7 +705,7 @@ async function generarReportePDF() {
                             data.cell.styles.fontStyle = "bold";
                         }
                     }
-                }
+                },
             });
 
             // --- BLOQUE 3: HISTORIAL Y PROGRAMACIÓN DE MANTENIMIENTO ---
@@ -698,15 +795,235 @@ async function generarReportePDF() {
     }
 }
 
-// Calcula automáticamente el próximo service sumando 10.000 km
-function calcularProximoKm(valor) {
+function formatearYCalcularKm(input) {
     const proxInput = document.getElementById("kms_prox_service");
-    if (!proxInput) return;
 
-    const kms = parseInt(valor, 10);
-    if (!isNaN(kms) && kms > 0) {
-        proxInput.value = kms + 10000;
-    } else {
-        proxInput.value = "";
+    // Extrae únicamente los dígitos numéricos
+    const valorLimpio = input.value.replace(/\D/g, "");
+
+    if (!valorLimpio) {
+        input.value = "";
+        if (proxInput) proxInput.value = "";
+        return;
+    }
+
+    const numero = parseInt(valorLimpio, 10);
+
+    // Formatea el input actual con puntos de miles (es-AR)
+    input.value = numero.toLocaleString("es-AR");
+
+    // Calcula y formatea el próximo service (+10.000)
+    if (proxInput) {
+        const proximo = numero + 10000;
+        proxInput.value = proximo.toLocaleString("es-AR");
+    }
+}
+
+// Obtiene el identificador del móvil actual (patente o número de móvil)
+function getVehiculoIdActual() {
+    const movilInput = document.getElementById("movil") || document.getElementById("patente") || document.querySelector("[name='movil']");
+    return movilInput && movilInput.value ? movilInput.value.trim().toUpperCase() : "GENERAL";
+}
+
+// Carga las fechas anteriores guardadas para este vehículo
+function precargarMantenimientoPrevio() {
+    const vehiculoId = getVehiculoIdActual();
+    const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
+    if (!rawData) return;
+
+    try {
+        const data = JSON.parse(rawData);
+
+        // Batería
+        const batInput = document.getElementById("ult_bateria");
+        const hintBat = document.getElementById("hint_bateria");
+        if (batInput && data.fecha_ult_bateria) {
+            batInput.value = data.fecha_ult_bateria;
+            if (hintBat) hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
+        }
+
+        // Lavado
+        const lavInput = document.getElementById("ult_lavado");
+        const hintLav = document.getElementById("hint_lavado");
+        if (lavInput && data.fecha_ult_lavado) {
+            lavInput.value = data.fecha_ult_lavado;
+            if (hintLav) hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
+        }
+
+        // Service
+        const srvInput = document.getElementById("ult_service");
+        const hintSrv = document.getElementById("hint_service");
+        if (srvInput && data.fecha_ult_service) {
+            srvInput.value = data.fecha_ult_service;
+            if (hintSrv) hintSrv.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
+        }
+
+        // Kms
+        const kmInput = document.getElementById("kms_ult_service");
+        if (kmInput && data.kms_ult_service) {
+            kmInput.value = data.kms_ult_service;
+            if (typeof formatearYCalcularKm === "function") {
+                formatearYCalcularKm(kmInput);
+            }
+        }
+    } catch (e) {
+        console.error("Error leyendo datos de mantenimiento:", e);
+    }
+}
+
+// Guarda los valores actuales para que queden fijados en el próximo control
+function guardarMantenimientoActual() {
+    const vehiculoId = getVehiculoIdActual();
+    const datos = {
+        fecha_ult_bateria: document.getElementById("ult_bateria")?.value || "",
+        fecha_ult_lavado: document.getElementById("ult_lavado")?.value || "",
+        fecha_ult_service: document.getElementById("ult_service")?.value || "",
+        kms_ult_service: document.getElementById("kms_ult_service")?.value || "",
+        // Nuevo: Alineado y balanceo
+        fecha_ult_alineado: document.getElementById("ult_alineado")?.value || "",
+        kms_ult_alineado: document.getElementById("kms_ult_alineado")?.value || ""
+    };
+    localStorage.setItem(`mantenimiento_${vehiculoId}`, JSON.stringify(datos));
+}
+
+// Obtiene el identificador del vehículo de forma segura
+function getVehiculoIdActual() {
+    const movilInput = document.getElementById("movil") ||
+        document.getElementById("patente") ||
+        document.querySelector("[name='movil']") ||
+        document.querySelector("[name='patente']");
+    return (movilInput && movilInput.value) ? movilInput.value.trim().toUpperCase() : "GENERAL";
+}
+
+// Carga datos previos sin romper si un elemento no existe
+function precargarMantenimientoPrevio() {
+    const vehiculoId = getVehiculoIdActual();
+    const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
+    if (!rawData) return;
+
+    try {
+        const data = JSON.parse(rawData);
+
+        // Batería
+        const bat = document.getElementById("ult_bateria");
+        const hintBat = document.getElementById("hint_bateria");
+        if (bat && data.fecha_ult_bateria) {
+            bat.value = data.fecha_ult_bateria;
+            if (hintBat) hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
+        }
+
+        // Lavado
+        const lav = document.getElementById("ult_lavado");
+        const hintLav = document.getElementById("hint_lavado");
+        if (lav && data.fecha_ult_lavado) {
+            lav.value = data.fecha_ult_lavado;
+            if (hintLav) hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
+        }
+
+        // Service
+        const srv = document.getElementById("ult_service");
+        const hintSrv = document.getElementById("hint_service");
+        if (srv && data.fecha_ult_service) {
+            srv.value = data.fecha_ult_service;
+            if (hintSrv) hintSrv.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
+        }
+
+        // Kilómetros
+        const kmInput = document.getElementById("kms_ult_service");
+        if (kmInput && data.kms_ult_service) {
+            kmInput.value = data.kms_ult_service;
+            formatearYCalcularKm(kmInput);
+        }
+
+        // Alineado: Fecha
+        const alnInput = document.getElementById("ult_alineado");
+        const hintAln = document.getElementById("hint_alineado");
+        if (alnInput && data.fecha_ult_alineado) {
+            alnInput.value = data.fecha_ult_alineado;
+            calcularProximoAlineadoFecha(data.fecha_ult_alineado);
+            if (hintAln) hintAln.innerText = `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`;
+        }
+
+        // Alineado: Kilómetros
+        const kmAlnInput = document.getElementById("kms_ult_alineado");
+        if (kmAlnInput && data.kms_ult_alineado) {
+            kmAlnInput.value = data.kms_ult_alineado;
+            formatearYCalcularKmAlineado(kmAlnInput);
+        }
+    } catch (e) {
+        console.warn("Aviso al parsear datos de mantenimiento:", e);
+    }
+}
+
+// Formato con punto de miles y suma de 10.000
+function formatearYCalcularKm(input) {
+    if (!input) return;
+    const proxInput = document.getElementById("kms_prox_service");
+    const valorLimpio = input.value.replace(/\D/g, "");
+
+    if (!valorLimpio) {
+        input.value = "";
+        if (proxInput) proxInput.value = "";
+        return;
+    }
+
+    const numero = parseInt(valorLimpio, 10);
+    input.value = numero.toLocaleString("es-AR");
+
+    if (proxInput) {
+        proxInput.value = (numero + 10000).toLocaleString("es-AR");
+    }
+}
+
+// Calcula exactamente 6 meses a partir de la fecha seleccionada
+function calcularProximoAlineadoFecha(fechaStr) {
+    const inputProx = document.getElementById("prox_alineado_fecha");
+    if (!fechaStr || !inputProx) return;
+
+    const partes = fechaStr.split("-"); // AAAA-MM-DD
+    const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+
+    // Suma 6 meses exactos
+    fecha.setMonth(fecha.getMonth() + 6);
+
+    const yyyy = fecha.getFullYear();
+    const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+    const dd = String(fecha.getDate()).padStart(2, "0");
+
+    inputProx.value = `${yyyy}-${mm}-${dd}`;
+}
+
+// Botón Hoy específico para alineado (setea hoy y calcula los 6 meses)
+function setAlineadoHoy() {
+    const inputUlt = document.getElementById("ult_alineado");
+    if (!inputUlt) return;
+
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dd = String(hoy.getDate()).padStart(2, "0");
+    const fechaHoyStr = `${yyyy}-${mm}-${dd}`;
+
+    inputUlt.value = fechaHoyStr;
+    calcularProximoAlineadoFecha(fechaHoyStr);
+}
+
+// Formateo de puntos y suma de 10.000 km para alineado
+function formatearYCalcularKmAlineado(input) {
+    if (!input) return;
+    const proxInput = document.getElementById("kms_prox_alineado");
+    const valorLimpio = input.value.replace(/\D/g, "");
+
+    if (!valorLimpio) {
+        input.value = "";
+        if (proxInput) proxInput.value = "";
+        return;
+    }
+
+    const numero = parseInt(valorLimpio, 10);
+    input.value = numero.toLocaleString("es-AR");
+
+    if (proxInput) {
+        proxInput.value = (numero + 10000).toLocaleString("es-AR");
     }
 }
