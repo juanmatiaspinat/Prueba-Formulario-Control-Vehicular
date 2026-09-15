@@ -719,16 +719,22 @@
                         <div class="maintenance-card-title">🔋 Control de Batería</div>
                         <div class="dates-grid">
                             <div class="date-box">
-                                <label>Último Control</label>
+                                <label>Fecha Compra</label>
                                 <input type="date" id="ult_bateria" name="fecha_ult_bateria">
                                 <button type="button" class="quick-btn"
                                     onclick="setFechaHoy('ult_bateria')">Hoy</button>
                             </div>
                             <div class="date-box">
-                                <label>Próximo Control</label>
-                                <input type="date" id="prox_bateria" name="fecha_prox_bateria">
-                                <button type="button" class="quick-btn"
-                                    onclick="sumarMeses('ult_bateria', 'prox_bateria', 3)">+3 Meses</button>
+                                <label>Necesita Cambio</label>
+                                <div class="cambio-bat-group">
+                                    <input type="radio" name="bateria_necesita_cambio" value="NO" id="bat_no"
+                                        class="radio-pill-bat" checked>
+                                    <label for="bat_no" class="btn-bat-opt btn-bat-no">NO</label>
+
+                                    <input type="radio" name="bateria_necesita_cambio" value="SI" id="bat_si"
+                                        class="radio-pill-bat">
+                                    <label for="bat_si" class="btn-bat-opt btn-bat-si">SI</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -743,10 +749,16 @@
                                 <button type="button" class="quick-btn" onclick="setFechaHoy('ult_lavado')">Hoy</button>
                             </div>
                             <div class="date-box">
-                                <label>Próximo Lavado</label>
-                                <input type="date" id="prox_lavado" name="fecha_prox_lavado">
-                                <button type="button" class="quick-btn"
-                                    onclick="sumarDias('ult_lavado', 'prox_lavado', 15)">+15 Días</button>
+                                <label>Necesita Lavado</label>
+                                <div class="cambio-bat-group">
+                                    <input type="radio" name="unidad_necesita_lavado" value="NO" id="lavado_no"
+                                        class="radio-pill-lavado" checked>
+                                    <label for="lavado_no" class="btn-bat-opt btn-lavado-no">NO</label>
+
+                                    <input type="radio" name="unidad_necesita_lavado" value="SI" id="lavado_si"
+                                        class="radio-pill-lavado">
+                                    <label for="lavado_si" class="btn-bat-opt btn-lavado-si">SI</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -755,17 +767,29 @@
                     <div class="maintenance-card">
                         <div class="maintenance-card-title">🔧 Service Mecánico</div>
                         <div class="dates-grid">
+                            <!-- Columna Izquierda: Fecha de último service -->
                             <div class="date-box">
-                                <label>Último Service</label>
+                                <label>ÚLTIMO SERVICE</label>
                                 <input type="date" id="ult_service" name="fecha_ult_service">
                                 <button type="button" class="quick-btn"
                                     onclick="setFechaHoy('ult_service')">Hoy</button>
                             </div>
-                            <div class="date-box">
-                                <label>Próximo Service</label>
-                                <input type="date" id="prox_service" name="fecha_prox_service">
-                                <button type="button" class="quick-btn"
-                                    onclick="sumarMeses('ult_service', 'prox_service', 6)">+6 Meses</button>
+
+                            <!-- Columna Derecha: Cantidad de KMs con 2 subcampos -->
+                            <div class="date-box km-service-group">
+                                <label class="group-title">CANTIDAD DE KMS</label>
+
+                                <div class="sub-km-box">
+                                    <span class="sub-km-label">Último Service</span>
+                                    <input type="number" id="kms_ult_service" name="kms_ult_service" class="input-km"
+                                        placeholder="Ej. 120000" oninput="calcularProximoKm(this.value)">
+                                </div>
+
+                                <div class="sub-km-box">
+                                    <span class="sub-km-label">Próximo Service (+10.000)</span>
+                                    <input type="number" id="kms_prox_service" name="kms_prox_service"
+                                        class="input-km input-km-readonly" placeholder="130000" readonly>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -442,3 +442,142 @@ select:focus {
 .btn-nav-back:hover {
     color: var(--text);
 }
+
+/* Oculta los radios nativos */
+.radio-pill-bat {
+    display: none;
+}
+
+/* Contenedor compacto alineado con el botón Hoy */
+.cambio-bat-group {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+/* Botones NO / SI con altura y padding optimizados para celular */
+.btn-bat-opt {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+/* Estado NO seleccionado (Tono rojo) */
+#bat_no:checked+.btn-bat-no {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+/* Estado SI seleccionado (Tono naranja de advertencia) */
+#bat_si:checked+.btn-bat-si {
+    background: #16a34a;
+    border-color: #15803d;
+    color: #ffffff;
+}
+
+/* Para que los botones 'Hoy' y 'Meses' no sean excesivamente altos/anchos en mobile */
+@media (max-width: 480px) {
+    .quick-btn {
+        padding: 7px 4px;
+        font-size: 0.78rem;
+    }
+}
+
+/* Oculta los radios de lavado */
+.radio-pill-lavado {
+    display: none;
+}
+
+/* NO seleccionado (Tono rojo idéntico al de batería) */
+#lavado_no:checked+.btn-lavado-no {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+/* SI seleccionado (Tono VERDE) */
+#lavado_si:checked+.btn-lavado-si {
+    background: #16a34a;
+    border-color: #15803d;
+    color: #ffffff;
+}
+
+/* Ajuste de grilla para 4 cajas con espacio vertical */
+.dates-grid-service {
+    row-gap: 12px;
+}
+
+/* Estilo para los campos de kilómetros */
+.date-box .input-km {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #f8fafc;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.date-box .input-km:focus {
+    border-color: #3b82f6;
+}
+
+/* Opcional: Oculta las flechitas por defecto de los inputs number */
+.date-box .input-km::-webkit-outer-spin-button,
+.date-box .input-km::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.date-box .input-km {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Agrupador de kilómetros */
+.km-service-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.km-service-group .group-title {
+    margin-bottom: 2px;
+}
+
+/* Sub-bloque con etiqueta pequeña */
+.sub-km-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sub-km-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.3px;
+}
+
+/* Input bloqueado con estilo sutil */
+.input-km-readonly {
+    background: #0f172a !important;
+    color: #38bdf8 !important;
+    font-weight: 700;
+    cursor: not-allowed;
+    border-color: #1e293b !important;
+}

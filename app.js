@@ -697,3 +697,16 @@ async function generarReportePDF() {
         if (loader) loader.style.display = "none";
     }
 }
+
+// Calcula automáticamente el próximo service sumando 10.000 km
+function calcularProximoKm(valor) {
+    const proxInput = document.getElementById("kms_prox_service");
+    if (!proxInput) return;
+
+    const kms = parseInt(valor, 10);
+    if (!isNaN(kms) && kms > 0) {
+        proxInput.value = kms + 10000;
+    } else {
+        proxInput.value = "";
+    }
+}
