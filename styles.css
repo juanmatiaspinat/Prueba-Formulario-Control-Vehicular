@@ -640,3 +640,61 @@ select:focus {
     color: #38bdf8;
     font-style: italic;
 }
+
+/* Responsive para vista de Mantenimiento en celulares */
+@media (max-width: 600px) {
+    .maintenance-card {
+        padding: 12px;
+        margin-bottom: 14px;
+    }
+
+    .dates-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .date-box,
+    .km-service-group {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Ajusta los campos internos a ancho total */
+    .sub-km-box {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 4px;
+    }
+
+    .sub-km-box input,
+    .date-box input[type="date"],
+    .date-box input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px;
+        /* Evita zoom automático molesto en iOS */
+    }
+
+    /* Botón Hoy y botones de acción a pantalla completa */
+    .quick-btn,
+    .btn-service-hoy {
+        width: 100%;
+        height: 38px;
+        margin-top: 4px;
+    }
+
+    /* Opciones de SI / NO bien accesibles para el dedo */
+    .cambio-bat-group {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .cambio-bat-group .btn-bat-opt {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+    }
+}
