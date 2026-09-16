@@ -105,13 +105,16 @@
                     <!-- 1. Kilometraje Actual -->
                     <div class="input-group">
                         <label>Kilometraje Actual</label>
-                        <input type="number" name="kilometraje" placeholder="Ej: 145000" min="0" required />
+                        <input type="text" inputmode="numeric" id="kilometraje" name="kilometraje"
+                            placeholder="Ej: 145.000" oninput="formatearKmSimple(this)" onfocus="this.select()"
+                            required />
+                        <span class="last-record-hint" id="hint_kilometraje"></span>
                     </div>
 
                     <!-- 2. Nivel de Combustible -->
                     <div class="input-group">
                         <label>Nivel de Combustible</label>
-                        <select name="combustible" required>
+                        <select id="combustible" name="combustible" required>
                             <option value="">Seleccionar nivel...</option>
                             <option value="Lleno (100%)">Lleno (100%)</option>
                             <option value="3/4 (75%)">3/4 (75%)</option>
@@ -119,17 +122,19 @@
                             <option value="1/4 (25%)">1/4 (25%)</option>
                             <option value="Reserva (20% o menos)">Reserva (20% o menos)</option>
                         </select>
+                        <span class="last-record-hint" id="hint_combustible"></span>
                     </div>
 
                     <!-- 3. Estado de la Batería -->
                     <div class="input-group">
                         <label>Estado de la Batería</label>
-                        <select name="estado_bateria" required>
+                        <select id="estado_bateria" name="estado_bateria" required>
                             <option value="">Seleccionar estado...</option>
                             <option value="Bien">Bien</option>
                             <option value="Con poca carga">Con poca carga</option>
                             <option value="Mal">Mal</option>
                         </select>
+                        <span class="last-record-hint" id="hint_estado_bateria"></span>
                     </div>
 
                     <div class="btn-group">

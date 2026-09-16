@@ -29,6 +29,13 @@ function nextStep(step) {
         nextContainer.classList.add("active");
         updateProgress();
 
+        // Precarga en el Paso 2 (Inspección General)
+        if (currentStep === 2) {
+            setTimeout(() => {
+                precargarInspeccionGeneralPrevio();
+            }, 50);
+        }
+
         // Precarga en el Paso 11 (Fechas de Mantenimiento)
         if (currentStep === 11) {
             setTimeout(() => {
@@ -64,6 +71,7 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
     const data = Object.fromEntries(formData.entries());
 
     guardarMantenimientoActual();
+    guardarInspeccionGeneralActual();
 
     try {
         // Envío compatible 100% con Google Apps Script sin bloqueos de red
@@ -955,6 +963,50 @@ function precargarMantenimientoPrevio() {
     }
 }
 
+// Guarda los valores de Inspección General vinculados al vehículo actual
+function guardarInspeccionGeneralActual() {
+    const vehiculoId = getVehiculoIdActual();
+    const datos = {
+        kilometraje: document.getElementById("kilometraje")?.value || "",
+        combustible: document.getElementById("combustible")?.value || "",
+        estado_bateria: document.getElementById("estado_bateria")?.value || ""
+    };
+    localStorage.setItem(`inspeccion_general_${vehiculoId}`, JSON.stringify(datos));
+}
+
+// Precarga los valores guardados en los inputs y muestra las leyendas "Anterior: ..."
+function precargarInspeccionGeneralPrevio() {
+    const vehiculoId = getVehiculoIdActual();
+    const rawData = localStorage.getItem(`inspeccion_general_${vehiculoId}`);
+    if (!rawData) return;
+
+    try {
+        const data = JSON.parse(rawData);
+
+        // 1. Kilometraje: precarga el input y arma la leyenda en celeste
+        const kmInput = document.getElementById("kilometraje");
+        const hintKm = document.getElementById("hint_kilometraje");
+        if (data.kilometraje) {
+            if (kmInput) kmInput.value = data.kilometraje;
+            if (hintKm) hintKm.innerText = `Anterior: ${data.kilometraje} km`;
+        }
+
+        // 2. Combustible: arma la leyenda en celeste
+        const hintComb = document.getElementById("hint_combustible");
+        if (hintComb && data.combustible) {
+            hintComb.innerText = `Anterior: ${data.combustible}`;
+        }
+
+        // 3. Estado de la Batería: arma la leyenda en celeste
+        const hintBat = document.getElementById("hint_estado_bateria");
+        if (hintBat && data.estado_bateria) {
+            hintBat.innerText = `Anterior: ${data.estado_bateria}`;
+        }
+    } catch (err) {
+        console.error("Error al precargar inspección general:", err);
+    }
+}
+
 // Formato con punto de miles y suma de 10.000
 function formatearYCalcularKm(input) {
     if (!input) return;
@@ -1026,4 +1078,15 @@ function formatearYCalcularKmAlineado(input) {
     if (proxInput) {
         proxInput.value = (numero + 10000).toLocaleString("es-AR");
     }
+}
+
+// Formatea con puntos de miles el kilometraje ingresado
+function formatearKmSimple(input) {
+    if (!input) return;
+    const valorLimpio = input.value.replace(/\D/g, "");
+    if (!valorLimpio) {
+        input.value = "";
+        return;
+    }
+    input.value = parseInt(valorLimpio, 10).toLocaleString("es-AR");
 }
