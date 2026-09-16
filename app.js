@@ -63,35 +63,55 @@ function prevStep(step) {
 document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = document.getElementById("btnSubmit");
-    btn.disabled = true;
-    btn.innerText = "Guardando en planilla...";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Guardando en planilla...";
+    }
 
     const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
 
+    // 1. Extracción exhaustiva de todos los controles del formulario
+    const data = {};
+    const elementos = form.querySelectorAll("input, select, textarea");
+    elementos.forEach((el) => {
+        if (!el.name) return;
+
+        if (el.type === "checkbox") {
+            data[el.name] = el.checked ? (el.value || "SI") : "NO";
+        } else if (el.type === "radio") {
+            if (el.checked) {
+                data[el.name] = el.value;
+            } else if (!data[el.name]) {
+                data[el.name] = "";
+            }
+        } else {
+            data[el.name] = el.value !== undefined ? el.value.trim() : "";
+        }
+    });
+
+    // 2. Persistencia local por vehículo
     guardarMantenimientoActual();
     guardarInspeccionGeneralActual();
 
+    // 3. Verificación en consola (F12) para chequear cada clave antes de enviar
+    console.log("DATOS COMPLETOS SALIENDO A GOOGLE SHEETS:", data);
+
     try {
-        // Envío compatible 100% con Google Apps Script sin bloqueos de red
         await fetch(SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
             body: JSON.stringify(data),
         });
 
-        // 1. Ocultamos el formulario
         form.style.display = "none";
-
-        // 2. Buscamos el contenedor de éxito
         const feedback = document.getElementById("feedbackMsg");
-        if (feedback) {
-            feedback.style.display = "block";
-        }
+        if (feedback) feedback.style.display = "block";
+
     } catch (err) {
         console.error("Error capturado:", err);
-        // Aunque salte un falso error en la consola, si la planilla guardó, mostramos el éxito
         form.style.display = "none";
         const feedback = document.getElementById("feedbackMsg");
         if (feedback) feedback.style.display = "block";
@@ -896,71 +916,89 @@ function guardarMantenimientoActual() {
 
 // Obtiene el identificador del vehículo de forma segura
 function getVehiculoIdActual() {
-    const movilInput = document.getElementById("movil") ||
-        document.getElementById("patente") ||
-        document.querySelector("[name='movil']") ||
-        document.querySelector("[name='patente']");
-    return (movilInput && movilInput.value) ? movilInput.value.trim().toUpperCase() : "GENERAL";
+    // Busca el select o input donde elegís el vehículo/modelo
+    const input = document.querySelector("[name='vehiculo']") ||
+        document.getElementById("vehiculo") ||
+        document.querySelector("[name='patente']") ||
+        document.getElementById("patente");
+
+    if (input && input.value && input.value.trim() !== "") {
+        // Normaliza el texto sacando espacios extras y pasando a mayúsculas
+        return input.value.trim().toUpperCase().replace(/\s+/g, "_");
+    }
+    return "SIN_VEHICULO";
 }
 
 // Carga datos previos sin romper si un elemento no existe
 function precargarMantenimientoPrevio() {
     const vehiculoId = getVehiculoIdActual();
+    if (vehiculoId === "SIN_VEHICULO") return;
+
     const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
-    if (!rawData) return;
 
-    try {
-        const data = JSON.parse(rawData);
+    // Elementos del DOM
+    const batInput = document.getElementById("ult_bateria");
+    const hintBat = document.getElementById("hint_bateria");
+    const lavInput = document.getElementById("ult_lavado");
+    const hintLav = document.getElementById("hint_lavado");
+    const servInput = document.getElementById("ult_service");
+    const hintServ = document.getElementById("hint_service");
+    const kmServInput = document.getElementById("kms_ult_service");
+    const kmProxServ = document.getElementById("kms_prox_service");
+    const alnInput = document.getElementById("ult_alineado");
+    const hintAln = document.getElementById("hint_alineado");
+    const kmAlnInput = document.getElementById("kms_ult_alineado");
+    const kmProxAln = document.getElementById("kms_prox_alineado");
 
-        // Batería
-        const bat = document.getElementById("ult_bateria");
-        const hintBat = document.getElementById("hint_bateria");
-        if (bat && data.fecha_ult_bateria) {
-            bat.value = data.fecha_ult_bateria;
-            if (hintBat) hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
+    if (rawData) {
+        try {
+            const data = JSON.parse(rawData);
+
+            // Batería
+            if (batInput) batInput.value = data.fecha_ult_bateria || "";
+            if (hintBat) hintBat.innerText = data.fecha_ult_bateria ? `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}` : "";
+
+            // Lavado
+            if (lavInput) lavInput.value = data.fecha_ult_lavado || "";
+            if (hintLav) hintLav.innerText = data.fecha_ult_lavado ? `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}` : "";
+
+            // Service
+            if (servInput) servInput.value = data.fecha_ult_service || "";
+            if (hintServ) hintServ.innerText = data.fecha_ult_service ? `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}` : "";
+            if (kmServInput) {
+                kmServInput.value = data.kms_ult_service || "";
+                if (typeof formatearYCalcularKmService === "function") formatearYCalcularKmService(kmServInput);
+            }
+
+            // Alineado
+            if (alnInput) {
+                alnInput.value = data.fecha_ult_alineado || "";
+                if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(data.fecha_ult_alineado);
+            }
+            if (hintAln) hintAln.innerText = data.fecha_ult_alineado ? `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}` : "";
+            if (kmAlnInput) {
+                kmAlnInput.value = data.kms_ult_alineado || "";
+                if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
+            }
+            return;
+        } catch (e) {
+            console.error("Error al parsear mantenimiento:", e);
         }
-
-        // Lavado
-        const lav = document.getElementById("ult_lavado");
-        const hintLav = document.getElementById("hint_lavado");
-        if (lav && data.fecha_ult_lavado) {
-            lav.value = data.fecha_ult_lavado;
-            if (hintLav) hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
-        }
-
-        // Service
-        const srv = document.getElementById("ult_service");
-        const hintSrv = document.getElementById("hint_service");
-        if (srv && data.fecha_ult_service) {
-            srv.value = data.fecha_ult_service;
-            if (hintSrv) hintSrv.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
-        }
-
-        // Kilómetros
-        const kmInput = document.getElementById("kms_ult_service");
-        if (kmInput && data.kms_ult_service) {
-            kmInput.value = data.kms_ult_service;
-            formatearYCalcularKm(kmInput);
-        }
-
-        // Alineado: Fecha
-        const alnInput = document.getElementById("ult_alineado");
-        const hintAln = document.getElementById("hint_alineado");
-        if (alnInput && data.fecha_ult_alineado) {
-            alnInput.value = data.fecha_ult_alineado;
-            calcularProximoAlineadoFecha(data.fecha_ult_alineado);
-            if (hintAln) hintAln.innerText = `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`;
-        }
-
-        // Alineado: Kilómetros
-        const kmAlnInput = document.getElementById("kms_ult_alineado");
-        if (kmAlnInput && data.kms_ult_alineado) {
-            kmAlnInput.value = data.kms_ult_alineado;
-            formatearYCalcularKmAlineado(kmAlnInput);
-        }
-    } catch (e) {
-        console.warn("Aviso al parsear datos de mantenimiento:", e);
     }
+
+    // SI NO HAY DATOS PARA ESTE AUTO: Limpieza total
+    if (batInput) batInput.value = "";
+    if (hintBat) hintBat.innerText = "";
+    if (lavInput) lavInput.value = "";
+    if (hintLav) hintLav.innerText = "";
+    if (servInput) servInput.value = "";
+    if (hintServ) hintServ.innerText = "";
+    if (kmServInput) kmServInput.value = "";
+    if (kmProxServ) kmProxServ.value = "";
+    if (alnInput) alnInput.value = "";
+    if (hintAln) hintAln.innerText = "";
+    if (kmAlnInput) kmAlnInput.value = "";
+    if (kmProxAln) kmProxAln.value = "";
 }
 
 // Guarda los valores de Inspección General vinculados al vehículo actual
@@ -977,34 +1015,45 @@ function guardarInspeccionGeneralActual() {
 // Precarga los valores guardados en los inputs y muestra las leyendas "Anterior: ..."
 function precargarInspeccionGeneralPrevio() {
     const vehiculoId = getVehiculoIdActual();
+    const kmInput = document.getElementById("kilometraje");
+    const hintKm = document.getElementById("hint_kilometraje");
+    const combSelect = document.getElementById("combustible");
+    const hintComb = document.getElementById("hint_combustible");
+    const batSelect = document.getElementById("estado_bateria");
+    const hintBat = document.getElementById("hint_estado_bateria");
+
+    if (vehiculoId === "SIN_VEHICULO") return;
+
     const rawData = localStorage.getItem(`inspeccion_general_${vehiculoId}`);
-    if (!rawData) return;
 
-    try {
-        const data = JSON.parse(rawData);
+    if (rawData) {
+        try {
+            const data = JSON.parse(rawData);
 
-        // 1. Kilometraje: precarga el input y arma la leyenda en celeste
-        const kmInput = document.getElementById("kilometraje");
-        const hintKm = document.getElementById("hint_kilometraje");
-        if (data.kilometraje) {
-            if (kmInput) kmInput.value = data.kilometraje;
-            if (hintKm) hintKm.innerText = `Anterior: ${data.kilometraje} km`;
+            // Kilometraje
+            if (kmInput) kmInput.value = data.kilometraje || "";
+            if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "";
+
+            // Combustible
+            if (combSelect) combSelect.value = data.combustible || "";
+            if (hintComb) hintComb.innerText = data.combustible ? `Anterior: ${data.combustible}` : "";
+
+            // Batería
+            if (batSelect) batSelect.value = data.estado_bateria || "";
+            if (hintBat) hintBat.innerText = data.estado_bateria ? `Anterior: ${data.estado_bateria}` : "";
+            return;
+        } catch (err) {
+            console.error("Error al parsear datos de inspección:", err);
         }
-
-        // 2. Combustible: arma la leyenda en celeste
-        const hintComb = document.getElementById("hint_combustible");
-        if (hintComb && data.combustible) {
-            hintComb.innerText = `Anterior: ${data.combustible}`;
-        }
-
-        // 3. Estado de la Batería: arma la leyenda en celeste
-        const hintBat = document.getElementById("hint_estado_bateria");
-        if (hintBat && data.estado_bateria) {
-            hintBat.innerText = `Anterior: ${data.estado_bateria}`;
-        }
-    } catch (err) {
-        console.error("Error al precargar inspección general:", err);
     }
+
+    // SI NO HAY DATOS PARA ESTE VEHÍCULO: Resetear para no arrastrar los del otro
+    if (kmInput) kmInput.value = "";
+    if (hintKm) hintKm.innerText = "";
+    if (combSelect) combSelect.value = "";
+    if (hintComb) hintComb.innerText = "";
+    if (batSelect) batSelect.value = "";
+    if (hintBat) hintBat.innerText = "";
 }
 
 // Formato con punto de miles y suma de 10.000
@@ -1090,3 +1139,21 @@ function formatearKmSimple(input) {
     }
     input.value = parseInt(valorLimpio, 10).toLocaleString("es-AR");
 }
+
+// ==========================================
+// ESCUCHAR CAMBIO DE VEHÍCULO EN PASO 1
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    const selectorVehiculo = document.querySelector("[name='vehiculo']") ||
+        document.querySelector("[name='patente']") ||
+        document.getElementById("vehiculo") ||
+        document.getElementById("patente");
+
+    if (selectorVehiculo) {
+        selectorVehiculo.addEventListener("change", () => {
+            // Cada vez que cambia el auto en el menú, actualiza o limpia los datos
+            precargarInspeccionGeneralPrevio();
+            precargarMantenimientoPrevio();
+        });
+    }
+});
