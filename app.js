@@ -24,7 +24,9 @@ function nextStep(step) {
     currentContainer.classList.remove("active");
     currentStep = step + 1;
 
-    const nextContainer = document.querySelector(`.step[data-step="${currentStep}"]`);
+    const nextContainer = document.querySelector(
+        `.step[data-step="${currentStep}"]`,
+    );
     if (nextContainer) {
         nextContainer.classList.add("active");
         updateProgress();
@@ -77,7 +79,7 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
         if (!el.name) return;
 
         if (el.type === "checkbox") {
-            data[el.name] = el.checked ? (el.value || "SI") : "NO";
+            data[el.name] = el.checked ? el.value || "SI" : "NO";
         } else if (el.type === "radio") {
             if (el.checked) {
                 data[el.name] = el.value;
@@ -101,7 +103,7 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
             method: "POST",
             mode: "no-cors",
             headers: {
-                "Content-Type": "text/plain;charset=utf-8"
+                "Content-Type": "text/plain;charset=utf-8",
             },
             body: JSON.stringify(data),
         });
@@ -109,7 +111,6 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
         form.style.display = "none";
         const feedback = document.getElementById("feedbackMsg");
         if (feedback) feedback.style.display = "block";
-
     } catch (err) {
         console.error("Error capturado:", err);
         form.style.display = "none";
@@ -849,8 +850,13 @@ function formatearYCalcularKm(input) {
 
 // Obtiene el identificador del móvil actual (patente o número de móvil)
 function getVehiculoIdActual() {
-    const movilInput = document.getElementById("movil") || document.getElementById("patente") || document.querySelector("[name='movil']");
-    return movilInput && movilInput.value ? movilInput.value.trim().toUpperCase() : "GENERAL";
+    const movilInput =
+        document.getElementById("movil") ||
+        document.getElementById("patente") ||
+        document.querySelector("[name='movil']");
+    return movilInput && movilInput.value
+        ? movilInput.value.trim().toUpperCase()
+        : "GENERAL";
 }
 
 // Carga las fechas anteriores guardadas para este vehículo
@@ -867,7 +873,8 @@ function precargarMantenimientoPrevio() {
         const hintBat = document.getElementById("hint_bateria");
         if (batInput && data.fecha_ult_bateria) {
             batInput.value = data.fecha_ult_bateria;
-            if (hintBat) hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
+            if (hintBat)
+                hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
         }
 
         // Lavado
@@ -875,7 +882,8 @@ function precargarMantenimientoPrevio() {
         const hintLav = document.getElementById("hint_lavado");
         if (lavInput && data.fecha_ult_lavado) {
             lavInput.value = data.fecha_ult_lavado;
-            if (hintLav) hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
+            if (hintLav)
+                hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
         }
 
         // Service
@@ -883,7 +891,8 @@ function precargarMantenimientoPrevio() {
         const hintSrv = document.getElementById("hint_service");
         if (srvInput && data.fecha_ult_service) {
             srvInput.value = data.fecha_ult_service;
-            if (hintSrv) hintSrv.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
+            if (hintSrv)
+                hintSrv.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
         }
 
         // Kms
@@ -909,7 +918,7 @@ function guardarMantenimientoActual() {
         kms_ult_service: document.getElementById("kms_ult_service")?.value || "",
         // Nuevo: Alineado y balanceo
         fecha_ult_alineado: document.getElementById("ult_alineado")?.value || "",
-        kms_ult_alineado: document.getElementById("kms_ult_alineado")?.value || ""
+        kms_ult_alineado: document.getElementById("kms_ult_alineado")?.value || "",
     };
     localStorage.setItem(`mantenimiento_${vehiculoId}`, JSON.stringify(datos));
 }
@@ -917,7 +926,8 @@ function guardarMantenimientoActual() {
 // Obtiene el identificador del vehículo de forma segura
 function getVehiculoIdActual() {
     // Busca el select o input donde elegís el vehículo/modelo
-    const input = document.querySelector("[name='vehiculo']") ||
+    const input =
+        document.querySelector("[name='vehiculo']") ||
         document.getElementById("vehiculo") ||
         document.querySelector("[name='patente']") ||
         document.getElementById("patente");
@@ -956,29 +966,44 @@ function precargarMantenimientoPrevio() {
 
             // Batería
             if (batInput) batInput.value = data.fecha_ult_bateria || "";
-            if (hintBat) hintBat.innerText = data.fecha_ult_bateria ? `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}` : "";
+            if (hintBat)
+                hintBat.innerText = data.fecha_ult_bateria
+                    ? `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`
+                    : "";
 
             // Lavado
             if (lavInput) lavInput.value = data.fecha_ult_lavado || "";
-            if (hintLav) hintLav.innerText = data.fecha_ult_lavado ? `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}` : "";
+            if (hintLav)
+                hintLav.innerText = data.fecha_ult_lavado
+                    ? `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`
+                    : "";
 
             // Service
             if (servInput) servInput.value = data.fecha_ult_service || "";
-            if (hintServ) hintServ.innerText = data.fecha_ult_service ? `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}` : "";
+            if (hintServ)
+                hintServ.innerText = data.fecha_ult_service
+                    ? `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`
+                    : "";
             if (kmServInput) {
                 kmServInput.value = data.kms_ult_service || "";
-                if (typeof formatearYCalcularKmService === "function") formatearYCalcularKmService(kmServInput);
+                if (typeof formatearYCalcularKmService === "function")
+                    formatearYCalcularKmService(kmServInput);
             }
 
             // Alineado
             if (alnInput) {
                 alnInput.value = data.fecha_ult_alineado || "";
-                if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(data.fecha_ult_alineado);
+                if (typeof calcularProximoAlineadoFecha === "function")
+                    calcularProximoAlineadoFecha(data.fecha_ult_alineado);
             }
-            if (hintAln) hintAln.innerText = data.fecha_ult_alineado ? `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}` : "";
+            if (hintAln)
+                hintAln.innerText = data.fecha_ult_alineado
+                    ? `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`
+                    : "";
             if (kmAlnInput) {
                 kmAlnInput.value = data.kms_ult_alineado || "";
-                if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
+                if (typeof formatearYCalcularKmAlineado === "function")
+                    formatearYCalcularKmAlineado(kmAlnInput);
             }
             return;
         } catch (e) {
@@ -1007,9 +1032,12 @@ function guardarInspeccionGeneralActual() {
     const datos = {
         kilometraje: document.getElementById("kilometraje")?.value || "",
         combustible: document.getElementById("combustible")?.value || "",
-        estado_bateria: document.getElementById("estado_bateria")?.value || ""
+        estado_bateria: document.getElementById("estado_bateria")?.value || "",
     };
-    localStorage.setItem(`inspeccion_general_${vehiculoId}`, JSON.stringify(datos));
+    localStorage.setItem(
+        `inspeccion_general_${vehiculoId}`,
+        JSON.stringify(datos),
+    );
 }
 
 // Precarga los valores guardados en los inputs y muestra las leyendas "Anterior: ..."
@@ -1032,15 +1060,24 @@ function precargarInspeccionGeneralPrevio() {
 
             // Kilometraje
             if (kmInput) kmInput.value = data.kilometraje || "";
-            if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "";
+            if (hintKm)
+                hintKm.innerText = data.kilometraje
+                    ? `Anterior: ${data.kilometraje} km`
+                    : "";
 
             // Combustible
             if (combSelect) combSelect.value = data.combustible || "";
-            if (hintComb) hintComb.innerText = data.combustible ? `Anterior: ${data.combustible}` : "";
+            if (hintComb)
+                hintComb.innerText = data.combustible
+                    ? `Anterior: ${data.combustible}`
+                    : "";
 
             // Batería
             if (batSelect) batSelect.value = data.estado_bateria || "";
-            if (hintBat) hintBat.innerText = data.estado_bateria ? `Anterior: ${data.estado_bateria}` : "";
+            if (hintBat)
+                hintBat.innerText = data.estado_bateria
+                    ? `Anterior: ${data.estado_bateria}`
+                    : "";
             return;
         } catch (err) {
             console.error("Error al parsear datos de inspección:", err);
@@ -1140,11 +1177,173 @@ function formatearKmSimple(input) {
     input.value = parseInt(valorLimpio, 10).toLocaleString("es-AR");
 }
 
-// ==========================================
-// ESCUCHAR CAMBIO DE VEHÍCULO EN PASO 1
-// ==========================================
+function limpiarCamposHistorial() {
+    // Inspección General
+    const kmInput = document.getElementById("kilometraje");
+    const hintKm = document.getElementById("hint_kilometraje");
+    const combSelect = document.getElementById("combustible");
+    const hintComb = document.getElementById("hint_combustible");
+    const batSelect = document.getElementById("estado_bateria");
+    const hintBat = document.getElementById("hint_estado_bateria");
+
+    if (kmInput) kmInput.value = "";
+    if (hintKm) hintKm.innerText = "";
+    if (combSelect) combSelect.value = "";
+    if (hintComb) hintComb.innerText = "";
+    if (batSelect) batSelect.value = "";
+    if (hintBat) hintBat.innerText = "";
+
+    // Mantenimiento
+    const idsLimpiar = [
+        "ult_bateria",
+        "hint_bateria",
+        "ult_lavado",
+        "hint_lavado",
+        "ult_service",
+        "hint_service",
+        "kms_ult_service",
+        "kms_prox_service",
+        "ult_alineado",
+        "hint_alineado",
+        "kms_ult_alineado",
+        "kms_prox_alineado",
+    ];
+    idsLimpiar.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.tagName === "INPUT") el.value = "";
+        else el.innerText = "";
+    });
+}
+
+async function cargarUltimosDatosDesdeSheets() {
+    const selectVehiculo =
+        document.querySelector("[name='vehiculo']") ||
+        document.getElementById("vehiculo");
+    const inputPatente =
+        document.querySelector("[name='patente']") ||
+        document.getElementById("patente");
+
+    const valorVehiculo = selectVehiculo ? selectVehiculo.value.trim() : "";
+    const valorPatente = inputPatente ? inputPatente.value.trim() : "";
+
+    if (!valorVehiculo && !valorPatente) {
+        limpiarCamposHistorial();
+        return;
+    }
+
+    // Indicador visual en el hint mientras consulta
+    const hintKm = document.getElementById("hint_kilometraje");
+    if (hintKm) hintKm.innerText = "Consultando último registro...";
+
+    try {
+        const url = `${SCRIPT_URL}?vehiculo=${encodeURIComponent(valorVehiculo)}&patente=${encodeURIComponent(valorPatente)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (json.status === "success" && json.data) {
+            const data = json.data;
+
+            // 1. Inspección General
+            const kmInput = document.getElementById("kilometraje");
+            const combSelect = document.getElementById("combustible");
+            const batSelect = document.getElementById("estado_bateria");
+            const hintComb = document.getElementById("hint_combustible");
+            const hintBat = document.getElementById("hint_estado_bateria");
+
+            if (kmInput) {
+                kmInput.value = data.kilometraje || "";
+                if (typeof formatearKmSimple === "function") formatearKmSimple(kmInput);
+            }
+            if (hintKm)
+                hintKm.innerText = data.kilometraje
+                    ? `Anterior: ${data.kilometraje} km`
+                    : "";
+            if (combSelect && data.combustible) combSelect.value = data.combustible;
+            if (hintComb)
+                hintComb.innerText = data.combustible
+                    ? `Anterior: ${data.combustible}`
+                    : "";
+            if (batSelect && data.estado_bateria)
+                batSelect.value = data.estado_bateria;
+            if (hintBat)
+                hintBat.innerText = data.estado_bateria
+                    ? `Anterior: ${data.estado_bateria}`
+                    : "";
+
+            // Helper para formatear fechas que vienen de Google Sheets
+            const formatearFecha = (f) => {
+                if (!f) return "";
+                const d = new Date(f);
+                if (isNaN(d.getTime())) return f;
+                return d.toISOString().split("T")[0];
+            };
+
+            // 2. Mantenimiento
+            const batInput = document.getElementById("ult_bateria");
+            const hintBatMant = document.getElementById("hint_bateria");
+            const fBat = formatearFecha(data.fecha_ult_bateria);
+            if (batInput) batInput.value = fBat;
+            if (hintBatMant)
+                hintBatMant.innerText = fBat
+                    ? `Anterior: ${fBat.split("-").reverse().join("/")}`
+                    : "";
+
+            const lavInput = document.getElementById("ult_lavado");
+            const hintLav = document.getElementById("hint_lavado");
+            const fLav = formatearFecha(data.fecha_ult_lavado);
+            if (lavInput) lavInput.value = fLav;
+            if (hintLav)
+                hintLav.innerText = fLav
+                    ? `Anterior: ${fLav.split("-").reverse().join("/")}`
+                    : "";
+
+            const servInput = document.getElementById("ult_service");
+            const hintServ = document.getElementById("hint_service");
+            const kmServInput = document.getElementById("kms_ult_service");
+            const fServ = formatearFecha(data.fecha_ult_service);
+            if (servInput) servInput.value = fServ;
+            if (hintServ)
+                hintServ.innerText = fServ
+                    ? `Anterior: ${fServ.split("-").reverse().join("/")}`
+                    : "";
+            if (kmServInput) {
+                kmServInput.value = data.kms_ult_service || "";
+                if (typeof formatearYCalcularKmService === "function")
+                    formatearYCalcularKmService(kmServInput);
+            }
+
+            const alnInput = document.getElementById("ult_alineado");
+            const hintAln = document.getElementById("hint_alineado");
+            const kmAlnInput = document.getElementById("kms_ult_alineado");
+            const fAln = formatearFecha(data.fecha_ult_alineado);
+            if (alnInput) {
+                alnInput.value = fAln;
+                if (typeof calcularProximoAlineadoFecha === "function")
+                    calcularProximoAlineadoFecha(fAln);
+            }
+            if (hintAln)
+                hintAln.innerText = fAln
+                    ? `Anterior: ${fAln.split("-").reverse().join("/")}`
+                    : "";
+            if (kmAlnInput) {
+                kmAlnInput.value = data.kms_ult_alineado || "";
+                if (typeof formatearYCalcularKmAlineado === "function")
+                    formatearYCalcularKmAlineado(kmAlnInput);
+            }
+        } else {
+            // Si la planilla no tiene ningún registro anterior de este vehículo
+            limpiarCamposHistorial();
+        }
+    } catch (err) {
+        console.error("Error al obtener datos previos desde Sheets:", err);
+        limpiarCamposHistorial();
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    const selectorVehiculo = document.querySelector("[name='vehiculo']") ||
+    const selectorVehiculo =
+        document.querySelector("[name='vehiculo']") ||
         document.querySelector("[name='patente']") ||
         document.getElementById("vehiculo") ||
         document.getElementById("patente");
