@@ -709,5 +709,39 @@ select:focus {
     font-size: 0.95rem;
     transition: background-color 0.2s;
     color: white;
-    background-color: var(--danger);;
+    background-color: var(--danger);
+    ;
+}
+
+/* Asegura que los inputs calculen padding y bordes dentro del 100% */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Contenedor del input de fecha + botón Hoy */
+.input-fecha-wrapper {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    align-items: center;
+}
+
+/* El input toma todo el espacio restante sin desbordar */
+.input-fecha-wrapper input[type="date"] {
+    flex: 1;
+    min-width: 0;
+    /* Clave en flexbox para que no se desborde */
+    width: 100%;
+}
+
+/* El botón Hoy mantiene su tamaño justo */
+.input-fecha-wrapper .btn-hoy {
+    flex-shrink: 0;
+    width: auto;
+    white-space: nowrap;
+    padding: 0 14px;
+    height: 42px;
+    /* Ajustá a la altura exacta de tu input */
 }

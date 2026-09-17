@@ -46,7 +46,7 @@
                 <div class="progress-bar" id="progressBar"></div>
             </div>
 
-            <form id="vehicleForm">
+            <form id="vehicleForm" novalidate>
                 <!-- PASO 1: Datos Generales -->
                 <div class="step active" data-step="1">
                     <h2>Datos del Vehículo</h2>
@@ -723,9 +723,11 @@
                         <div class="dates-grid">
                             <div class="date-box">
                                 <label>FECHA COMPRA</label>
-                                <input type="date" id="ult_bateria" name="fecha_ult_bateria">
-                                <button type="button" class="quick-btn"
-                                    onclick="setFechaHoy('ult_bateria')">Hoy</button>
+                                <div class="date-input-row">
+                                    <input type="date" id="ult_bateria" name="fecha_ult_bateria">
+                                    <button type="button" class="quick-btn"
+                                        onclick="setFechaHoy('ult_bateria')">Hoy</button>
+                                </div>
                                 <small class="last-record-hint" id="hint_bateria"></small>
                             </div>
                             <div class="date-box">
@@ -749,8 +751,11 @@
                         <div class="dates-grid">
                             <div class="date-box">
                                 <label>ÚLTIMO LAVADO</label>
-                                <input type="date" id="ult_lavado" name="fecha_ult_lavado">
-                                <button type="button" class="quick-btn" onclick="setFechaHoy('ult_lavado')">Hoy</button>
+                                <div class="date-input-row">
+                                    <input type="date" id="ult_lavado" name="fecha_ult_lavado">
+                                    <button type="button" class="quick-btn"
+                                        onclick="setFechaHoy('ult_lavado')">Hoy</button>
+                                </div>
                                 <small class="last-record-hint" id="hint_lavado"></small>
                             </div>
                             <div class="date-box">
@@ -777,11 +782,11 @@
                                 <label class="group-title">FECHA</label>
                                 <div class="sub-km-box">
                                     <span class="sub-km-label">Último Service</span>
-                                    <input type="date" id="ult_service" name="fecha_ult_service">
-                                </div>
-                                <div class="sub-km-box sub-btn-fill">
-                                    <button type="button" class="quick-btn btn-service-hoy"
-                                        onclick="setFechaHoy('ult_service')">Hoy</button>
+                                    <div class="date-input-row">
+                                        <input type="date" id="ult_service" name="fecha_ult_service">
+                                        <button type="button" class="quick-btn"
+                                            onclick="setFechaHoy('ult_service')">Hoy</button>
+                                    </div>
                                 </div>
                                 <small class="last-record-hint" id="hint_service"></small>
                             </div>
@@ -813,12 +818,11 @@
                                 <label class="group-title">FECHA</label>
                                 <div class="sub-km-box">
                                     <span class="sub-km-label">Último Alineado</span>
-                                    <input type="date" id="ult_alineado" name="fecha_ult_alineado"
-                                        onchange="calcularProximoAlineadoFecha(this.value)">
-                                </div>
-                                <div class="sub-km-box sub-btn-fill">
-                                    <button type="button" class="quick-btn btn-service-hoy"
-                                        onclick="setAlineadoHoy()">Hoy</button>
+                                    <div class="date-input-row">
+                                        <input type="date" id="ult_alineado" name="fecha_ult_alineado"
+                                            onchange="calcularProximoAlineadoFecha(this.value)">
+                                        <button type="button" class="quick-btn" onclick="setAlineadoHoy()">Hoy</button>
+                                    </div>
                                 </div>
                                 <div class="sub-km-box">
                                     <span class="sub-km-label">Próximo (+6 meses)</span>
@@ -897,9 +901,9 @@
             <div class="input-group" id="grupoFiltroDia">
                 <label>Seleccionar Fecha</label>
                 <div style="display: flex; gap: 8px;">
-                    <input type="date" id="filtroFechaDia" />
-                    <button type="button" class="btn-secondary" style="width: auto; padding: 0 16px;"
-                        onclick="setFechaHoyFiltro()">Hoy</button>
+                    <select id="filtroFechaDia" class="form-control" style="width: 100%;">
+                        <option value="">Cargando fechas de inspecciones...</option>
+                    </select>
                 </div>
             </div>
 

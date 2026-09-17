@@ -273,16 +273,85 @@ function mostrarReportes() {
     document.getElementById("reportContainerView").style.display = "block";
 }
 
-function volverAlMenu() {
+async function mostrarReportes() {
+    document.getElementById("homeView").style.display = "none";
     document.getElementById("formContainerView").style.display = "none";
-    document.getElementById("reportContainerView").style.display = "none";
-    document.getElementById("homeView").style.display = "block";
+    document.getElementById("reportContainerView").style.display = "block";
+
+    // Carga dinámica de fechas de inspección al abrir la vista
+    await cargarFechasDisponiblesReporte();
+}
+
+async function cargarFechasDisponiblesReporte() {
+    const selectFechas = document.getElementById("filtroFechaDia");
+    if (!selectFechas) return;
+
+    selectFechas.innerHTML = '<option value="">Cargando fechas de inspecciones...</option>';
+
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getAll`);
+        const json = await res.json();
+
+        if (json.status !== "success" || !json.data || json.data.length === 0) {
+            selectFechas.innerHTML = '<option value="">Sin inspecciones registradas</option>';
+            return;
+        }
+
+        // Extraer fechas únicas buscando en columna C ('fecha_hora') o A ('Fecha y Hora')
+        const fechasSet = new Set();
+
+        json.data.forEach((r) => {
+            const raw = r.fecha_hora || r["Fecha y Hora"] || "";
+            if (!raw) return;
+
+            let fechaStr = "";
+            if (typeof normalizarFecha === "function") {
+                fechaStr = normalizarFecha(raw);
+            } else {
+                fechaStr = raw.toString().slice(0, 10);
+            }
+
+            if (fechaStr) {
+                fechasSet.add(fechaStr);
+            }
+        });
+
+        const listaFechas = Array.from(fechasSet);
+
+        if (listaFechas.length === 0) {
+            selectFechas.innerHTML = '<option value="">Sin fechas encontradas</option>';
+            return;
+        }
+
+        // Orden descendente (las inspecciones más recientes arriba)
+        listaFechas.sort((a, b) => b.localeCompare(a));
+
+        selectFechas.innerHTML =
+            '<option value="">Seleccionar una fecha...</option>' +
+            listaFechas
+                .map((f) => `<option value="${f}">${f}</option>`)
+                .join("");
+
+    } catch (err) {
+        console.error("Error al cargar las fechas de inspección:", err);
+        selectFechas.innerHTML = '<option value="">Error al cargar fechas</option>';
+    }
 }
 
 function volverAlMenuDesdeFeedback() {
     document.getElementById("feedbackMsg").style.display = "none";
     resetForm(); // resetea los campos
     volverAlMenu();
+}
+
+function volverAlMenu() {
+    const home = document.getElementById("homeView");
+    const form = document.getElementById("formContainerView");
+    const report = document.getElementById("reportContainerView");
+
+    if (home) home.style.display = "block";
+    if (form) form.style.display = "none";
+    if (report) report.style.display = "none";
 }
 
 let tipoReporteActual = "dia";
@@ -390,17 +459,17 @@ async function generarReportePDF() {
 
         // 1. Filtrado por Fecha (Día o Mes)
         if (tipoReporteActual === "dia") {
-            const diaBuscado = document.getElementById("filtroFechaDia").value; // Formato: YYYY-MM-DD
+            const diaBuscado = document.getElementById("filtroFechaDia").value.trim();
             if (!diaBuscado) {
-                alert("Por favor seleccioná una fecha.");
+                alert("Por favor seleccioná una fecha del listado.");
                 return;
             }
 
             registros = registros.filter((r) => {
-                // Busca en 'fecha_hora' (columna C) o en 'Fecha y Hora' (columna A)
                 const fechaRaw = r.fecha_hora || r["Fecha y Hora"] || "";
-                const fechaNormalizada = normalizarFecha(fechaRaw);
-                return fechaNormalizada === diaBuscado;
+                const fechaNorm = normalizarFecha(fechaRaw);
+                // Compara tanto en formato directo del select como normalizado
+                return fechaNorm === diaBuscado || fechaRaw.toString().includes(diaBuscado);
             });
         } else {
             const mesBuscado = document.getElementById("filtroFechaMes").value; // Formato: YYYY-MM
@@ -565,13 +634,10 @@ async function generarReportePDF() {
 
             // --- BLOQUE 2: CHECKLIST EXACTO CON FILA ADICIONAL A LA IZQUIERDA ---
             const checklistPorVistas = [
-                // Fila 1: Títulos
                 [
                     headerSeccion("INSPECCIÓN DE LUCES"),
                     headerSeccion("ELEMENTOS DE SEGURIDAD"),
                 ],
-
-                // Fila 2
                 [
                     "Luces Bajas",
                     fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
@@ -581,16 +647,12 @@ async function generarReportePDF() {
                         item.seguridad_matafuego_detalle,
                     ),
                 ],
-
-                // Fila 3
                 [
                     "Luces Altas",
                     fItem(item.luces_altas_estado, item.luces_altas_detalle),
                     "Balizas Portátiles",
                     fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle),
                 ],
-
-                // Fila 4: Continúa Luces / Título Auxilio
                 [
                     "Luces de Giro (Guiños)",
                     fItem(
@@ -599,38 +661,28 @@ async function generarReportePDF() {
                     ),
                     headerSeccion("ELEMENTOS DE AUXILIO"),
                 ],
-
-                // Fila 5
                 [
                     "Balizas (Emergencia)",
                     fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
                     "Gato Hidráulico",
                     fItem(item.auxilio_gato_estado, item.auxilio_gato_detalle),
                 ],
-
-                // Fila 6: Título Frenos / Continúa Auxilio
                 [
                     headerSeccion("INSPECCIÓN DE FRENOS"),
                     "Llave Cruz",
                     fItem(item.auxilio_llave_estado, item.auxilio_llave_detalle),
                 ],
-
-                // Fila 7
                 [
                     "Frenos de Servicio (Pedal)",
                     fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
                     "Rueda de Auxilio",
                     fItem(item.auxilio_rueda_estado, item.auxilio_rueda_detalle),
                 ],
-
-                // Fila 8: Continúa Frenos / Título Escobillas
                 [
                     "Freno de Mano",
                     fItem(item.freno_mano_estado, item.freno_mano_detalle),
                     headerSeccion("ESCOBILLAS LIMPIAPARABRISAS"),
                 ],
-
-                // Fila 9: Título Cubiertas / Continúa Escobillas
                 [
                     headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"),
                     "Escobillas Delanteras",
@@ -639,54 +691,40 @@ async function generarReportePDF() {
                         item.escobillas_delanteras_detalle,
                     ),
                 ],
-
-                // Fila 10
                 [
                     "Cubierta Delantera Izq.",
                     fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
                     "Escobilla Trasera",
                     fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle),
                 ],
-
-                // Fila 11: Continúa Cubiertas / Título Documentación
                 [
                     "Cubierta Delantera Der.",
                     fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
                     headerSeccion("DOCUMENTACIÓN OBLIGATORIA"),
                 ],
-
-                // Fila 12
                 [
                     "Cubierta Trasera Izq.",
                     fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
                     "Cédula Vehicular",
                     fItem(item.doc_cedula_estado, item.doc_cedula_detalle),
                 ],
-
-                // Fila 13
                 [
                     "Cubierta Trasera Der.",
                     fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
                     "Comprobante de Seguro",
                     fItem(item.doc_seguro_estado, item.doc_seguro_detalle),
                 ],
-
-                // Fila 14: Título Fluidos / Continúa Documentación
                 [
                     headerSeccion("INSPECCIÓN DE FLUIDOS"),
                     "VTV / RTO Vigente",
                     fItem(item.doc_vtv_estado, item.doc_vtv_detalle),
                 ],
-
-                // Fila 15: Aceite a la izquierda / Derecha vacía limpia (sin guiones)
                 [
                     "Nivel de Aceite",
                     fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
                     "",
                     "",
                 ],
-
-                // Fila 16: Agua / Refrigerante a la izquierda (FILA NUEVA) / Derecha vacía limpia
                 [
                     "Agua / Refrigerante",
                     fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
@@ -698,7 +736,7 @@ async function generarReportePDF() {
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 3,
                 margin: { left: 12, right: 12 },
-                tableWidth: 186, // 186 mm calza exacto con el ancho del banner y márgenes
+                tableWidth: 186,
                 head: [
                     ["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"],
                 ],
@@ -795,7 +833,6 @@ async function generarReportePDF() {
             doc.setFontSize(7.5);
             doc.setTextColor(71, 85, 105);
 
-            // Cuadro contenedor prolijo hasta el final de la hoja
             doc.setDrawColor(203, 213, 225);
             doc.setFillColor(248, 250, 252);
             doc.roundedRect(12, yObs + 2, 186, 18, 1, 1, "FD");
@@ -803,7 +840,6 @@ async function generarReportePDF() {
         });
 
         // Guardado y descarga del documento
-        // Obtener la fecha y hora exacta actual
         const ahora = new Date();
         const dia = String(ahora.getDate()).padStart(2, "0");
         const mes = String(ahora.getMonth() + 1).padStart(2, "0");
@@ -811,9 +847,7 @@ async function generarReportePDF() {
         const horas = String(ahora.getHours()).padStart(2, "0");
         const minutos = String(ahora.getMinutes()).padStart(2, "0");
 
-        // Construcción del nombre final: Reporte_DEA_Inspeccion_DD-MM-YYYY_HH-mm.pdf
         const nombreArchivo = `Reporte_DEA_Inspeccion_${dia}-${mes}-${anio}_${horas}-${minutos}.pdf`;
-
         doc.save(nombreArchivo);
     } catch (err) {
         console.error("Error al exportar:", err);
@@ -1372,7 +1406,7 @@ function verificarElementosPorVehiculo() {
         if (!selectorVehiculo || !cardTrasera) return;
 
         const valorVehiculo = (selectorVehiculo.value || "").toString().trim().toUpperCase();
-        
+
         // Si todavía no eligió ningún vehículo en el desplegable, no aplica ninguna restricción
         if (!valorVehiculo) return;
 
@@ -1453,4 +1487,81 @@ function resetearMantenimientoVista() {
         const el = document.getElementById(id);
         if (el) el.value = "";
     });
+}
+
+async function cargarFechasDisponiblesReporte() {
+    const selectFechas = document.getElementById("filtroFechaDia");
+    if (!selectFechas) return;
+
+    selectFechas.innerHTML = '<option value="">Cargando fechas de inspecciones...</option>';
+
+    try {
+        const res = await fetch(`${SCRIPT_URL}?action=getAll`);
+        const json = await res.json();
+
+        if (json.status !== "success" || !json.data || json.data.length === 0) {
+            selectFechas.innerHTML = '<option value="">Sin inspecciones registradas</option>';
+            return;
+        }
+
+        const fechasSet = new Set();
+
+        json.data.forEach((r) => {
+            const raw = (r.fecha_hora || r["fecha_hora"] || r["Fecha y Hora"] || r.fecha || "").toString().trim();
+            if (!raw) return;
+
+            let fechaLimpia = "";
+
+            if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+                fechaLimpia = raw.slice(0, 10);
+            } else if (raw.includes("/")) {
+                const parteFecha = raw.split(" ")[0];
+                const partes = parteFecha.split("/");
+                if (partes.length === 3) {
+                    const dia = partes[0].padStart(2, "0");
+                    const mes = partes[1].padStart(2, "0");
+                    const anio = partes[2].length === 2 ? `20${partes[2]}` : partes[2];
+                    fechaLimpia = `${anio}-${mes}-${dia}`;
+                }
+            }
+
+            if (fechaLimpia) {
+                fechasSet.add(fechaLimpia);
+            }
+        });
+
+        const listaFechas = Array.from(fechasSet);
+
+        if (listaFechas.length === 0) {
+            selectFechas.innerHTML = '<option value="">Sin fechas encontradas</option>';
+            return;
+        }
+
+        // Orden descendente (las más recientes primero)
+        listaFechas.sort((a, b) => b.localeCompare(a));
+
+        // Función para armar "Jueves 17/09/2026"
+        const formatearTextoFecha = (isoStr) => {
+            const [y, m, d] = isoStr.split("-").map(Number);
+            // Creamos la fecha local exacta evitando desfasajes de zona horaria UTC
+            const fechaObj = new Date(y, m - 1, d);
+
+            const nombreDia = new Intl.DateTimeFormat("es-ES", { weekday: "long" }).format(fechaObj);
+            const diaCap = nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1);
+            const diaFormateado = String(d).padStart(2, "0");
+            const mesFormateado = String(m).padStart(2, "0");
+
+            return `${diaCap} ${diaFormateado}/${mesFormateado}/${y}`;
+        };
+
+        selectFechas.innerHTML =
+            '<option value="">Seleccionar una fecha...</option>' +
+            listaFechas
+                .map((f) => `<option value="${f}">${formatearTextoFecha(f)}</option>`)
+                .join("");
+
+    } catch (err) {
+        console.error("Error al cargar las fechas de inspección:", err);
+        selectFechas.innerHTML = '<option value="">Error al cargar fechas</option>';
+    }
 }
