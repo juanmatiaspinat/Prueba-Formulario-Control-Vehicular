@@ -215,7 +215,7 @@
                         <!-- 4. Balizas (Luces de Emergencia) -->
                         <div class="check-item" style="flex-direction: column; align-items: stretch;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="check-title">Balizas (Portátiles / Triángulos)</span>
+                                <span class="check-title">Luces intermitentes (Balizas)</span>
                                 <div class="options-group">
                                     <input type="radio" name="luces_balizas_estado" value="OK" id="balizas_ok"
                                         class="radio-pill" checked onchange="toggleObsField('balizas_obs_box', false)">
@@ -478,7 +478,7 @@
                         <!-- 2. Balizas portátiles -->
                         <div class="check-item" style="flex-direction: column; align-items: stretch;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="check-title">Balizas</span>
+                                <span class="check-title">Balizas (Portátiles / Triángulos)</span>
                                 <div class="options-group">
                                     <input type="radio" name="seguridad_balizas_estado" value="OK" id="balizas_seg_ok"
                                         class="radio-pill" checked
@@ -610,7 +610,8 @@
                         </div>
 
                         <!-- 2. Escobilla Trasera -->
-                        <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div class="check-item" id="card_limpiaparabrisas_trasera"
+                            style="flex-direction: column; align-items: stretch;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span class="check-title">Escobilla Limpiaparabrisas (trasera)</span>
                                 <div class="options-group">
@@ -668,7 +669,7 @@
                         <!-- 2. Seguro Obligatorio -->
                         <div class="check-item" style="flex-direction: column; align-items: stretch;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="check-title">Comprobante de Seguro Vigente (Póliza / Tarjeta)</span>
+                                <span class="check-title">Comprobante de Seguro (Póliza / Tarjeta)</span>
                                 <div class="options-group">
                                     <input type="radio" name="doc_seguro_estado" value="OK" id="doc_seg_ok"
                                         class="radio-pill" checked onchange="toggleObsField('doc_seg_obs_box', false)">
@@ -687,7 +688,7 @@
                         <!-- 3. VTV / RTO -->
                         <div class="check-item" style="flex-direction: column; align-items: stretch;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="check-title">Verificación Técnica Vehicular (VTV / RTO) Vigente</span>
+                                <span class="check-title">Verificación Técnica Vehicular (VTV / RTO)</span>
                                 <div class="options-group">
                                     <input type="radio" name="doc_vtv_estado" value="OK" id="doc_vtv_ok"
                                         class="radio-pill" checked onchange="toggleObsField('doc_vtv_obs_box', false)">

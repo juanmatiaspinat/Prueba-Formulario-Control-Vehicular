@@ -1350,12 +1350,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (selectorVehiculo) {
         selectorVehiculo.addEventListener("change", () => {
-            // Cada vez que cambia el auto en el menú, actualiza o limpia los datos
-            precargarInspeccionGeneralPrevio();
-            precargarMantenimientoPrevio();
+            // Trae los últimos registros de la planilla para el auto elegido
+            if (typeof cargarUltimosDatosDesdeSheets === "function") {
+                cargarUltimosDatosDesdeSheets();
+            }
+            // Oculta la escobilla trasera si es la Montana o la muestra si es otro vehículo
+            if (typeof verificarElementosPorVehiculo === "function") {
+                verificarElementosPorVehiculo();
+            }
         });
     }
 });
+
+function verificarElementosPorVehiculo() {
+    try {
+        const selectorVehiculo = document.querySelector("[name='vehiculo']") ||
+            document.getElementById("vehiculo");
+        const cardTrasera = document.getElementById("card_limpiaparabrisas_trasera");
+
+        // Si todavía no existen en el DOM (ej: estás en el Panel de Control), sale sin romper
+        if (!selectorVehiculo || !cardTrasera) return;
+
+        const valorVehiculo = (selectorVehiculo.value || "").toString().trim().toUpperCase();
+        
+        // Si todavía no eligió ningún vehículo en el desplegable, no aplica ninguna restricción
+        if (!valorVehiculo) return;
+
+        const esMontana = valorVehiculo.includes("MONTANA");
+
+        const radioOk = document.getElementById("esco_tras_ok");
+        const radioRev = document.getElementById("esco_tras_rev");
+        const textareaObs = cardTrasera.querySelector("textarea");
+
+        if (esMontana) {
+            // Ocultar fila completa
+            cardTrasera.style.display = "none";
+
+            // Desactivar y limpiar campos para no mandar datos inválidos
+            if (radioOk) {
+                radioOk.checked = false;
+                radioOk.disabled = true;
+            }
+            if (radioRev) {
+                radioRev.checked = false;
+                radioRev.disabled = true;
+            }
+            if (textareaObs) {
+                textareaObs.value = "N/A";
+                textareaObs.disabled = true;
+            }
+        } else {
+            // Mostrar fila para los otros vehículos
+            cardTrasera.style.display = "";
+
+            if (radioOk) {
+                radioOk.disabled = false;
+                radioOk.checked = true; // Valor por defecto
+            }
+            if (radioRev) {
+                radioRev.disabled = false;
+            }
+            if (textareaObs) {
+                textareaObs.disabled = false;
+                if (textareaObs.value === "N/A") textareaObs.value = "";
+            }
+        }
+    } catch (err) {
+        console.warn("Aviso en verificarElementosPorVehiculo:", err);
+    }
+}
 
 function resetearValoresVista() {
     // Vacía los inputs para permitir una carga desde cero
