@@ -1,8 +1,12 @@
+/* ==========================================================================
+   1. VARIABLES & RESET GENERAL
+   ========================================================================== */
 :root {
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
     --bg: #0f172a;
     --card-bg: #1e293b;
+    --card-inner-bg: #090d16;
     --text: #f8fafc;
     --text-muted: #94a3b8;
     --border: #334155;
@@ -11,14 +15,13 @@
     --danger: #ef4444;
 }
 
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family:
-        system-ui,
-        -apple-system,
-        sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -31,6 +34,9 @@ body {
     padding: 16px;
 }
 
+/* ==========================================================================
+   2. CONTENEDOR PRINCIPAL, HEADER & PASOS
+   ========================================================================== */
 .form-container {
     background: var(--card-bg);
     width: 100%;
@@ -113,6 +119,9 @@ label {
     color: #cbd5e1;
 }
 
+/* ==========================================================================
+   3. INPUTS, SELECTS & CONTROLES BÁSICOS
+   ========================================================================== */
 input,
 select,
 textarea {
@@ -133,7 +142,22 @@ textarea:focus {
     border-color: var(--primary);
 }
 
-/* Checklist interactivo */
+select {
+    padding: 12px 40px 12px 14px;
+    background-color: #0f172a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 16px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* ==========================================================================
+   4. CHECKLIST INTERACTIVO & DETALLES
+   ========================================================================== */
 .checklist-grid {
     display: flex;
     flex-direction: column;
@@ -185,7 +209,8 @@ textarea:focus {
     border-color: var(--ok);
 }
 
-.radio-pill:checked+label.obs {
+.radio-pill:checked+label.obs,
+.radio-pill:checked+label.revisar {
     background: rgba(234, 179, 8, 0.2);
     color: var(--warn);
     border-color: var(--warn);
@@ -197,6 +222,240 @@ textarea:focus {
     border-color: var(--danger);
 }
 
+.obs-detail-container {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    animation: slideDown 0.25s ease-out forwards;
+}
+
+.obs-detail-container.visible {
+    display: block;
+}
+
+.obs-detail-container textarea {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+    background: var(--card-inner-bg);
+    border-color: #475569;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   5. TARJETAS DE MANTENIMIENTO & INPUTS DE FECHA
+   ========================================================================== */
+.maintenance-card {
+    background: var(--card-inner-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.maintenance-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #60a5fa;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.date-box label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+/* Fila integrada: Date + Botón Hoy */
+.date-input-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    align-items: center;
+}
+
+.date-input-row input[type="date"] {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    height: 38px;
+}
+
+.quick-btn {
+    flex-shrink: 0;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    padding: 0 0px;
+    height: 38px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.quick-btn:hover {
+    background: #334155;
+    color: var(--text);
+}
+
+/* Sub-bloques y campos de KMS */
+.km-service-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.km-service-group .group-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.sub-km-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sub-km-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+.date-box .input-km {
+    width: 100%;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    height: 38px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.date-box .input-km:focus {
+    border-color: #3b82f6;
+}
+
+.date-box .input-km::-webkit-outer-spin-button,
+.date-box .input-km::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-km-readonly {
+    background: #0f172a !important;
+    color: #38bdf8 !important;
+    font-weight: 700;
+    cursor: not-allowed;
+    border-color: #1e293b !important;
+}
+
+.input-km-readonly::placeholder {
+    color: #38bdf8 !important;
+}
+
+/* Input readonly de fecha para alineado y balanceo */
+#prox_alineado_fecha {
+    width: 100%;
+    height: 38px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #38bdf8 !important;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    display: block;
+}
+
+.last-record-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: #38bdf8;
+    font-style: italic;
+}
+
+/* Switches de opciones (NO / SI) */
+.radio-pill-bat,
+.radio-pill-lavado {
+    display: none;
+}
+
+.cambio-bat-group {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.btn-bat-opt {
+    flex: 1;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #1e293b;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    user-select: none;
+    margin: 0;
+}
+
+#bat_no:checked+.btn-bat-no,
+#lavado_no:checked+.btn-lavado-no {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+#bat_si:checked+.btn-bat-si,
+#lavado_si:checked+.btn-lavado-si {
+    background: #16a34a;
+    border-color: #15803d;
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   6. BOTONES & NAVEGACIÓN
+   ========================================================================== */
 .btn-group {
     display: flex;
     gap: 12px;
@@ -233,154 +492,40 @@ button {
     background: var(--border);
 }
 
-.feedback {
-    text-align: center;
-    display: none;
-    padding: 20px 0;
-}
-
-.feedback h2 {
-    font-size: 1.6rem;
-    color: #4ade80;
-    margin-bottom: 8px;
-}
-
-.card-footer {
-    text-align: center;
-    padding-top: 12px;
-    margin-bottom: -10px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-    user-select: none;
-}
-
-select {
-    width: 100%;
-    padding: 12px 40px 12px 14px;
-    /* 40px a la derecha para dejar aire */
-    background-color: #0f172a;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    /* 14px despegado del borde derecho */
-    background-size: 16px 16px;
-    border: 1px solid var(--border);
+.btn-link-clean {
+    flex: 1;
+    padding: 12px;
     border-radius: 8px;
-    color: var(--text);
-    font-size: 0.95rem;
-    outline: none;
-    cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    transition: border-color 0.2s;
-}
-
-select:focus {
-    border-color: var(--primary);
-}
-
-/* Caja del campo de observación desplegable */
-.obs-detail-container {
-    display: none;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border);
-    animation: slideDown 0.25s ease-out forwards;
-}
-
-.obs-detail-container.visible {
-    display: block;
-}
-
-.obs-detail-container textarea {
-    font-size: 0.85rem;
-    padding: 8px 10px;
-    background: #090d16;
-    border-color: #475569;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Modificación de color para el botón 'Revisar' */
-.radio-pill:checked+label.revisar {
-    background: rgba(234, 179, 8, 0.2);
-    color: var(--warn);
-    border-color: var(--warn);
-}
-
-/* Contenedor de cada bloque de mantenimiento */
-.maintenance-card {
-    background: #090d16;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-    margin-bottom: 14px;
-}
-
-.maintenance-card-title {
-    font-size: 0.95rem;
     font-weight: 600;
-    color: #60a5fa;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Grilla en 2 columnas: Último vs Próximo */
-.dates-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.date-box label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-}
-
-.date-box input[type="date"] {
-    padding: 8px 10px;
-    font-size: 0.85rem;
-    width: 100%;
-}
-
-.quick-btn {
-    background: #1e293b;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: 4px;
     cursor: pointer;
-    margin-top: 5px;
-    width: 100%;
-    font-weight: 500;
+    border: none;
+    font-size: 0.95rem;
+    color: white;
+    background-color: var(--danger);
     transition: background-color 0.2s;
 }
 
-.quick-btn:hover {
-    background: #334155;
+.btn-link-clean:hover {
+    background-color: #dc2626;
+}
+
+.btn-nav-back {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 0;
+}
+
+.btn-nav-back:hover {
     color: var(--text);
 }
 
-/* Botones de acción del menú principal */
 .menu-card-btn {
     width: 100%;
     padding: 16px;
@@ -425,227 +570,44 @@ select:focus {
     margin: 0;
 }
 
-/* Botón sutil para regresar al menú */
-.btn-nav-back {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 14px;
-    padding: 0;
-}
-
-.btn-nav-back:hover {
-    color: var(--text);
-}
-
-/* Oculta los radios nativos */
-.radio-pill-bat {
-    display: none;
-}
-
-/* Contenedor compacto alineado con el botón Hoy */
-.cambio-bat-group {
-    display: flex;
-    gap: 6px;
-    width: 100%;
-    margin-top: 4px;
-}
-
-/* Botones NO / SI con altura y padding optimizados para celular */
-.btn-bat-opt {
-    flex: 1;
-    padding: 8px 0;
+.feedback {
     text-align: center;
-    font-size: 0.82rem;
-    font-weight: 700;
-    border-radius: 6px;
-    cursor: pointer;
-    border: 1px solid #334155;
-    background: #1e293b;
-    color: #94a3b8;
-    transition: all 0.2s ease;
+    display: none;
+    padding: 20px 0;
+}
+
+.feedback h2 {
+    font-size: 1.6rem;
+    color: #4ade80;
+    margin-bottom: 8px;
+}
+
+.card-footer {
+    text-align: center;
+    padding-top: 12px;
+    margin-bottom: -10px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
     user-select: none;
 }
 
-/* Estado NO seleccionado (Tono rojo) */
-#bat_no:checked+.btn-bat-no {
-    background: #dc2626;
-    border-color: #b91c1c;
-    color: #ffffff;
-}
-
-/* Estado SI seleccionado (Tono naranja de advertencia) */
-#bat_si:checked+.btn-bat-si {
-    background: #16a34a;
-    border-color: #15803d;
-    color: #ffffff;
-}
-
-/* Para que los botones 'Hoy' y 'Meses' no sean excesivamente altos/anchos en mobile */
-@media (max-width: 480px) {
-    .quick-btn {
-        padding: 7px 4px;
-        font-size: 0.78rem;
-    }
-}
-
-/* Oculta los radios de lavado */
-.radio-pill-lavado {
-    display: none;
-}
-
-/* NO seleccionado (Tono rojo idéntico al de batería) */
-#lavado_no:checked+.btn-lavado-no {
-    background: #dc2626;
-    border-color: #b91c1c;
-    color: #ffffff;
-}
-
-/* SI seleccionado (Tono VERDE) */
-#lavado_si:checked+.btn-lavado-si {
-    background: #16a34a;
-    border-color: #15803d;
-    color: #ffffff;
-}
-
-/* Ajuste de grilla para 4 cajas con espacio vertical */
-.dates-grid-service {
-    row-gap: 12px;
-}
-
-/* Estilo para los campos de kilómetros */
-.date-box .input-km {
-    width: 100%;
-    box-sizing: border-box;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 6px;
-    color: #f8fafc;
-    padding: 8px 10px;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.date-box .input-km:focus {
-    border-color: #3b82f6;
-}
-
-/* Opcional: Oculta las flechitas por defecto de los inputs number */
-.date-box .input-km::-webkit-outer-spin-button,
-.date-box .input-km::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.date-box .input-km {
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-/* Agrupador de kilómetros */
-.km-service-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.km-service-group .group-title {
-    margin-bottom: 2px;
-}
-
-/* Sub-bloque con etiqueta pequeña */
-.sub-km-box {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.sub-km-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #94a3b8;
-    letter-spacing: 0.3px;
-}
-
-/* Input bloqueado con estilo sutil */
-.input-km-readonly {
-    background: #0f172a !important;
-    color: #38bdf8 !important;
-    font-weight: 700;
-    cursor: not-allowed;
-    border-color: #1e293b !important;
-}
-
-/* Espaciado del grupo para alinear los dos lados */
-.km-service-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.km-service-group .group-title {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #94a3b8;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
-}
-
-.sub-km-box {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.sub-km-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #94a3b8;
-    letter-spacing: 0.3px;
-}
-
-/* Alinea la base del botón 'Hoy' exactamente con la segunda caja de KMS */
-.sub-btn-fill {
-    margin-top: auto;
-}
-
-.btn-service-hoy {
-    width: 100%;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-}
-
-.input-km-readonly {
-    background: #0f172a !important;
-    color: #38bdf8 !important;
-    font-weight: 700;
-    cursor: not-allowed;
-    border-color: #1e293b !important;
-}
-
-/* Indicador de último registro previo */
-.last-record-hint {
-    display: block;
-    margin-top: 5px;
-    font-size: 0.7rem;
-    color: #38bdf8;
-    font-style: italic;
-}
-
-/* Responsive para vista de Mantenimiento en celulares */
+/* ==========================================================================
+   7. RESPONSIVE (MOBILE OPTIMIZATION)
+   ========================================================================== */
 @media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .form-container {
+        padding: 18px;
+    }
+
     .maintenance-card {
         padding: 12px;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
 
     .dates-grid {
@@ -660,88 +622,44 @@ select:focus {
         min-width: 0;
     }
 
-    /* Ajusta los campos internos a ancho total */
-    .sub-km-box {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        gap: 4px;
-    }
-
+    /* Evita el zoom automático molesto en iOS Safari */
     .sub-km-box input,
     .date-box input[type="date"],
     .date-box input[type="text"] {
-        width: 100%;
-        box-sizing: border-box;
         font-size: 16px;
-        /* Evita zoom automático molesto en iOS */
     }
 
-    /* Botón Hoy y botones de acción a pantalla completa */
-    .quick-btn,
-    .btn-service-hoy {
-        width: 100%;
+    /* Mantiene el botón Hoy en línea sin deformar */
+    .date-input-row .quick-btn {
+        flex-shrink: 0;
+        width: auto;
+        padding: 0 0px;
         height: 38px;
-        margin-top: 4px;
+        margin: 0;
     }
 
-    /* Opciones de SI / NO bien accesibles para el dedo */
     .cambio-bat-group {
-        display: flex;
-        width: 100%;
         gap: 8px;
     }
 
-    .cambio-bat-group .btn-bat-opt {
-        flex: 1;
-        text-align: center;
-        padding: 10px 0;
+    /* Sincronización tipográfica idéntica en pantallas chicas para inputs bloqueados */
+    #prox_alineado_fecha,
+    #kms_prox_alineado,
+    #kms_prox_service {
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px;
     }
-}
 
-.btn-link-clean {
-    flex: 1;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-size: 0.95rem;
-    transition: background-color 0.2s;
-    color: white;
-    background-color: var(--danger);
-    ;
-}
-
-/* Asegura que los inputs calculen padding y bordes dentro del 100% */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-/* Contenedor del input de fecha + botón Hoy */
-.input-fecha-wrapper {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-    align-items: center;
-}
-
-/* El input toma todo el espacio restante sin desbordar */
-.input-fecha-wrapper input[type="date"] {
-    flex: 1;
-    min-width: 0;
-    /* Clave en flexbox para que no se desborde */
-    width: 100%;
-}
-
-/* El botón Hoy mantiene su tamaño justo */
-.input-fecha-wrapper .btn-hoy {
-    flex-shrink: 0;
-    width: auto;
-    white-space: nowrap;
-    padding: 0 14px;
-    height: 42px;
-    /* Ajustá a la altura exacta de tu input */
+    /* Forzar al contenedor interno de fecha nativo en WebKit (Chrome / Safari mobile) */
+    #prox_alineado_fecha::-webkit-datetime-edit,
+    #prox_alineado_fecha::-webkit-datetime-edit-fields-wrapper,
+    #prox_alineado_fecha::-webkit-datetime-edit-text,
+    #prox_alineado_fecha::-webkit-datetime-edit-month-field,
+    #prox_alineado_fecha::-webkit-datetime-edit-day-field,
+    #prox_alineado_fecha::-webkit-datetime-edit-year-field {
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        color: #38bdf8 !important;
+    }
 }
