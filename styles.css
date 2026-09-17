@@ -602,18 +602,19 @@ button {
     }
 
     .form-container {
-        padding: 18px;
+        padding: 18px 14px;
     }
 
     .maintenance-card {
-        padding: 12px;
-        margin-bottom: 12px;
+        padding: 14px;
+        margin-bottom: 14px;
     }
 
+    /* Pasa de 2 columnas a 1 sola: el bloque rojo queda abajo del azul */
     .dates-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .date-box,
@@ -622,43 +623,70 @@ button {
         min-width: 0;
     }
 
-    /* Evita el zoom automático molesto en iOS Safari */
+    /* Tamaños unificados a ancho completo */
     .sub-km-box input,
     .date-box input[type="date"],
-    .date-box input[type="text"] {
-        font-size: 16px;
+    .date-box input[type="text"],
+    .date-box .input-km {
+        width: 100%;
+        height: 42px;
+        font-size: 15px;
+        padding: 8px 12px;
     }
 
-    /* Mantiene el botón Hoy en línea sin deformar */
-    .date-input-row .quick-btn {
-        flex-shrink: 0;
-        width: auto;
-        padding: 0 0px;
-        height: 38px;
-        margin: 0;
-    }
-
-    .cambio-bat-group {
+    /* Fila de fecha + botón Hoy */
+    .date-input-row {
+        display: flex;
         gap: 8px;
+        width: 100%;
+        align-items: center;
     }
 
-    /* Sincronización tipográfica idéntica en pantallas chicas para inputs bloqueados */
+    .date-input-row input[type="date"] {
+        flex: 1;
+        min-width: 0;
+        height: 42px;
+    }
+
+    /* Botón Hoy con ancho fijo armónico */
+    .date-input-row .quick-btn {
+        width: 60px;
+        min-width: 60px;
+        height: 42px;
+        font-size: 0.82rem;
+        padding: 0;
+        margin: 0;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Botones SI / NO con buen área de toque */
+    .cambio-bat-group {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .btn-bat-opt {
+        height: 42px;
+        font-size: 0.85rem;
+    }
+
+    /* Inputs bloqueados (azul/celeste) en columna completa */
     #prox_alineado_fecha,
     #kms_prox_alineado,
     #kms_prox_service {
-        font-size: 0.95rem !important;
+        width: 100% !important;
+        height: 42px !important;
+        font-size: 15px !important;
         font-weight: 700 !important;
-        letter-spacing: 0.5px;
+        text-align: left;
     }
 
-    /* Forzar al contenedor interno de fecha nativo en WebKit (Chrome / Safari mobile) */
-    #prox_alineado_fecha::-webkit-datetime-edit,
-    #prox_alineado_fecha::-webkit-datetime-edit-fields-wrapper,
-    #prox_alineado_fecha::-webkit-datetime-edit-text,
-    #prox_alineado_fecha::-webkit-datetime-edit-month-field,
-    #prox_alineado_fecha::-webkit-datetime-edit-day-field,
-    #prox_alineado_fecha::-webkit-datetime-edit-year-field {
-        font-size: 0.95rem !important;
+    #prox_alineado_fecha::-webkit-datetime-edit {
+        font-size: 15px !important;
         font-weight: 700 !important;
         color: #38bdf8 !important;
     }
