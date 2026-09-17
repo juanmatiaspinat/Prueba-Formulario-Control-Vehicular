@@ -1356,3 +1356,38 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+function resetearValoresVista() {
+    // Vacía los inputs para permitir una carga desde cero
+    const kmInput = document.getElementById("kilometraje");
+    const combSelect = document.getElementById("combustible");
+    const batSelect = document.getElementById("estado_bateria");
+
+    if (kmInput) kmInput.value = "";
+    if (combSelect) combSelect.value = "";
+    if (batSelect) batSelect.value = "";
+}
+
+function resetearMantenimientoVista() {
+    const ids = [
+        // Batería y Lavado (si están arriba en la misma pantalla)
+        "ult_bateria",
+        "ult_lavado",
+
+        // Service Mecánico
+        "ult_service",
+        "kms_ult_service",
+        "kms_prox_service",
+
+        // Alineado y Balanceo
+        "ult_alineado",
+        "prox_alineado_fecha", // o el id que tenga tu campo "Próximo (+6 meses)"
+        "kms_ult_alineado",
+        "kms_prox_alineado"
+    ];
+
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+}
