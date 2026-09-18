@@ -715,3 +715,23 @@ button {
         color: #38bdf8 !important;
     }
 }
+
+/* Bloquear el auto-zoom nativo de iOS al tocar inputs o textareas */
+@media (max-width: 600px) {
+
+    input,
+    select,
+    textarea,
+    .obs-detail-container textarea {
+        font-size: 16px !important;
+        /* Mínimo requerido por iOS para no disparar zoom */
+    }
+
+    /* Evita el rebote y desborde horizontal accidental */
+    html,
+    body {
+        overflow-x: hidden;
+        position: relative;
+        width: 100%;
+    }
+}
