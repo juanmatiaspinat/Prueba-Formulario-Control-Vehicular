@@ -124,6 +124,15 @@ label {
    ========================================================================== */
 input,
 select,
+textarea,
+button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+input,
+select,
 textarea {
     width: 100%;
     padding: 12px 14px;
@@ -150,9 +159,17 @@ select {
     background-position: right 14px center;
     background-size: 16px 16px;
     cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+}
+
+/* Quita el comportamiento expansivo rígido de WebKit en iOS */
+input[type="date"] {
+    display: inline-flex;
+    align-items: center;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    margin: 0;
 }
 
 /* ==========================================================================
@@ -297,7 +314,7 @@ select {
 }
 
 .date-input-row input[type="date"] {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     width: 100%;
     padding: 8px 10px;
@@ -311,7 +328,7 @@ select {
     border: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 0.78rem;
-    padding: 0 0px;
+    padding: 0 14px;
     height: 38px;
     border-radius: 6px;
     cursor: pointer;
@@ -389,11 +406,11 @@ select {
     color: #38bdf8 !important;
 }
 
-/* Input readonly de fecha para alineado y balanceo */
+/* Input readonly de fecha para alineado y balanceo en escritorio */
 #prox_alineado_fecha {
     width: 100%;
     height: 38px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: #38bdf8 !important;
     padding: 8px 10px;
@@ -610,17 +627,20 @@ button {
         margin-bottom: 14px;
     }
 
-    /* Pasa de 2 columnas a 1 sola: el bloque rojo queda abajo del azul */
+    /* Pasa de 2 columnas a 1 sola: el bloque de KMS/Opciones queda abajo de la fecha */
     .dates-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 16px;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+        width: 100% !important;
     }
 
     .date-box,
     .km-service-group {
-        width: 100%;
-        min-width: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
     }
 
     /* Tamaños unificados a ancho completo */
@@ -628,53 +648,57 @@ button {
     .date-box input[type="date"],
     .date-box input[type="text"],
     .date-box .input-km {
-        width: 100%;
-        height: 42px;
-        font-size: 15px;
-        padding: 8px 12px;
+        width: 100% !important;
+        height: 42px !important;
+        font-size: 15px !important;
+        padding: 8px 12px !important;
+        box-sizing: border-box !important;
     }
 
     /* Fila de fecha + botón Hoy */
     .date-input-row {
-        display: flex;
-        gap: 8px;
-        width: 100%;
-        align-items: center;
+        display: flex !important;
+        gap: 8px !important;
+        width: 100% !important;
+        align-items: center !important;
     }
 
+    /* Clave: width: 0 obliga a WebKit a no calcular un ancho mínimo arbitrario */
     .date-input-row input[type="date"] {
-        flex: 1;
-        min-width: 0;
-        height: 42px;
+        flex: 1 1 auto !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        height: 42px !important;
+        font-size: 15px !important;
     }
 
     /* Botón Hoy con ancho fijo armónico */
     .date-input-row .quick-btn {
-        width: 60px;
-        min-width: 60px;
-        height: 42px;
-        font-size: 0.82rem;
-        padding: 0;
-        margin: 0;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        flex: 0 0 65px !important;
+        width: 65px !important;
+        min-width: 65px !important;
+        height: 42px !important;
+        font-size: 0.82rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     /* Botones SI / NO con buen área de toque */
     .cambio-bat-group {
-        display: flex;
-        gap: 8px;
-        width: 100%;
+        display: flex !important;
+        gap: 8px !important;
+        width: 100% !important;
     }
 
     .btn-bat-opt {
-        height: 42px;
-        font-size: 0.85rem;
+        height: 42px !important;
+        font-size: 0.85rem !important;
     }
 
-    /* Inputs bloqueados (azul/celeste) en columna completa */
+    /* Inputs bloqueados (celeste) en columna completa */
     #prox_alineado_fecha,
     #kms_prox_alineado,
     #kms_prox_service {
@@ -682,7 +706,7 @@ button {
         height: 42px !important;
         font-size: 15px !important;
         font-weight: 700 !important;
-        text-align: left;
+        text-align: left !important;
     }
 
     #prox_alineado_fecha::-webkit-datetime-edit {
