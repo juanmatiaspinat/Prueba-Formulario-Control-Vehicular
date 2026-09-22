@@ -447,6 +447,28 @@
                             </div>
                         </div>
 
+                        <!-- 3. Líquido limpiaparabrisas -->
+                        <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="check-title">Líquido limpiaparabrisas</span>
+                                <div class="options-group">
+                                    <input type="radio" name="fluido_limpiaparabrisas_estado" value="OK"
+                                        id="limpiaparabrisas_ok" class="radio-pill" checked
+                                        onchange="toggleObsField('limpiaparabrisas_obs_box', false)">
+                                    <label for="limpiaparabrisas_ok" class="ok">OK</label>
+
+                                    <input type="radio" name="fluido_limpiaparabrisas_estado" value="Revisar"
+                                        id="limpiaparabrisas_rev" class="radio-pill"
+                                        onchange="toggleObsField('limpiaparabrisas_obs_box', true)">
+                                    <label for="limpiaparabrisas_rev" class="revisar">Revisar</label>
+                                </div>
+                            </div>
+                            <div class="obs-detail-container" id="limpiaparabrisas_obs_box">
+                                <textarea name="fluido_limpiaparabrisas_detalle" rows="2"
+                                    placeholder="Detalle: ej. Depósito vacío, sapito obstruido, pérdida de líquido..."></textarea>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="btn-group">
