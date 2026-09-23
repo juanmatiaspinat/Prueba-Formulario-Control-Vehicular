@@ -22,6 +22,15 @@ function nextStep(step) {
                 return;
             }
         }
+
+        // Si estamos saliendo de Documentación (10) o Mantenimiento (11), guardamos lo que el usuario editó
+        if (step === 10 || step === 11) {
+            guardarMantenimientoActual();
+        }
+        if (step === 2) {
+            guardarInspeccionGeneralActual();
+        }
+
         currentContainer.classList.remove("active");
     }
 
@@ -32,20 +41,15 @@ function nextStep(step) {
         nextContainer.classList.add("active");
         updateProgress();
 
-        // 1. Precarga en Paso 2: Inspección General
         if (currentStep === 2) {
-            setTimeout(() => {
-                precargarInspeccionGeneralPrevio();
-            }, 50);
+            setTimeout(() => { precargarInspeccionGeneralPrevio(); }, 50);
         }
-
-        // 2. Precarga en Paso 10 (Documentación) y Paso 11 (Mantenimiento)
         if (currentStep === 10 || currentStep === 11) {
             setTimeout(() => {
                 try {
                     precargarMantenimientoPrevio();
                 } catch (err) {
-                    console.error("Error al precargar datos de mantenimiento/documentación:", err);
+                    console.error("Error al precargar datos:", err);
                 }
             }, 50);
         }
@@ -54,7 +58,16 @@ function nextStep(step) {
 
 function prevStep(step) {
     const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
-    if (currentContainer) currentContainer.classList.remove("active");
+    if (currentContainer) {
+        // Guardamos antes de volver atrás para no perder lo escrito
+        if (step === 10 || step === 11) {
+            guardarMantenimientoActual();
+        }
+        if (step === 2) {
+            guardarInspeccionGeneralActual();
+        }
+        currentContainer.classList.remove("active");
+    }
 
     currentStep = step - 1;
     const prevContainer = document.querySelector(`.step[data-step="${currentStep}"]`);
@@ -1210,4 +1223,21 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // Escucha cambios manuales en documentación para que persistan inmediatamente
+    const inputsDoc = [
+        "doc_seguro_inicio",
+        "doc_seguro_vencimiento",
+        "doc_vtv_inspeccion",
+        "doc_vtv_vencimiento"
+    ];
+
+    inputsDoc.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("change", () => {
+                guardarMantenimientoActual();
+            });
+        }
+    });
 });
