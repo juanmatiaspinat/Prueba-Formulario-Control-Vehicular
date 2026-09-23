@@ -6,60 +6,60 @@ const totalSteps = 12;
 let currentStep = 1;
 
 function updateProgress() {
-    const progress = (currentStep / totalSteps) * 100;
-    document.getElementById("progressBar").style.width = `${progress}%`;
+    const total = document.querySelectorAll(".step").length || totalSteps;
+    const progress = (currentStep / total) * 100;
+    const bar = document.getElementById("progressBar");
+    if (bar) bar.style.width = `${progress}%`;
 }
 
 function nextStep(step) {
     const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
-    const inputs = currentContainer.querySelectorAll("input, select, textarea");
-
-    for (let input of inputs) {
-        if (input.hasAttribute("required") && !input.value.trim()) {
-            input.focus();
-            return;
+    if (currentContainer) {
+        const inputs = currentContainer.querySelectorAll("input, select, textarea");
+        for (let input of inputs) {
+            if (input.hasAttribute("required") && !input.value.trim()) {
+                input.focus();
+                return;
+            }
         }
+        currentContainer.classList.remove("active");
     }
 
-    currentContainer.classList.remove("active");
     currentStep = step + 1;
 
-    const nextContainer = document.querySelector(
-        `.step[data-step="${currentStep}"]`,
-    );
+    const nextContainer = document.querySelector(`.step[data-step="${currentStep}"]`);
     if (nextContainer) {
         nextContainer.classList.add("active");
         updateProgress();
 
-        // Precarga en el Paso 2 (Inspección General)
+        // Precarga en Inspección General
         if (currentStep === 2) {
             setTimeout(() => {
                 precargarInspeccionGeneralPrevio();
             }, 50);
         }
 
-        // Precarga en el Paso 11 (Fechas de Mantenimiento)
-        if (currentStep === 11) {
-            setTimeout(() => {
-                try {
-                    precargarMantenimientoPrevio();
-                } catch (err) {
-                    console.error("Error al precargar mantenimiento:", err);
-                }
-            }, 50);
-        }
+        // Precarga en Documentación y Mantenimiento
+        setTimeout(() => {
+            try {
+                precargarMantenimientoPrevio();
+            } catch (err) {
+                console.error("Error al precargar datos de mantenimiento/documentación:", err);
+            }
+        }, 50);
     }
 }
 
 function prevStep(step) {
-    document
-        .querySelector(`.step[data-step="${step}"]`)
-        .classList.remove("active");
+    const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
+    if (currentContainer) currentContainer.classList.remove("active");
+
     currentStep = step - 1;
-    document
-        .querySelector(`.step[data-step="${currentStep}"]`)
-        .classList.add("active");
-    updateProgress();
+    const prevContainer = document.querySelector(`.step[data-step="${currentStep}"]`);
+    if (prevContainer) {
+        prevContainer.classList.add("active");
+        updateProgress();
+    }
 }
 
 document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
@@ -91,11 +91,11 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
         }
     });
 
-    // 2. Persistencia local por vehículo
+    // 2. Persistencia local por vehículo (Ambas funciones activas)
     guardarMantenimientoActual();
     guardarInspeccionGeneralActual();
 
-    // 3. Verificación en consola (F12) para chequear cada clave antes de enviar
+    // 3. Verificación en consola (F12)
     console.log("DATOS COMPLETOS SALIENDO A GOOGLE SHEETS:", data);
 
     try {
@@ -112,7 +112,7 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
         const feedback = document.getElementById("feedbackMsg");
         if (feedback) feedback.style.display = "block";
     } catch (err) {
-        console.error("Error capturado:", err);
+        console.error("Error capturado al guardar:", err);
         form.style.display = "none";
         const feedback = document.getElementById("feedbackMsg");
         if (feedback) feedback.style.display = "block";
@@ -120,20 +120,25 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
 });
 
 function resetForm() {
-    document.getElementById("vehicleForm").reset();
-    document.getElementById("vehicleForm").style.display = "block";
-    document.getElementById("feedbackMsg").style.display = "none";
+    const form = document.getElementById("vehicleForm");
+    if (form) {
+        form.reset();
+        form.style.display = "block";
+    }
+    const feedback = document.getElementById("feedbackMsg");
+    if (feedback) feedback.style.display = "none";
 
-    document
-        .querySelectorAll(".step")
-        .forEach((s) => s.classList.remove("active"));
+    document.querySelectorAll(".step").forEach((s) => s.classList.remove("active"));
     currentStep = 1;
-    document.querySelector('.step[data-step="1"]').classList.add("active");
+    const firstStep = document.querySelector('.step[data-step="1"]');
+    if (firstStep) firstStep.classList.add("active");
     updateProgress();
 
     const btn = document.getElementById("btnSubmit");
-    btn.disabled = false;
-    btn.innerText = "Finalizar y Guardar";
+    if (btn) {
+        btn.disabled = false;
+        btn.innerText = "Finalizar y Guardar";
+    }
 }
 
 // Diccionario de patentes asociadas
@@ -147,6 +152,7 @@ const patentes = {
 function autocompletarPatente() {
     const select = document.getElementById("selectVehiculo");
     const inputPatente = document.getElementById("inputPatente");
+    if (!select || !inputPatente) return;
     const pat = patentes[select.value] || "";
     inputPatente.value = pat;
 
@@ -158,19 +164,15 @@ function autocompletarPatente() {
 // Carga la fecha y hora actual en el input
 function setFechaHoraActual() {
     const now = new Date();
-    // Formatea al estándar requerido por datetime-local (YYYY-MM-DDTHH:mm)
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById("fechaHora").value = now.toISOString().slice(0, 16);
+    const el = document.getElementById("fechaHora");
+    if (el) el.value = now.toISOString().slice(0, 16);
 }
-
-// Carga la fecha/hora actual por defecto apenas abre la página
-document.addEventListener("DOMContentLoaded", () => {
-    setFechaHoraActual();
-});
 
 // Muestra u oculta la caja de detalle según la opción marcada
 function toggleObsField(boxId, show) {
     const box = document.getElementById(boxId);
+    if (!box) return;
     if (show) {
         box.classList.add("visible");
         const textarea = box.querySelector("textarea");
@@ -178,15 +180,8 @@ function toggleObsField(boxId, show) {
     } else {
         box.classList.remove("visible");
         const textarea = box.querySelector("textarea");
-        if (textarea) textarea.value = ""; // Limpia el texto si vuelven a marcar OK
+        if (textarea) textarea.value = "";
     }
-}
-
-// Cálculo automático de la barra de progreso
-function updateProgress() {
-    const totalSteps = document.querySelectorAll(".step").length;
-    const progress = (currentStep / totalSteps) * 100;
-    document.getElementById("progressBar").style.width = `${progress}%`;
 }
 
 // Dispara la búsqueda silenciosa apenas se elige el auto en el Paso 1
@@ -197,27 +192,21 @@ async function consultarFechasVehiculo(patente) {
     if (loader) loader.style.display = "block";
 
     try {
-        const res = await fetch(
-            `${SCRIPT_URL}?patente=${encodeURIComponent(patente)}`,
-        );
+        const res = await fetch(`${SCRIPT_URL}?patente=${encodeURIComponent(patente)}`);
         const json = await res.json();
 
         if (json.status === "success" && json.data) {
-            // Si existía una fecha próxima anterior, ahora pasa a ser el último control sugerido
             if (json.data.fecha_prox_bateria) {
-                document.getElementById("ult_bateria").value = formatearFechaParaInput(
-                    json.data.fecha_prox_bateria,
-                );
+                const el = document.getElementById("ult_bateria");
+                if (el) el.value = formatearFechaParaInput(json.data.fecha_prox_bateria);
             }
             if (json.data.fecha_prox_lavado) {
-                document.getElementById("ult_lavado").value = formatearFechaParaInput(
-                    json.data.fecha_prox_lavado,
-                );
+                const el = document.getElementById("ult_lavado");
+                if (el) el.value = formatearFechaParaInput(json.data.fecha_prox_lavado);
             }
             if (json.data.fecha_prox_service) {
-                document.getElementById("ult_service").value = formatearFechaParaInput(
-                    json.data.fecha_prox_service,
-                );
+                const el = document.getElementById("ult_service");
+                if (el) el.value = formatearFechaParaInput(json.data.fecha_prox_service);
             }
         }
     } catch (err) {
@@ -227,7 +216,6 @@ async function consultarFechasVehiculo(patente) {
     }
 }
 
-// Adapta fechas devueltas por Google Sheets al formato YYYY-MM-DD
 function formatearFechaParaInput(fechaRaw) {
     if (!fechaRaw) return "";
     const d = new Date(fechaRaw);
@@ -235,51 +223,137 @@ function formatearFechaParaInput(fechaRaw) {
     return d.toISOString().split("T")[0];
 }
 
-// Helpers para botones rápidos
+// Helpers para botones rápidos de fechas
 function setFechaHoy(inputId) {
-    const hoy = new Date().toISOString().split("T")[0];
-    document.getElementById(inputId).value = hoy;
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    el.value = new Date().toISOString().split("T")[0];
 }
 
 function sumarMeses(origenId, destinoId, meses) {
-    const baseVal = document.getElementById(origenId).value;
+    const origen = document.getElementById(origenId);
+    const destino = document.getElementById(destinoId);
+    if (!origen || !destino) return;
+    const baseVal = origen.value;
     const fechaBase = baseVal ? new Date(baseVal) : new Date();
     fechaBase.setMonth(fechaBase.getMonth() + meses);
-    document.getElementById(destinoId).value = fechaBase
-        .toISOString()
-        .split("T")[0];
+    destino.value = fechaBase.toISOString().split("T")[0];
 }
 
 function sumarDias(origenId, destinoId, dias) {
-    const baseVal = document.getElementById(origenId).value;
+    const origen = document.getElementById(origenId);
+    const destino = document.getElementById(destinoId);
+    if (!origen || !destino) return;
+    const baseVal = origen.value;
     const fechaBase = baseVal ? new Date(baseVal) : new Date();
     fechaBase.setDate(fechaBase.getDate() + dias);
-    document.getElementById(destinoId).value = fechaBase
-        .toISOString()
-        .split("T")[0];
+    destino.value = fechaBase.toISOString().split("T")[0];
 }
 
 // Navegación entre vistas principales
 function mostrarFormulario() {
-    document.getElementById("homeView").style.display = "none";
-    document.getElementById("reportContainerView").style.display = "none";
-    document.getElementById("formContainerView").style.display = "block";
+    const home = document.getElementById("homeView");
+    const report = document.getElementById("reportContainerView");
+    const form = document.getElementById("formContainerView");
+    if (home) home.style.display = "none";
+    if (report) report.style.display = "none";
+    if (form) form.style.display = "block";
     updateProgress();
 }
 
-function mostrarReportes() {
-    document.getElementById("homeView").style.display = "none";
-    document.getElementById("formContainerView").style.display = "none";
-    document.getElementById("reportContainerView").style.display = "block";
+async function mostrarReportes() {
+    const home = document.getElementById("homeView");
+    const form = document.getElementById("formContainerView");
+    const report = document.getElementById("reportContainerView");
+    if (home) home.style.display = "none";
+    if (form) form.style.display = "none";
+    if (report) report.style.display = "block";
+
+    await cargarFechasDisponiblesReporte();
 }
 
-async function mostrarReportes() {
-    document.getElementById("homeView").style.display = "none";
-    document.getElementById("formContainerView").style.display = "none";
-    document.getElementById("reportContainerView").style.display = "block";
+function volverAlMenuDesdeFeedback() {
+    const feedback = document.getElementById("feedbackMsg");
+    if (feedback) feedback.style.display = "none";
+    resetForm();
+    volverAlMenu();
+}
 
-    // Carga dinámica de fechas de inspección al abrir la vista
-    await cargarFechasDisponiblesReporte();
+function volverAlMenu() {
+    const home = document.getElementById("homeView");
+    const form = document.getElementById("formContainerView");
+    const report = document.getElementById("reportContainerView");
+    if (home) home.style.display = "block";
+    if (form) form.style.display = "none";
+    if (report) report.style.display = "none";
+}
+
+let tipoReporteActual = "dia";
+
+function initReportView() {
+    const hoy = new Date().toISOString().split("T")[0];
+    const mesActual = hoy.slice(0, 7);
+    const inputDia = document.getElementById("filtroFechaDia");
+    const inputMes = document.getElementById("filtroFechaMes");
+    if (inputDia) inputDia.value = hoy;
+    if (inputMes) inputMes.value = mesActual;
+}
+
+function setFechaHoyFiltro() {
+    const inputDia = document.getElementById("filtroFechaDia");
+    if (inputDia) inputDia.value = new Date().toISOString().split("T")[0];
+}
+
+function cambiarTipoReporte(tipo) {
+    tipoReporteActual = tipo;
+    const btnDia = document.getElementById("btnTipoDia");
+    const btnMes = document.getElementById("btnTipoMes");
+    const grupoDia = document.getElementById("grupoFiltroDia");
+    const grupoMes = document.getElementById("grupoFiltroMes");
+
+    if (tipo === "dia") {
+        if (btnDia) btnDia.className = "btn-primary";
+        if (btnMes) btnMes.className = "btn-secondary";
+        if (grupoDia) grupoDia.style.display = "block";
+        if (grupoMes) grupoMes.style.display = "none";
+    } else {
+        if (btnDia) btnDia.className = "btn-secondary";
+        if (btnMes) btnMes.className = "btn-primary";
+        if (grupoDia) grupoDia.style.display = "none";
+        if (grupoMes) grupoMes.style.display = "block";
+    }
+}
+
+function normalizarFecha(val) {
+    if (!val) return "";
+    const str = val.toString().trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        return str.slice(0, 10);
+    }
+    const partes = str.split(",")[0].split("/");
+    if (partes.length === 3) {
+        const dia = partes[0].padStart(2, "0");
+        const mes = partes[1].padStart(2, "0");
+        const anio = partes[2].length === 2 ? `20${partes[2]}` : partes[2];
+        return `${anio}-${mes}-${dia}`;
+    }
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+    return "";
+}
+
+function cargarImagen(ruta) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = ruta;
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("No se pudo cargar la imagen: " + ruta));
+    });
 }
 
 async function cargarFechasDisponiblesReporte() {
@@ -297,151 +371,46 @@ async function cargarFechasDisponiblesReporte() {
             return;
         }
 
-        // Extraer fechas únicas buscando en columna C ('fecha_hora') o A ('Fecha y Hora')
         const fechasSet = new Set();
-
         json.data.forEach((r) => {
-            const raw = r.fecha_hora || r["Fecha y Hora"] || "";
+            const raw = (r.fecha_hora || r["fecha_hora"] || r["Fecha y Hora"] || r.fecha || "").toString().trim();
             if (!raw) return;
-
-            let fechaStr = "";
-            if (typeof normalizarFecha === "function") {
-                fechaStr = normalizarFecha(raw);
-            } else {
-                fechaStr = raw.toString().slice(0, 10);
-            }
-
-            if (fechaStr) {
-                fechasSet.add(fechaStr);
-            }
+            const fechaLimpia = normalizarFecha(raw);
+            if (fechaLimpia) fechasSet.add(fechaLimpia);
         });
 
         const listaFechas = Array.from(fechasSet);
-
         if (listaFechas.length === 0) {
             selectFechas.innerHTML = '<option value="">Sin fechas encontradas</option>';
             return;
         }
 
-        // Orden descendente (las inspecciones más recientes arriba)
         listaFechas.sort((a, b) => b.localeCompare(a));
+
+        const formatearTextoFecha = (isoStr) => {
+            const [y, m, d] = isoStr.split("-").map(Number);
+            const fechaObj = new Date(y, m - 1, d);
+            const nombreDia = new Intl.DateTimeFormat("es-ES", { weekday: "long" }).format(fechaObj);
+            const diaCap = nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1);
+            const diaFormateado = String(d).padStart(2, "0");
+            const mesFormateado = String(m).padStart(2, "0");
+            return `${diaCap} ${diaFormateado}/${mesFormateado}/${y}`;
+        };
 
         selectFechas.innerHTML =
             '<option value="">Seleccionar una fecha...</option>' +
-            listaFechas
-                .map((f) => `<option value="${f}">${f}</option>`)
-                .join("");
-
+            listaFechas.map((f) => `<option value="${f}">${formatearTextoFecha(f)}</option>`).join("");
     } catch (err) {
         console.error("Error al cargar las fechas de inspección:", err);
         selectFechas.innerHTML = '<option value="">Error al cargar fechas</option>';
     }
 }
 
-function volverAlMenuDesdeFeedback() {
-    document.getElementById("feedbackMsg").style.display = "none";
-    resetForm(); // resetea los campos
-    volverAlMenu();
-}
-
-function volverAlMenu() {
-    const home = document.getElementById("homeView");
-    const form = document.getElementById("formContainerView");
-    const report = document.getElementById("reportContainerView");
-
-    if (home) home.style.display = "block";
-    if (form) form.style.display = "none";
-    if (report) report.style.display = "none";
-}
-
-let tipoReporteActual = "dia";
-
-// Inicializa valores por defecto al cargar
-function initReportView() {
-    const hoy = new Date().toISOString().split("T")[0];
-    const mesActual = hoy.slice(0, 7);
-
-    const inputDia = document.getElementById("filtroFechaDia");
-    const inputMes = document.getElementById("filtroFechaMes");
-
-    if (inputDia) inputDia.value = hoy;
-    if (inputMes) inputMes.value = mesActual;
-}
-initReportView();
-
-function setFechaHoyFiltro() {
-    document.getElementById("filtroFechaDia").value = new Date()
-        .toISOString()
-        .split("T")[0];
-}
-
-function cambiarTipoReporte(tipo) {
-    tipoReporteActual = tipo;
-    const btnDia = document.getElementById("btnTipoDia");
-    const btnMes = document.getElementById("btnTipoMes");
-    const grupoDia = document.getElementById("grupoFiltroDia");
-    const grupoMes = document.getElementById("grupoFiltroMes");
-
-    if (tipo === "dia") {
-        btnDia.className = "btn-primary";
-        btnMes.className = "btn-secondary";
-        grupoDia.style.display = "block";
-        grupoMes.style.display = "none";
-    } else {
-        btnDia.className = "btn-secondary";
-        btnMes.className = "btn-primary";
-        grupoDia.style.display = "none";
-        grupoMes.style.display = "block";
-    }
-}
-
-// Función auxiliar para llevar cualquier fecha (ISO, Date de Sheets o D/M/YYYY) a formato YYYY-MM-DD
-function normalizarFecha(val) {
-    if (!val) return "";
-    const str = val.toString().trim();
-
-    // Si ya empieza en formato YYYY-MM-DD (ej: "2026-09-04 10:30")
-    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-        return str.slice(0, 10);
-    }
-
-    // Si viene en formato D/M/YYYY o DD/MM/YYYY (ej: "4/9/2026, 10:40:27")
-    const partes = str.split(",")[0].split("/");
-    if (partes.length === 3) {
-        const dia = partes[0].padStart(2, "0");
-        const mes = partes[1].padStart(2, "0");
-        const anio = partes[2];
-        return `${anio}-${mes}-${dia}`;
-    }
-
-    // Fallback con objeto Date
-    const d = new Date(str);
-    if (!isNaN(d.getTime())) {
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const dd = String(d.getDate()).padStart(2, "0");
-        return `${yyyy}-${mm}-${dd}`;
-    }
-
-    return "";
-}
-
-// Función para cargar la imagen en memoria antes de meterla al PDF
-function cargarImagen(ruta) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = ruta;
-        img.onload = () => resolve(img);
-        img.onerror = (err) =>
-            reject(new Error("No se pudo cargar la imagen: " + ruta));
-    });
-}
-
 async function generarReportePDF() {
     const btn = document.getElementById("btnGenerarPDF");
     const loader = document.getElementById("reportLoading");
 
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     if (loader) loader.style.display = "block";
 
     try {
@@ -453,31 +422,26 @@ async function generarReportePDF() {
             return;
         }
 
-        const vehiculoSeleccionado =
-            document.getElementById("filtroVehiculo").value;
+        const vehiculoSeleccionado = document.getElementById("filtroVehiculo").value;
         let registros = json.data;
 
-        // 1. Filtrado por Fecha (Día o Mes)
         if (tipoReporteActual === "dia") {
             const diaBuscado = document.getElementById("filtroFechaDia").value.trim();
             if (!diaBuscado) {
                 alert("Por favor seleccioná una fecha del listado.");
                 return;
             }
-
             registros = registros.filter((r) => {
                 const fechaRaw = r.fecha_hora || r["Fecha y Hora"] || "";
                 const fechaNorm = normalizarFecha(fechaRaw);
-                // Compara tanto en formato directo del select como normalizado
                 return fechaNorm === diaBuscado || fechaRaw.toString().includes(diaBuscado);
             });
         } else {
-            const mesBuscado = document.getElementById("filtroFechaMes").value; // Formato: YYYY-MM
+            const mesBuscado = document.getElementById("filtroFechaMes").value;
             if (!mesBuscado) {
                 alert("Por favor seleccioná un mes.");
                 return;
             }
-
             registros = registros.filter((r) => {
                 const fechaRaw = r.fecha_hora || r["Fecha y Hora"] || "";
                 const fechaNormalizada = normalizarFecha(fechaRaw);
@@ -485,7 +449,6 @@ async function generarReportePDF() {
             });
         }
 
-        // 2. Filtrado por Vehículo si no es 'TODOS'
         if (vehiculoSeleccionado !== "TODOS") {
             registros = registros.filter(
                 (r) => (r.vehiculo || "").trim() === vehiculoSeleccionado.trim(),
@@ -497,7 +460,6 @@ async function generarReportePDF() {
             return;
         }
 
-        // 3. Generación del documento con jsPDF (Ficha por Vehículo completa)
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
             orientation: "portrait",
@@ -505,7 +467,6 @@ async function generarReportePDF() {
             format: "a4",
         });
 
-        // Precargamos banner institucional
         let bannerImg = null;
         try {
             bannerImg = await cargarImagen("assets/banner.png");
@@ -513,7 +474,6 @@ async function generarReportePDF() {
             console.warn("Banner no encontrado en assets/banner.png");
         }
 
-        // Limpieza de formato para fecha y hora de inspección
         const formatearFechaHora = (val) => {
             if (!val) return "-";
             const str = val.toString().trim();
@@ -531,7 +491,6 @@ async function generarReportePDF() {
             return str;
         };
 
-        // Formateo de fechas simples (YYYY-MM-DD a DD/MM/YYYY)
         const formatearFechaCorta = (val) => {
             if (!val) return "-";
             const str = val.toString().trim();
@@ -542,34 +501,25 @@ async function generarReportePDF() {
             return str;
         };
 
-        // Formatea el estado de cada ítem: OK limpio o Alerta con detalle
         const fItem = (estado, detalle) => {
             if (!estado || estado.toString().trim() === "") return "-";
             const est = estado.toString().trim().toUpperCase();
             if (est === "REVISAR") {
-                const det =
-                    detalle && detalle.toString().trim()
-                        ? detalle.toString().trim()
-                        : "Sin detalle";
+                const det = detalle && detalle.toString().trim() ? detalle.toString().trim() : "Sin detalle";
                 return `REVISAR: ${det}`;
             }
             return "OK";
         };
 
-        // Iteramos cada registro: 1 página por vehículo
         registros.forEach((item, index) => {
-            if (index > 0) {
-                doc.addPage();
-            }
+            if (index > 0) doc.addPage();
 
-            // --- ENCABEZADO INSTITUCIONAL ---
             if (bannerImg) {
                 doc.addImage(bannerImg, "PNG", 12, 8, 186, 22);
             }
             doc.setDrawColor(200, 200, 200);
             doc.line(12, 32, 198, 32);
 
-            // --- TÍTULO Y METADATOS DE LA INSPECCIÓN ---
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10.5);
             doc.setTextColor(30, 41, 59);
@@ -578,29 +528,20 @@ async function generarReportePDF() {
             doc.setFont("helvetica", "normal");
             doc.setFontSize(8);
             doc.setTextColor(100, 116, 139);
-            doc.text(
-                `Fecha y hora: ${formatearFechaHora(item.fecha_hora || item["Fecha y Hora"])}`,
-                12,
-                43,
-            );
+            doc.text(`Fecha y hora: ${formatearFechaHora(item.fecha_hora || item["Fecha y Hora"])}`, 12, 43);
             doc.text(`Inspector: ${item.inspector || "-"}`, 95, 43);
             doc.text(`Unidad: ${index + 1} de ${registros.length}`, 172, 43);
 
-            // --- BLOQUE 1: DATOS BÁSICOS DEL VEHÍCULO ---
             doc.autoTable({
                 startY: 46,
-                head: [
-                    ["VEHÍCULO", "PATENTE", "KILOMETRAJE", "COMBUSTIBLE", "BATERÍA"],
-                ],
-                body: [
-                    [
-                        item.vehiculo || "-",
-                        item.patente || "-",
-                        item.kilometraje ? `${item.kilometraje} km` : "-",
-                        item.combustible || "-",
-                        item.estado_bateria || "-",
-                    ],
-                ],
+                head: [["VEHÍCULO", "PATENTE", "KILOMETRAJE", "COMBUSTIBLE", "BATERÍA"]],
+                body: [[
+                    item.vehiculo || "-",
+                    item.patente || "-",
+                    item.kilometraje ? `${item.kilometraje} km` : "-",
+                    item.combustible || "-",
+                    item.estado_bateria || "-",
+                ]],
                 theme: "plain",
                 headStyles: {
                     fillColor: [30, 41, 59],
@@ -620,7 +561,6 @@ async function generarReportePDF() {
                 tableLineWidth: 0.2,
             });
 
-            // Helper para encabezados de sección que abarcan 2 columnas
             const headerSeccion = (texto) => ({
                 content: texto,
                 colSpan: 2,
@@ -632,114 +572,30 @@ async function generarReportePDF() {
                 },
             });
 
-            // --- BLOQUE 2: CHECKLIST EXACTO CON FILA ADICIONAL A LA IZQUIERDA ---
             const checklistPorVistas = [
-                [
-                    headerSeccion("INSPECCIÓN DE LUCES"),
-                    headerSeccion("ELEMENTOS DE SEGURIDAD"),
-                ],
-                [
-                    "Luces Bajas",
-                    fItem(item.luces_bajas_estado, item.luces_bajas_detalle),
-                    "Matafuego Reglam.",
-                    fItem(
-                        item.seguridad_matafuego_estado,
-                        item.seguridad_matafuego_detalle,
-                    ),
-                ],
-                [
-                    "Luces Altas",
-                    fItem(item.luces_altas_estado, item.luces_altas_detalle),
-                    "Balizas Portátiles",
-                    fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle),
-                ],
-                [
-                    "Luces de Giro (Guiños)",
-                    fItem(
-                        item.luces_giros_estado || item.luces_giro_estado,
-                        item.luces_giros_detalle || item.luces_giro_detalle,
-                    ),
-                    headerSeccion("ELEMENTOS DE AUXILIO"),
-                ],
-                [
-                    "Balizas (Emergencia)",
-                    fItem(item.luces_balizas_estado, item.luces_balizas_detalle),
-                    "Gato Hidráulico",
-                    fItem(item.auxilio_gato_estado, item.auxilio_gato_detalle),
-                ],
-                [
-                    headerSeccion("INSPECCIÓN DE FRENOS"),
-                    "Llave Cruz",
-                    fItem(item.auxilio_llave_estado, item.auxilio_llave_detalle),
-                ],
-                [
-                    "Frenos de Servicio (Pedal)",
-                    fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle),
-                    "Rueda de Auxilio",
-                    fItem(item.auxilio_rueda_estado, item.auxilio_rueda_detalle),
-                ],
-                [
-                    "Freno de Mano",
-                    fItem(item.freno_mano_estado, item.freno_mano_detalle),
-                    headerSeccion("ESCOBILLAS LIMPIAPARABRISAS"),
-                ],
-                [
-                    headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"),
-                    "Escobillas Delanteras",
-                    fItem(
-                        item.escobillas_delanteras_estado,
-                        item.escobillas_delanteras_detalle,
-                    ),
-                ],
-                [
-                    "Cubierta Delantera Izq.",
-                    fItem(item.cubierta_di_estado, item.cubierta_di_detalle),
-                    "Escobilla Trasera",
-                    fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle),
-                ],
-                [
-                    "Cubierta Delantera Der.",
-                    fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle),
-                    headerSeccion("DOCUMENTACIÓN OBLIGATORIA"),
-                ],
-                [
-                    "Cubierta Trasera Izq.",
-                    fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle),
-                    "Cédula Vehicular",
-                    fItem(item.doc_cedula_estado, item.doc_cedula_detalle),
-                ],
-                [
-                    "Cubierta Trasera Der.",
-                    fItem(item.cubierta_td_estado, item.cubierta_td_detalle),
-                    "Comprobante de Seguro",
-                    fItem(item.doc_seguro_estado, item.doc_seguro_detalle),
-                ],
-                [
-                    headerSeccion("INSPECCIÓN DE FLUIDOS"),
-                    "VTV / RTO Vigente",
-                    fItem(item.doc_vtv_estado, item.doc_vtv_detalle),
-                ],
-                [
-                    "Nivel de Aceite",
-                    fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle),
-                    "",
-                    "",
-                ],
-                [
-                    "Agua / Refrigerante",
-                    fItem(item.fluido_agua_estado, item.fluido_agua_detalle),
-                    "",
-                    "",
-                ],
+                [headerSeccion("INSPECCIÓN DE LUCES"), headerSeccion("ELEMENTOS DE SEGURIDAD")],
+                ["Luces Bajas", fItem(item.luces_bajas_estado, item.luces_bajas_detalle), "Matafuego Reglam.", fItem(item.seguridad_matafuego_estado, item.seguridad_matafuego_detalle)],
+                ["Luces Altas", fItem(item.luces_altas_estado, item.luces_altas_detalle), "Balizas Portátiles", fItem(item.seguridad_balizas_estado, item.seguridad_balizas_detalle)],
+                ["Luces de Giro (Guiños)", fItem(item.luces_giros_estado || item.luces_giro_estado, item.luces_giros_detalle || item.luces_giro_detalle), headerSeccion("ELEMENTOS DE AUXILIO")],
+                ["Balizas (Emergencia)", fItem(item.luces_balizas_estado, item.luces_balizas_detalle), "Gato Hidráulico", fItem(item.auxilio_gato_estado, item.auxilio_gato_detalle)],
+                [headerSeccion("INSPECCIÓN DE FRENOS"), "Llave Cruz", fItem(item.auxilio_llave_estado, item.auxilio_llave_detalle)],
+                ["Frenos de Servicio (Pedal)", fItem(item.frenos_servicio_estado, item.frenos_servicio_detalle), "Rueda de Auxilio", fItem(item.auxilio_rueda_estado, item.auxilio_rueda_detalle)],
+                ["Freno de Mano", fItem(item.freno_mano_estado, item.freno_mano_detalle), headerSeccion("ESCOBILLAS LIMPIAPARABRISAS")],
+                [headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"), "Escobillas Delanteras", fItem(item.escobillas_delanteras_estado, item.escobillas_delanteras_detalle)],
+                ["Cubierta Delantera Izq.", fItem(item.cubierta_di_estado, item.cubierta_di_detalle), "Escobilla Trasera", fItem(item.escobilla_trasera_estado, item.escobilla_trasera_detalle)],
+                ["Cubierta Delantera Der.", fItem(item.cubierta_dd_estado, item.cubierta_dd_detalle), headerSeccion("DOCUMENTACIÓN OBLIGATORIA")],
+                ["Cubierta Trasera Izq.", fItem(item.cubierta_ti_estado, item.cubierta_ti_detalle), "Cédula Vehicular", fItem(item.doc_cedula_estado, item.doc_cedula_detalle)],
+                ["Cubierta Trasera Der.", fItem(item.cubierta_td_estado, item.cubierta_td_detalle), "Comprobante de Seguro", fItem(item.doc_seguro_estado, item.doc_seguro_detalle)],
+                [headerSeccion("INSPECCIÓN DE FLUIDOS"), "VTV / RTO Vigente", fItem(item.doc_vtv_estado, item.doc_vtv_detalle)],
+                ["Nivel de Aceite", fItem(item.fluido_aceite_estado, item.fluido_aceite_detalle), "", ""],
+                ["Agua / Refrigerante", fItem(item.fluido_agua_estado, item.fluido_agua_detalle), "", ""],
             ];
 
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 3,
                 margin: { left: 12, right: 12 },
                 tableWidth: 186,
-                head: [
-                    ["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"],
-                ],
+                head: [["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"]],
                 body: checklistPorVistas,
                 theme: "plain",
                 headStyles: {
@@ -757,52 +613,29 @@ async function generarReportePDF() {
                     2: { fontStyle: "bold", cellWidth: 43 },
                     3: { cellWidth: 50 },
                 },
-                didParseCell: function (data) {
-                    if (
-                        (data.column.index === 1 || data.column.index === 3) &&
-                        data.cell.raw &&
-                        typeof data.cell.raw === "string"
-                    ) {
-                        const val = data.cell.raw.trim();
+                didParseCell: function (dataCell) {
+                    if ((dataCell.column.index === 1 || dataCell.column.index === 3) && dataCell.cell.raw && typeof dataCell.cell.raw === "string") {
+                        const val = dataCell.cell.raw.trim();
                         if (val.startsWith("REVISAR")) {
-                            data.cell.styles.textColor = [185, 28, 28];
-                            data.cell.styles.fontStyle = "bold";
+                            dataCell.cell.styles.textColor = [185, 28, 28];
+                            dataCell.cell.styles.fontStyle = "bold";
                         } else if (val === "OK") {
-                            data.cell.styles.textColor = [21, 128, 61];
-                            data.cell.styles.fontStyle = "bold";
+                            dataCell.cell.styles.textColor = [21, 128, 61];
+                            dataCell.cell.styles.fontStyle = "bold";
                         }
                     }
                 },
             });
 
-            // --- BLOQUE 3: HISTORIAL Y PROGRAMACIÓN DE MANTENIMIENTO ---
             const mantenimientos = [
-                [
-                    "Control de Batería",
-                    formatearFechaCorta(item.fecha_ult_bateria),
-                    formatearFechaCorta(item.fecha_prox_bateria),
-                ],
-                [
-                    "Lavado de Unidad",
-                    formatearFechaCorta(item.fecha_ult_lavado),
-                    formatearFechaCorta(item.fecha_prox_lavado),
-                ],
-                [
-                    "Service Mecánico",
-                    formatearFechaCorta(item.fecha_ult_service),
-                    formatearFechaCorta(item.fecha_prox_service),
-                ],
+                ["Control de Batería", formatearFechaCorta(item.fecha_ult_bateria), formatearFechaCorta(item.fecha_prox_bateria)],
+                ["Lavado de Unidad", formatearFechaCorta(item.fecha_ult_lavado), formatearFechaCorta(item.fecha_prox_lavado)],
+                ["Service Mecánico", formatearFechaCorta(item.fecha_ult_service), formatearFechaCorta(item.fecha_prox_service)],
             ];
 
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 3.5,
-                head: [
-                    [
-                        "CONTROL DE MANTENIMIENTO",
-                        "ÚLTIMO REALIZADO",
-                        "PRÓXIMO PROGRAMADO",
-                    ],
-                ],
+                head: [["CONTROL DE MANTENIMIENTO", "ÚLTIMO REALIZADO", "PRÓXIMO PROGRAMADO"]],
                 body: mantenimientos,
                 theme: "plain",
                 headStyles: {
@@ -816,30 +649,25 @@ async function generarReportePDF() {
                 tableLineWidth: 0.2,
             });
 
-            // --- BLOQUE 4: OBSERVACIONES GENERALES DE LA UNIDAD ---
             const yObs = doc.lastAutoTable.finalY + 4;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(8);
             doc.setTextColor(30, 41, 59);
             doc.text("Observaciones Generales / Novedades del Vehículo", 12, yObs);
 
-            const obsFinal =
-                item.observaciones_generales &&
-                    item.observaciones_generales.toString().trim()
-                    ? item.observaciones_generales.toString().trim()
-                    : "Sin observaciones reportadas.";
+            const obsFinal = item.observaciones_generales && item.observaciones_generales.toString().trim()
+                ? item.observaciones_generales.toString().trim()
+                : "Sin observaciones reportadas.";
 
             doc.setFont("helvetica", "normal");
             doc.setFontSize(7.5);
             doc.setTextColor(71, 85, 105);
-
             doc.setDrawColor(203, 213, 225);
             doc.setFillColor(248, 250, 252);
             doc.roundedRect(12, yObs + 2, 186, 18, 1, 1, "FD");
             doc.text(obsFinal, 14, yObs + 7, { maxWidth: 182 });
         });
 
-        // Guardado y descarga del documento
         const ahora = new Date();
         const dia = String(ahora.getDate()).padStart(2, "0");
         const mes = String(ahora.getMonth() + 1).padStart(2, "0");
@@ -850,137 +678,58 @@ async function generarReportePDF() {
         const nombreArchivo = `Reporte_DEA_Inspeccion_${dia}-${mes}-${anio}_${horas}-${minutos}.pdf`;
         doc.save(nombreArchivo);
     } catch (err) {
-        console.error("Error al exportar:", err);
+        console.error("Error al exportar reporte:", err);
         alert("Ocurrió un error al procesar el reporte.");
     } finally {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
         if (loader) loader.style.display = "none";
     }
 }
 
-function formatearYCalcularKm(input) {
-    const proxInput = document.getElementById("kms_prox_service");
-
-    // Extrae únicamente los dígitos numéricos
-    const valorLimpio = input.value.replace(/\D/g, "");
-
-    if (!valorLimpio) {
-        input.value = "";
-        if (proxInput) proxInput.value = "";
-        return;
-    }
-
-    const numero = parseInt(valorLimpio, 10);
-
-    // Formatea el input actual con puntos de miles (es-AR)
-    input.value = numero.toLocaleString("es-AR");
-
-    // Calcula y formatea el próximo service (+10.000)
-    if (proxInput) {
-        const proximo = numero + 10000;
-        proxInput.value = proximo.toLocaleString("es-AR");
-    }
-}
-
-// Obtiene el identificador del móvil actual (patente o número de móvil)
-function getVehiculoIdActual() {
-    const movilInput =
-        document.getElementById("movil") ||
-        document.getElementById("patente") ||
-        document.querySelector("[name='movil']");
-    return movilInput && movilInput.value
-        ? movilInput.value.trim().toUpperCase()
-        : "GENERAL";
-}
-
-// Carga las fechas anteriores guardadas para este vehículo
-function precargarMantenimientoPrevio() {
-    const vehiculoId = getVehiculoIdActual();
-    const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
-    if (!rawData) return;
-
-    try {
-        const data = JSON.parse(rawData);
-
-        // Batería
-        const batInput = document.getElementById("ult_bateria");
-        const hintBat = document.getElementById("hint_bateria");
-        if (batInput && data.fecha_ult_bateria) {
-            batInput.value = data.fecha_ult_bateria;
-            if (hintBat)
-                hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
-        }
-
-        // Lavado
-        const lavInput = document.getElementById("ult_lavado");
-        const hintLav = document.getElementById("hint_lavado");
-        if (lavInput && data.fecha_ult_lavado) {
-            lavInput.value = data.fecha_ult_lavado;
-            if (hintLav)
-                hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
-        }
-
-        // Service
-        const srvInput = document.getElementById("ult_service");
-        const hintSrv = document.getElementById("hint_service");
-        if (srvInput && data.fecha_ult_service) {
-            srvInput.value = data.fecha_ult_service;
-            if (hintSrv)
-                hintSrv.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
-        }
-
-        // Kms
-        const kmInput = document.getElementById("kms_ult_service");
-        if (kmInput && data.kms_ult_service) {
-            kmInput.value = data.kms_ult_service;
-            if (typeof formatearYCalcularKm === "function") {
-                formatearYCalcularKm(kmInput);
-            }
-        }
-    } catch (e) {
-        console.error("Error leyendo datos de mantenimiento:", e);
-    }
-}
-
-// Guarda los valores actuales para que queden fijados en el próximo control
-function guardarMantenimientoActual() {
-    const vehiculoId = getVehiculoIdActual();
-    const datos = {
-        fecha_ult_bateria: document.getElementById("ult_bateria")?.value || "",
-        fecha_ult_lavado: document.getElementById("ult_lavado")?.value || "",
-        fecha_ult_service: document.getElementById("ult_service")?.value || "",
-        kms_ult_service: document.getElementById("kms_ult_service")?.value || "",
-        // Nuevo: Alineado y balanceo
-        fecha_ult_alineado: document.getElementById("ult_alineado")?.value || "",
-        kms_ult_alineado: document.getElementById("kms_ult_alineado")?.value || "",
-    };
-    localStorage.setItem(`mantenimiento_${vehiculoId}`, JSON.stringify(datos));
-}
-
 // Obtiene el identificador del vehículo de forma segura
 function getVehiculoIdActual() {
-    // Busca el select o input donde elegís el vehículo/modelo
     const input =
         document.querySelector("[name='vehiculo']") ||
+        document.getElementById("selectVehiculo") ||
         document.getElementById("vehiculo") ||
         document.querySelector("[name='patente']") ||
+        document.getElementById("inputPatente") ||
         document.getElementById("patente");
 
     if (input && input.value && input.value.trim() !== "") {
-        // Normaliza el texto sacando espacios extras y pasando a mayúsculas
         return input.value.trim().toUpperCase().replace(/\s+/g, "_");
     }
     return "SIN_VEHICULO";
 }
 
-// Carga datos previos sin romper si un elemento no existe
+// Guarda los valores actuales para que queden fijados en el próximo control
+function guardarMantenimientoActual() {
+    const vehiculoId = getVehiculoIdActual();
+    if (!vehiculoId || vehiculoId === "SIN_VEHICULO") return;
+
+    const datos = {
+        fecha_ult_bateria: document.getElementById("ult_bateria")?.value || "",
+        fecha_ult_lavado: document.getElementById("ult_lavado")?.value || "",
+        fecha_ult_service: document.getElementById("ult_service")?.value || "",
+        kms_ult_service: document.getElementById("kms_ult_service")?.value || "",
+        fecha_ult_alineado: document.getElementById("ult_alineado")?.value || "",
+        kms_ult_alineado: document.getElementById("kms_ult_alineado")?.value || "",
+        doc_seguro_inicio: document.getElementById("doc_seguro_inicio")?.value || "",
+        doc_seguro_vencimiento: document.getElementById("doc_seguro_vencimiento")?.value || "",
+        doc_vtv_inspeccion: document.getElementById("doc_vtv_inspeccion")?.value || "",
+        doc_vtv_vencimiento: document.getElementById("doc_vtv_vencimiento")?.value || "",
+    };
+    localStorage.setItem(`mantenimiento_${vehiculoId}`, JSON.stringify(datos));
+}
+
+// Única función unificada de precarga: Mantenimiento + Alineado + Seguro + VTV
 function precargarMantenimientoPrevio() {
     const vehiculoId = getVehiculoIdActual();
     if (vehiculoId === "SIN_VEHICULO") return;
 
     const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
 
-    // Elementos del DOM
+    // Elementos de Mantenimiento
     const batInput = document.getElementById("ult_bateria");
     const hintBat = document.getElementById("hint_bateria");
     const lavInput = document.getElementById("ult_lavado");
@@ -994,58 +743,97 @@ function precargarMantenimientoPrevio() {
     const kmAlnInput = document.getElementById("kms_ult_alineado");
     const kmProxAln = document.getElementById("kms_prox_alineado");
 
+    // Elementos de Documentación
+    const segInicioInput = document.getElementById("doc_seguro_inicio");
+    const hintSegInicio = document.getElementById("ant_doc_seguro_inicio");
+    const segVencInput = document.getElementById("doc_seguro_vencimiento");
+    const hintSegVenc = document.getElementById("ant_doc_seguro_vencimiento");
+    const vtvInspInput = document.getElementById("doc_vtv_inspeccion");
+    const hintVtvInsp = document.getElementById("ant_doc_vtv_inspeccion");
+    const vtvVencInput = document.getElementById("doc_vtv_vencimiento");
+    const hintVtvVenc = document.getElementById("ant_doc_vtv_vencimiento");
+
     if (rawData) {
         try {
             const data = JSON.parse(rawData);
 
             // Batería
             if (batInput) batInput.value = data.fecha_ult_bateria || "";
-            if (hintBat)
-                hintBat.innerText = data.fecha_ult_bateria
+            if (hintBat) {
+                hintBat.innerText = data.fecha_ult_bateria && data.fecha_ult_bateria.includes("-")
                     ? `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`
                     : "";
+            }
 
             // Lavado
             if (lavInput) lavInput.value = data.fecha_ult_lavado || "";
-            if (hintLav)
-                hintLav.innerText = data.fecha_ult_lavado
+            if (hintLav) {
+                hintLav.innerText = data.fecha_ult_lavado && data.fecha_ult_lavado.includes("-")
                     ? `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`
                     : "";
+            }
 
-            // Service
+            // Service Mecánico
             if (servInput) servInput.value = data.fecha_ult_service || "";
-            if (hintServ)
-                hintServ.innerText = data.fecha_ult_service
+            if (hintServ) {
+                hintServ.innerText = data.fecha_ult_service && data.fecha_ult_service.includes("-")
                     ? `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`
                     : "";
+            }
             if (kmServInput) {
                 kmServInput.value = data.kms_ult_service || "";
-                if (typeof formatearYCalcularKmService === "function")
-                    formatearYCalcularKmService(kmServInput);
+                if (typeof formatearYCalcularKm === "function") formatearYCalcularKm(kmServInput);
             }
 
-            // Alineado
+            // Alineado y Balanceo
             if (alnInput) {
                 alnInput.value = data.fecha_ult_alineado || "";
-                if (typeof calcularProximoAlineadoFecha === "function")
-                    calcularProximoAlineadoFecha(data.fecha_ult_alineado);
+                if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(data.fecha_ult_alineado);
             }
-            if (hintAln)
-                hintAln.innerText = data.fecha_ult_alineado
+            if (hintAln) {
+                hintAln.innerText = data.fecha_ult_alineado && data.fecha_ult_alineado.includes("-")
                     ? `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`
                     : "";
+            }
             if (kmAlnInput) {
                 kmAlnInput.value = data.kms_ult_alineado || "";
-                if (typeof formatearYCalcularKmAlineado === "function")
-                    formatearYCalcularKmAlineado(kmAlnInput);
+                if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
+            }
+
+            // Seguro
+            if (segInicioInput) segInicioInput.value = data.doc_seguro_inicio || "";
+            if (hintSegInicio) {
+                hintSegInicio.innerText = data.doc_seguro_inicio && data.doc_seguro_inicio.includes("-")
+                    ? `Anterior: ${data.doc_seguro_inicio.split("-").reverse().join("/")}`
+                    : "Anterior: ---";
+            }
+            if (segVencInput) segVencInput.value = data.doc_seguro_vencimiento || "";
+            if (hintSegVenc) {
+                hintSegVenc.innerText = data.doc_seguro_vencimiento && data.doc_seguro_vencimiento.includes("-")
+                    ? `Anterior: ${data.doc_seguro_vencimiento.split("-").reverse().join("/")}`
+                    : "Anterior: ---";
+            }
+
+            // VTV / RTO
+            if (vtvInspInput) vtvInspInput.value = data.doc_vtv_inspeccion || "";
+            if (hintVtvInsp) {
+                hintVtvInsp.innerText = data.doc_vtv_inspeccion && data.doc_vtv_inspeccion.includes("-")
+                    ? `Anterior: ${data.doc_vtv_inspeccion.split("-").reverse().join("/")}`
+                    : "Anterior: ---";
+            }
+            if (vtvVencInput) vtvVencInput.value = data.doc_vtv_vencimiento || "";
+            if (hintVtvVenc) {
+                hintVtvVenc.innerText = data.doc_vtv_vencimiento && data.doc_vtv_vencimiento.includes("-")
+                    ? `Anterior: ${data.doc_vtv_vencimiento.split("-").reverse().join("/")}`
+                    : "Anterior: ---";
             }
             return;
         } catch (e) {
-            console.error("Error al parsear mantenimiento:", e);
+            console.error("Error al parsear datos de mantenimiento:", e);
         }
     }
 
-    // SI NO HAY DATOS PARA ESTE AUTO: Limpieza total
+    // SI NO HAY DATOS PARA ESTE AUTO: Limpieza controlada
     if (batInput) batInput.value = "";
     if (hintBat) hintBat.innerText = "";
     if (lavInput) lavInput.value = "";
@@ -1058,23 +846,31 @@ function precargarMantenimientoPrevio() {
     if (hintAln) hintAln.innerText = "";
     if (kmAlnInput) kmAlnInput.value = "";
     if (kmProxAln) kmProxAln.value = "";
+
+    if (segInicioInput) segInicioInput.value = "";
+    if (hintSegInicio) hintSegInicio.innerText = "Anterior: ---";
+    if (segVencInput) segVencInput.value = "";
+    if (hintSegVenc) hintSegVenc.innerText = "Anterior: ---";
+    if (vtvInspInput) vtvInspInput.value = "";
+    if (hintVtvInsp) hintVtvInsp.innerText = "Anterior: ---";
+    if (vtvVencInput) vtvVencInput.value = "";
+    if (hintVtvVenc) hintVtvVenc.innerText = "Anterior: ---";
 }
 
 // Guarda los valores de Inspección General vinculados al vehículo actual
 function guardarInspeccionGeneralActual() {
     const vehiculoId = getVehiculoIdActual();
+    if (!vehiculoId || vehiculoId === "SIN_VEHICULO") return;
+
     const datos = {
         kilometraje: document.getElementById("kilometraje")?.value || "",
         combustible: document.getElementById("combustible")?.value || "",
         estado_bateria: document.getElementById("estado_bateria")?.value || "",
     };
-    localStorage.setItem(
-        `inspeccion_general_${vehiculoId}`,
-        JSON.stringify(datos),
-    );
+    localStorage.setItem(`inspeccion_general_${vehiculoId}`, JSON.stringify(datos));
 }
 
-// Precarga los valores guardados en los inputs y muestra las leyendas "Anterior: ..."
+// Precarga los valores de Inspección General
 function precargarInspeccionGeneralPrevio() {
     const vehiculoId = getVehiculoIdActual();
     const kmInput = document.getElementById("kilometraje");
@@ -1087,38 +883,21 @@ function precargarInspeccionGeneralPrevio() {
     if (vehiculoId === "SIN_VEHICULO") return;
 
     const rawData = localStorage.getItem(`inspeccion_general_${vehiculoId}`);
-
     if (rawData) {
         try {
             const data = JSON.parse(rawData);
-
-            // Kilometraje
             if (kmInput) kmInput.value = data.kilometraje || "";
-            if (hintKm)
-                hintKm.innerText = data.kilometraje
-                    ? `Anterior: ${data.kilometraje} km`
-                    : "";
-
-            // Combustible
+            if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "";
             if (combSelect) combSelect.value = data.combustible || "";
-            if (hintComb)
-                hintComb.innerText = data.combustible
-                    ? `Anterior: ${data.combustible}`
-                    : "";
-
-            // Batería
+            if (hintComb) hintComb.innerText = data.combustible ? `Anterior: ${data.combustible}` : "";
             if (batSelect) batSelect.value = data.estado_bateria || "";
-            if (hintBat)
-                hintBat.innerText = data.estado_bateria
-                    ? `Anterior: ${data.estado_bateria}`
-                    : "";
+            if (hintBat) hintBat.innerText = data.estado_bateria ? `Anterior: ${data.estado_bateria}` : "";
             return;
         } catch (err) {
-            console.error("Error al parsear datos de inspección:", err);
+            console.error("Error al parsear datos de inspección general:", err);
         }
     }
 
-    // SI NO HAY DATOS PARA ESTE VEHÍCULO: Resetear para no arrastrar los del otro
     if (kmInput) kmInput.value = "";
     if (hintKm) hintKm.innerText = "";
     if (combSelect) combSelect.value = "";
@@ -1127,7 +906,7 @@ function precargarInspeccionGeneralPrevio() {
     if (hintBat) hintBat.innerText = "";
 }
 
-// Formato con punto de miles y suma de 10.000
+// Formato con punto de miles y suma de 10.000 para Service
 function formatearYCalcularKm(input) {
     if (!input) return;
     const proxInput = document.getElementById("kms_prox_service");
@@ -1152,10 +931,9 @@ function calcularProximoAlineadoFecha(fechaStr) {
     const inputProx = document.getElementById("prox_alineado_fecha");
     if (!fechaStr || !inputProx) return;
 
-    const partes = fechaStr.split("-"); // AAAA-MM-DD
+    const partes = fechaStr.split("-");
+    if (partes.length < 3) return;
     const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
-
-    // Suma 6 meses exactos
     fecha.setMonth(fecha.getMonth() + 6);
 
     const yyyy = fecha.getFullYear();
@@ -1165,7 +943,7 @@ function calcularProximoAlineadoFecha(fechaStr) {
     inputProx.value = `${yyyy}-${mm}-${dd}`;
 }
 
-// Botón Hoy específico para alineado (setea hoy y calcula los 6 meses)
+// Botón Hoy específico para alineado
 function setAlineadoHoy() {
     const inputUlt = document.getElementById("ult_alineado");
     if (!inputUlt) return;
@@ -1200,7 +978,6 @@ function formatearYCalcularKmAlineado(input) {
     }
 }
 
-// Formatea con puntos de miles el kilometraje ingresado
 function formatearKmSimple(input) {
     if (!input) return;
     const valorLimpio = input.value.replace(/\D/g, "");
@@ -1212,12 +989,38 @@ function formatearKmSimple(input) {
 }
 
 function limpiarCamposHistorial() {
-    // Inspección General
+    resetearValoresVista();
+    resetearMantenimientoVista();
+
+    const idsDoc = [
+        "doc_seguro_inicio",
+        "doc_seguro_vencimiento",
+        "doc_vtv_inspeccion",
+        "doc_vtv_vencimiento",
+    ];
+    idsDoc.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+
+    const labelsDoc = [
+        "ant_doc_seguro_inicio",
+        "ant_doc_seguro_vencimiento",
+        "ant_doc_vtv_inspeccion",
+        "ant_doc_vtv_vencimiento",
+    ];
+    labelsDoc.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = "Anterior: ---";
+    });
+}
+
+function resetearValoresVista() {
     const kmInput = document.getElementById("kilometraje");
-    const hintKm = document.getElementById("hint_kilometraje");
     const combSelect = document.getElementById("combustible");
-    const hintComb = document.getElementById("hint_combustible");
     const batSelect = document.getElementById("estado_bateria");
+    const hintKm = document.getElementById("hint_kilometraje");
+    const hintComb = document.getElementById("hint_combustible");
     const hintBat = document.getElementById("hint_estado_bateria");
 
     if (kmInput) kmInput.value = "";
@@ -1226,9 +1029,10 @@ function limpiarCamposHistorial() {
     if (hintComb) hintComb.innerText = "";
     if (batSelect) batSelect.value = "";
     if (hintBat) hintBat.innerText = "";
+}
 
-    // Mantenimiento
-    const idsLimpiar = [
+function resetearMantenimientoVista() {
+    const ids = [
         "ult_bateria",
         "hint_bateria",
         "ult_lavado",
@@ -1239,10 +1043,12 @@ function limpiarCamposHistorial() {
         "kms_prox_service",
         "ult_alineado",
         "hint_alineado",
+        "prox_alineado_fecha",
         "kms_ult_alineado",
         "kms_prox_alineado",
     ];
-    idsLimpiar.forEach((id) => {
+
+    ids.forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
         if (el.tagName === "INPUT") el.value = "";
@@ -1250,12 +1056,15 @@ function limpiarCamposHistorial() {
     });
 }
 
+// Carga últimos datos desde Sheets al cambiar de auto en el selector
 async function cargarUltimosDatosDesdeSheets() {
     const selectVehiculo =
         document.querySelector("[name='vehiculo']") ||
+        document.getElementById("selectVehiculo") ||
         document.getElementById("vehiculo");
     const inputPatente =
         document.querySelector("[name='patente']") ||
+        document.getElementById("inputPatente") ||
         document.getElementById("patente");
 
     const valorVehiculo = selectVehiculo ? selectVehiculo.value.trim() : "";
@@ -1266,7 +1075,6 @@ async function cargarUltimosDatosDesdeSheets() {
         return;
     }
 
-    // Indicador visual en el hint mientras consulta
     const hintKm = document.getElementById("hint_kilometraje");
     if (hintKm) hintKm.innerText = "Consultando último registro...";
 
@@ -1289,23 +1097,12 @@ async function cargarUltimosDatosDesdeSheets() {
                 kmInput.value = data.kilometraje || "";
                 if (typeof formatearKmSimple === "function") formatearKmSimple(kmInput);
             }
-            if (hintKm)
-                hintKm.innerText = data.kilometraje
-                    ? `Anterior: ${data.kilometraje} km`
-                    : "";
+            if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "";
             if (combSelect && data.combustible) combSelect.value = data.combustible;
-            if (hintComb)
-                hintComb.innerText = data.combustible
-                    ? `Anterior: ${data.combustible}`
-                    : "";
-            if (batSelect && data.estado_bateria)
-                batSelect.value = data.estado_bateria;
-            if (hintBat)
-                hintBat.innerText = data.estado_bateria
-                    ? `Anterior: ${data.estado_bateria}`
-                    : "";
+            if (hintComb) hintComb.innerText = data.combustible ? `Anterior: ${data.combustible}` : "";
+            if (batSelect && data.estado_bateria) batSelect.value = data.estado_bateria;
+            if (hintBat) hintBat.innerText = data.estado_bateria ? `Anterior: ${data.estado_bateria}` : "";
 
-            // Helper para formatear fechas que vienen de Google Sheets
             const formatearFecha = (f) => {
                 if (!f) return "";
                 const d = new Date(f);
@@ -1318,33 +1115,23 @@ async function cargarUltimosDatosDesdeSheets() {
             const hintBatMant = document.getElementById("hint_bateria");
             const fBat = formatearFecha(data.fecha_ult_bateria);
             if (batInput) batInput.value = fBat;
-            if (hintBatMant)
-                hintBatMant.innerText = fBat
-                    ? `Anterior: ${fBat.split("-").reverse().join("/")}`
-                    : "";
+            if (hintBatMant) hintBatMant.innerText = fBat ? `Anterior: ${fBat.split("-").reverse().join("/")}` : "";
 
             const lavInput = document.getElementById("ult_lavado");
             const hintLav = document.getElementById("hint_lavado");
             const fLav = formatearFecha(data.fecha_ult_lavado);
             if (lavInput) lavInput.value = fLav;
-            if (hintLav)
-                hintLav.innerText = fLav
-                    ? `Anterior: ${fLav.split("-").reverse().join("/")}`
-                    : "";
+            if (hintLav) hintLav.innerText = fLav ? `Anterior: ${fLav.split("-").reverse().join("/")}` : "";
 
             const servInput = document.getElementById("ult_service");
             const hintServ = document.getElementById("hint_service");
             const kmServInput = document.getElementById("kms_ult_service");
             const fServ = formatearFecha(data.fecha_ult_service);
             if (servInput) servInput.value = fServ;
-            if (hintServ)
-                hintServ.innerText = fServ
-                    ? `Anterior: ${fServ.split("-").reverse().join("/")}`
-                    : "";
+            if (hintServ) hintServ.innerText = fServ ? `Anterior: ${fServ.split("-").reverse().join("/")}` : "";
             if (kmServInput) {
                 kmServInput.value = data.kms_ult_service || "";
-                if (typeof formatearYCalcularKmService === "function")
-                    formatearYCalcularKmService(kmServInput);
+                if (typeof formatearYCalcularKm === "function") formatearYCalcularKm(kmServInput);
             }
 
             const alnInput = document.getElementById("ult_alineado");
@@ -1353,20 +1140,40 @@ async function cargarUltimosDatosDesdeSheets() {
             const fAln = formatearFecha(data.fecha_ult_alineado);
             if (alnInput) {
                 alnInput.value = fAln;
-                if (typeof calcularProximoAlineadoFecha === "function")
-                    calcularProximoAlineadoFecha(fAln);
+                if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(fAln);
             }
-            if (hintAln)
-                hintAln.innerText = fAln
-                    ? `Anterior: ${fAln.split("-").reverse().join("/")}`
-                    : "";
+            if (hintAln) hintAln.innerText = fAln ? `Anterior: ${fAln.split("-").reverse().join("/")}` : "";
             if (kmAlnInput) {
                 kmAlnInput.value = data.kms_ult_alineado || "";
-                if (typeof formatearYCalcularKmAlineado === "function")
-                    formatearYCalcularKmAlineado(kmAlnInput);
+                if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
             }
+
+            // 3. Documentación: Seguro y VTV desde Sheets
+            const segInicio = formatearFecha(data.doc_seguro_inicio);
+            const segInicioInput = document.getElementById("doc_seguro_inicio");
+            const hintSegInicio = document.getElementById("ant_doc_seguro_inicio");
+            if (segInicioInput) segInicioInput.value = segInicio;
+            if (hintSegInicio) hintSegInicio.innerText = segInicio ? `Anterior: ${segInicio.split("-").reverse().join("/")}` : "Anterior: ---";
+
+            const segVenc = formatearFecha(data.doc_seguro_vencimiento);
+            const segVencInput = document.getElementById("doc_seguro_vencimiento");
+            const hintSegVenc = document.getElementById("ant_doc_seguro_vencimiento");
+            if (segVencInput) segVencInput.value = segVenc;
+            if (hintSegVenc) hintSegVenc.innerText = segVenc ? `Anterior: ${segVenc.split("-").reverse().join("/")}` : "Anterior: ---";
+
+            const vtvInsp = formatearFecha(data.doc_vtv_inspeccion);
+            const vtvInspInput = document.getElementById("doc_vtv_inspeccion");
+            const hintVtvInsp = document.getElementById("ant_doc_vtv_inspeccion");
+            if (vtvInspInput) vtvInspInput.value = vtvInsp;
+            if (hintVtvInsp) hintVtvInsp.innerText = vtvInsp ? `Anterior: ${vtvInsp.split("-").reverse().join("/")}` : "Anterior: ---";
+
+            const vtvVenc = formatearFecha(data.doc_vtv_vencimiento);
+            const vtvVencInput = document.getElementById("doc_vtv_vencimiento");
+            const hintVtvVenc = document.getElementById("ant_doc_vtv_vencimiento");
+            if (vtvVencInput) vtvVencInput.value = vtvVenc;
+            if (hintVtvVenc) hintVtvVenc.innerText = vtvVenc ? `Anterior: ${vtvVenc.split("-").reverse().join("/")}` : "Anterior: ---";
+
         } else {
-            // Si la planilla no tiene ningún registro anterior de este vehículo
             limpiarCamposHistorial();
         }
     } catch (err) {
@@ -1375,52 +1182,26 @@ async function cargarUltimosDatosDesdeSheets() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const selectorVehiculo =
-        document.querySelector("[name='vehiculo']") ||
-        document.querySelector("[name='patente']") ||
-        document.getElementById("vehiculo") ||
-        document.getElementById("patente");
-
-    if (selectorVehiculo) {
-        selectorVehiculo.addEventListener("change", () => {
-            // Trae los últimos registros de la planilla para el auto elegido
-            if (typeof cargarUltimosDatosDesdeSheets === "function") {
-                cargarUltimosDatosDesdeSheets();
-            }
-            // Oculta la escobilla trasera si es la Montana o la muestra si es otro vehículo
-            if (typeof verificarElementosPorVehiculo === "function") {
-                verificarElementosPorVehiculo();
-            }
-        });
-    }
-});
-
 function verificarElementosPorVehiculo() {
     try {
-        const selectorVehiculo = document.querySelector("[name='vehiculo']") ||
+        const selectorVehiculo =
+            document.querySelector("[name='vehiculo']") ||
+            document.getElementById("selectVehiculo") ||
             document.getElementById("vehiculo");
         const cardTrasera = document.getElementById("card_limpiaparabrisas_trasera");
 
-        // Si todavía no existen en el DOM (ej: estás en el Panel de Control), sale sin romper
         if (!selectorVehiculo || !cardTrasera) return;
 
         const valorVehiculo = (selectorVehiculo.value || "").toString().trim().toUpperCase();
-
-        // Si todavía no eligió ningún vehículo en el desplegable, no aplica ninguna restricción
         if (!valorVehiculo) return;
 
         const esMontana = valorVehiculo.includes("MONTANA");
-
         const radioOk = document.getElementById("esco_tras_ok");
         const radioRev = document.getElementById("esco_tras_rev");
         const textareaObs = cardTrasera.querySelector("textarea");
 
         if (esMontana) {
-            // Ocultar fila completa
             cardTrasera.style.display = "none";
-
-            // Desactivar y limpiar campos para no mandar datos inválidos
             if (radioOk) {
                 radioOk.checked = false;
                 radioOk.disabled = true;
@@ -1434,16 +1215,12 @@ function verificarElementosPorVehiculo() {
                 textareaObs.disabled = true;
             }
         } else {
-            // Mostrar fila para los otros vehículos
             cardTrasera.style.display = "";
-
             if (radioOk) {
                 radioOk.disabled = false;
-                radioOk.checked = true; // Valor por defecto
+                radioOk.checked = true;
             }
-            if (radioRev) {
-                radioRev.disabled = false;
-            }
+            if (radioRev) radioRev.disabled = false;
             if (textareaObs) {
                 textareaObs.disabled = false;
                 if (textareaObs.value === "N/A") textareaObs.value = "";
@@ -1454,114 +1231,27 @@ function verificarElementosPorVehiculo() {
     }
 }
 
-function resetearValoresVista() {
-    // Vacía los inputs para permitir una carga desde cero
-    const kmInput = document.getElementById("kilometraje");
-    const combSelect = document.getElementById("combustible");
-    const batSelect = document.getElementById("estado_bateria");
+// Inicialización global
+document.addEventListener("DOMContentLoaded", () => {
+    setFechaHoraActual();
+    initReportView();
 
-    if (kmInput) kmInput.value = "";
-    if (combSelect) combSelect.value = "";
-    if (batSelect) batSelect.value = "";
-}
+    const selectorVehiculo =
+        document.querySelector("[name='vehiculo']") ||
+        document.getElementById("selectVehiculo") ||
+        document.getElementById("vehiculo");
 
-function resetearMantenimientoVista() {
-    const ids = [
-        // Batería y Lavado (si están arriba en la misma pantalla)
-        "ult_bateria",
-        "ult_lavado",
-
-        // Service Mecánico
-        "ult_service",
-        "kms_ult_service",
-        "kms_prox_service",
-
-        // Alineado y Balanceo
-        "ult_alineado",
-        "prox_alineado_fecha", // o el id que tenga tu campo "Próximo (+6 meses)"
-        "kms_ult_alineado",
-        "kms_prox_alineado"
-    ];
-
-    ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = "";
-    });
-}
-
-async function cargarFechasDisponiblesReporte() {
-    const selectFechas = document.getElementById("filtroFechaDia");
-    if (!selectFechas) return;
-
-    selectFechas.innerHTML = '<option value="">Cargando fechas de inspecciones...</option>';
-
-    try {
-        const res = await fetch(`${SCRIPT_URL}?action=getAll`);
-        const json = await res.json();
-
-        if (json.status !== "success" || !json.data || json.data.length === 0) {
-            selectFechas.innerHTML = '<option value="">Sin inspecciones registradas</option>';
-            return;
-        }
-
-        const fechasSet = new Set();
-
-        json.data.forEach((r) => {
-            const raw = (r.fecha_hora || r["fecha_hora"] || r["Fecha y Hora"] || r.fecha || "").toString().trim();
-            if (!raw) return;
-
-            let fechaLimpia = "";
-
-            if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
-                fechaLimpia = raw.slice(0, 10);
-            } else if (raw.includes("/")) {
-                const parteFecha = raw.split(" ")[0];
-                const partes = parteFecha.split("/");
-                if (partes.length === 3) {
-                    const dia = partes[0].padStart(2, "0");
-                    const mes = partes[1].padStart(2, "0");
-                    const anio = partes[2].length === 2 ? `20${partes[2]}` : partes[2];
-                    fechaLimpia = `${anio}-${mes}-${dia}`;
-                }
+    if (selectorVehiculo) {
+        selectorVehiculo.addEventListener("change", () => {
+            autocompletarPatente();
+            precargarMantenimientoPrevio();
+            precargarInspeccionGeneralPrevio();
+            if (typeof cargarUltimosDatosDesdeSheets === "function") {
+                cargarUltimosDatosDesdeSheets();
             }
-
-            if (fechaLimpia) {
-                fechasSet.add(fechaLimpia);
+            if (typeof verificarElementosPorVehiculo === "function") {
+                verificarElementosPorVehiculo();
             }
         });
-
-        const listaFechas = Array.from(fechasSet);
-
-        if (listaFechas.length === 0) {
-            selectFechas.innerHTML = '<option value="">Sin fechas encontradas</option>';
-            return;
-        }
-
-        // Orden descendente (las más recientes primero)
-        listaFechas.sort((a, b) => b.localeCompare(a));
-
-        // Función para armar "Jueves 17/09/2026"
-        const formatearTextoFecha = (isoStr) => {
-            const [y, m, d] = isoStr.split("-").map(Number);
-            // Creamos la fecha local exacta evitando desfasajes de zona horaria UTC
-            const fechaObj = new Date(y, m - 1, d);
-
-            const nombreDia = new Intl.DateTimeFormat("es-ES", { weekday: "long" }).format(fechaObj);
-            const diaCap = nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1);
-            const diaFormateado = String(d).padStart(2, "0");
-            const mesFormateado = String(m).padStart(2, "0");
-
-            return `${diaCap} ${diaFormateado}/${mesFormateado}/${y}`;
-        };
-
-        selectFechas.innerHTML =
-            '<option value="">Seleccionar una fecha...</option>' +
-            listaFechas
-                .map((f) => `<option value="${f}">${formatearTextoFecha(f)}</option>`)
-                .join("");
-
-    } catch (err) {
-        console.error("Error al cargar las fechas de inspección:", err);
-        selectFechas.innerHTML = '<option value="">Error al cargar fechas</option>';
     }
-}
+});

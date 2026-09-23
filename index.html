@@ -702,36 +702,82 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span class="check-title">Comprobante de Seguro (Póliza / Tarjeta)</span>
                                 <div class="options-group">
-                                    <input type="radio" name="doc_seguro_estado" value="OK" id="doc_seg_ok"
-                                        class="radio-pill" checked onchange="toggleObsField('doc_seg_obs_box', false)">
-                                    <label for="doc_seg_ok" class="ok">OK</label>
-                                    <input type="radio" name="doc_seguro_estado" value="Revisar" id="doc_seg_rev"
-                                        class="radio-pill" onchange="toggleObsField('doc_seg_obs_box', true)">
-                                    <label for="doc_seg_rev" class="revisar">Revisar</label>
+                                    <input type="radio" name="doc_seguro_estado" value="OK" id="seguro_ok"
+                                        class="radio-pill" checked onchange="toggleObsField('seguro_obs_box', false)">
+                                    <label for="seguro_ok" class="ok">OK</label>
+
+                                    <input type="radio" name="doc_seguro_estado" value="Revisar" id="seguro_rev"
+                                        class="radio-pill" onchange="toggleObsField('seguro_obs_box', true)">
+                                    <label for="seguro_rev" class="revisar">Revisar</label>
                                 </div>
                             </div>
-                            <div class="obs-detail-container" id="doc_seg_obs_box">
+
+                            <!-- Fechas Seguro -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 0.75rem; color: #94a3b8;">Inicio de Vigencia</label>
+                                    <input type="date" id="doc_seguro_inicio" name="doc_seguro_inicio"
+                                        style="padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 16px;">
+                                    <span id="ant_doc_seguro_inicio"
+                                        style="font-size: 0.75rem; color: #38bdf8; font-style: italic;">Anterior:
+                                        ---</span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 0.75rem; color: #94a3b8;">Fecha de Vencimiento</label>
+                                    <input type="date" id="doc_seguro_vencimiento" name="doc_seguro_vencimiento"
+                                        style="padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 16px;">
+                                    <span id="ant_doc_seguro_vencimiento"
+                                        style="font-size: 0.75rem; color: #38bdf8; font-style: italic;">Anterior:
+                                        ---</span>
+                                </div>
+                            </div>
+
+                            <!-- Detalle desplegable si tocan Revisar -->
+                            <div class="obs-detail-container" id="seguro_obs_box">
                                 <textarea name="doc_seguro_detalle" rows="2"
-                                    placeholder="Detalle: ej. Póliza vencida el día XX, falta comprobante de pago..."></textarea>
+                                    placeholder="Detalle: ej. Sin comprobante físico, póliza impaga..."></textarea>
                             </div>
                         </div>
 
                         <!-- 3. VTV / RTO -->
-                        <div class="check-item" style="flex-direction: column; align-items: stretch;">
+                        <div class="check-item" style="flex-direction: column; align-items: stretch; margin-top: 12px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span class="check-title">Verificación Técnica Vehicular (VTV / RTO)</span>
                                 <div class="options-group">
-                                    <input type="radio" name="doc_vtv_estado" value="OK" id="doc_vtv_ok"
-                                        class="radio-pill" checked onchange="toggleObsField('doc_vtv_obs_box', false)">
-                                    <label for="doc_vtv_ok" class="ok">OK</label>
-                                    <input type="radio" name="doc_vtv_estado" value="Revisar" id="doc_vtv_rev"
-                                        class="radio-pill" onchange="toggleObsField('doc_vtv_obs_box', true)">
-                                    <label for="doc_vtv_rev" class="revisar">Revisar</label>
+                                    <input type="radio" name="doc_vtv_estado" value="OK" id="vtv_ok" class="radio-pill"
+                                        checked onchange="toggleObsField('vtv_obs_box', false)">
+                                    <label for="vtv_ok" class="ok">OK</label>
+
+                                    <input type="radio" name="doc_vtv_estado" value="Revisar" id="vtv_rev"
+                                        class="radio-pill" onchange="toggleObsField('vtv_obs_box', true)">
+                                    <label for="vtv_rev" class="revisar">Revisar</label>
                                 </div>
                             </div>
-                            <div class="obs-detail-container" id="doc_vtv_obs_box">
+
+                            <!-- Fechas VTV -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 0.75rem; color: #94a3b8;">Fecha de Inspección</label>
+                                    <input type="date" id="doc_vtv_inspeccion" name="doc_vtv_inspeccion"
+                                        style="padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 16px;">
+                                    <span id="ant_doc_vtv_inspeccion"
+                                        style="font-size: 0.75rem; color: #38bdf8; font-style: italic;">Anterior:
+                                        ---</span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 0.75rem; color: #94a3b8;">Fecha de Vencimiento</label>
+                                    <input type="date" id="doc_vtv_vencimiento" name="doc_vtv_vencimiento"
+                                        style="padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 16px;">
+                                    <span id="ant_doc_vtv_vencimiento"
+                                        style="font-size: 0.75rem; color: #38bdf8; font-style: italic;">Anterior:
+                                        ---</span>
+                                </div>
+                            </div>
+
+                            <!-- Detalle desplegable si tocan Revisar -->
+                            <div class="obs-detail-container" id="vtv_obs_box">
                                 <textarea name="doc_vtv_detalle" rows="2"
-                                    placeholder="Detalle: ej. Oblea vencida, falta certificado físico..."></textarea>
+                                    placeholder="Detalle: ej. Oblea vencida, sin certificado impreso..."></textarea>
                             </div>
                         </div>
 
