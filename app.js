@@ -32,21 +32,23 @@ function nextStep(step) {
         nextContainer.classList.add("active");
         updateProgress();
 
-        // Precarga en Inspección General
+        // 1. Precarga en Paso 2: Inspección General
         if (currentStep === 2) {
             setTimeout(() => {
                 precargarInspeccionGeneralPrevio();
             }, 50);
         }
 
-        // Precarga en Documentación y Mantenimiento
-        setTimeout(() => {
-            try {
-                precargarMantenimientoPrevio();
-            } catch (err) {
-                console.error("Error al precargar datos de mantenimiento/documentación:", err);
-            }
-        }, 50);
+        // 2. Precarga en Paso 10 (Documentación) y Paso 11 (Mantenimiento)
+        if (currentStep === 10 || currentStep === 11) {
+            setTimeout(() => {
+                try {
+                    precargarMantenimientoPrevio();
+                } catch (err) {
+                    console.error("Error al precargar datos de mantenimiento/documentación:", err);
+                }
+            }, 50);
+        }
     }
 }
 
@@ -1056,129 +1058,101 @@ function resetearMantenimientoVista() {
     });
 }
 
-// Carga últimos datos desde Sheets al cambiar de auto en el selector
-async function cargarUltimosDatosDesdeSheets() {
-    const selectVehiculo =
-        document.querySelector("[name='vehiculo']") ||
-        document.getElementById("selectVehiculo") ||
-        document.getElementById("vehiculo");
-    const inputPatente =
-        document.querySelector("[name='patente']") ||
-        document.getElementById("inputPatente") ||
-        document.getElementById("patente");
+// Carga datos previos sin pisar lo obtenido de Google Sheets
+function precargarMantenimientoPrevio() {
+    const vehiculoId = getVehiculoIdActual();
+    if (vehiculoId === "SIN_VEHICULO") return;
 
-    const valorVehiculo = selectVehiculo ? selectVehiculo.value.trim() : "";
-    const valorPatente = inputPatente ? inputPatente.value.trim() : "";
+    const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
 
-    if (!valorVehiculo && !valorPatente) {
-        limpiarCamposHistorial();
-        return;
-    }
+    // Elementos de Mantenimiento
+    const batInput = document.getElementById("ult_bateria");
+    const hintBat = document.getElementById("hint_bateria");
+    const lavInput = document.getElementById("ult_lavado");
+    const hintLav = document.getElementById("hint_lavado");
+    const servInput = document.getElementById("ult_service");
+    const hintServ = document.getElementById("hint_service");
+    const kmServInput = document.getElementById("kms_ult_service");
+    const kmProxServ = document.getElementById("kms_prox_service");
+    const alnInput = document.getElementById("ult_alineado");
+    const hintAln = document.getElementById("hint_alineado");
+    const kmAlnInput = document.getElementById("kms_ult_alineado");
+    const kmProxAln = document.getElementById("kms_prox_alineado");
 
-    const hintKm = document.getElementById("hint_kilometraje");
-    if (hintKm) hintKm.innerText = "Consultando último registro...";
+    // Elementos de Documentación (Paso 10)
+    const segInicioInput = document.getElementById("doc_seguro_inicio");
+    const hintSegInicio = document.getElementById("ant_doc_seguro_inicio");
+    const segVencInput = document.getElementById("doc_seguro_vencimiento");
+    const hintSegVenc = document.getElementById("ant_doc_seguro_vencimiento");
+    const vtvInspInput = document.getElementById("doc_vtv_inspeccion");
+    const hintVtvInsp = document.getElementById("ant_doc_vtv_inspeccion");
+    const vtvVencInput = document.getElementById("doc_vtv_vencimiento");
+    const hintVtvVenc = document.getElementById("ant_doc_vtv_vencimiento");
 
-    try {
-        const url = `${SCRIPT_URL}?vehiculo=${encodeURIComponent(valorVehiculo)}&patente=${encodeURIComponent(valorPatente)}`;
-        const res = await fetch(url);
-        const json = await res.json();
+    if (rawData) {
+        try {
+            const data = JSON.parse(rawData);
 
-        if (json.status === "success" && json.data) {
-            const data = json.data;
-
-            // 1. Inspección General
-            const kmInput = document.getElementById("kilometraje");
-            const combSelect = document.getElementById("combustible");
-            const batSelect = document.getElementById("estado_bateria");
-            const hintComb = document.getElementById("hint_combustible");
-            const hintBat = document.getElementById("hint_estado_bateria");
-
-            if (kmInput) {
-                kmInput.value = data.kilometraje || "";
-                if (typeof formatearKmSimple === "function") formatearKmSimple(kmInput);
+            // Batería
+            if (batInput && data.fecha_ult_bateria) batInput.value = data.fecha_ult_bateria;
+            if (hintBat && data.fecha_ult_bateria && data.fecha_ult_bateria.includes("-")) {
+                hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
             }
-            if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "";
-            if (combSelect && data.combustible) combSelect.value = data.combustible;
-            if (hintComb) hintComb.innerText = data.combustible ? `Anterior: ${data.combustible}` : "";
-            if (batSelect && data.estado_bateria) batSelect.value = data.estado_bateria;
-            if (hintBat) hintBat.innerText = data.estado_bateria ? `Anterior: ${data.estado_bateria}` : "";
 
-            const formatearFecha = (f) => {
-                if (!f) return "";
-                const d = new Date(f);
-                if (isNaN(d.getTime())) return f;
-                return d.toISOString().split("T")[0];
-            };
+            // Lavado
+            if (lavInput && data.fecha_ult_lavado) lavInput.value = data.fecha_ult_lavado;
+            if (hintLav && data.fecha_ult_lavado && data.fecha_ult_lavado.includes("-")) {
+                hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
+            }
 
-            // 2. Mantenimiento
-            const batInput = document.getElementById("ult_bateria");
-            const hintBatMant = document.getElementById("hint_bateria");
-            const fBat = formatearFecha(data.fecha_ult_bateria);
-            if (batInput) batInput.value = fBat;
-            if (hintBatMant) hintBatMant.innerText = fBat ? `Anterior: ${fBat.split("-").reverse().join("/")}` : "";
-
-            const lavInput = document.getElementById("ult_lavado");
-            const hintLav = document.getElementById("hint_lavado");
-            const fLav = formatearFecha(data.fecha_ult_lavado);
-            if (lavInput) lavInput.value = fLav;
-            if (hintLav) hintLav.innerText = fLav ? `Anterior: ${fLav.split("-").reverse().join("/")}` : "";
-
-            const servInput = document.getElementById("ult_service");
-            const hintServ = document.getElementById("hint_service");
-            const kmServInput = document.getElementById("kms_ult_service");
-            const fServ = formatearFecha(data.fecha_ult_service);
-            if (servInput) servInput.value = fServ;
-            if (hintServ) hintServ.innerText = fServ ? `Anterior: ${fServ.split("-").reverse().join("/")}` : "";
-            if (kmServInput) {
-                kmServInput.value = data.kms_ult_service || "";
+            // Service Mecánico
+            if (servInput && data.fecha_ult_service) servInput.value = data.fecha_ult_service;
+            if (hintServ && data.fecha_ult_service && data.fecha_ult_service.includes("-")) {
+                hintServ.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
+            }
+            if (kmServInput && data.kms_ult_service) {
+                kmServInput.value = data.kms_ult_service;
                 if (typeof formatearYCalcularKm === "function") formatearYCalcularKm(kmServInput);
             }
 
-            const alnInput = document.getElementById("ult_alineado");
-            const hintAln = document.getElementById("hint_alineado");
-            const kmAlnInput = document.getElementById("kms_ult_alineado");
-            const fAln = formatearFecha(data.fecha_ult_alineado);
-            if (alnInput) {
-                alnInput.value = fAln;
-                if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(fAln);
+            // Alineado y Balanceo
+            if (alnInput && data.fecha_ult_alineado) {
+                alnInput.value = data.fecha_ult_alineado;
+                if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(data.fecha_ult_alineado);
             }
-            if (hintAln) hintAln.innerText = fAln ? `Anterior: ${fAln.split("-").reverse().join("/")}` : "";
-            if (kmAlnInput) {
-                kmAlnInput.value = data.kms_ult_alineado || "";
+            if (hintAln && data.fecha_ult_alineado && data.fecha_ult_alineado.includes("-")) {
+                hintAln.innerText = `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`;
+            }
+            if (kmAlnInput && data.kms_ult_alineado) {
+                kmAlnInput.value = data.kms_ult_alineado;
                 if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
             }
 
-            // 3. Documentación: Seguro y VTV desde Sheets
-            const segInicio = formatearFecha(data.doc_seguro_inicio);
-            const segInicioInput = document.getElementById("doc_seguro_inicio");
-            const hintSegInicio = document.getElementById("ant_doc_seguro_inicio");
-            if (segInicioInput) segInicioInput.value = segInicio;
-            if (hintSegInicio) hintSegInicio.innerText = segInicio ? `Anterior: ${segInicio.split("-").reverse().join("/")}` : "Anterior: ---";
+            // Seguro (Paso 10)
+            if (segInicioInput && data.doc_seguro_inicio) segInicioInput.value = data.doc_seguro_inicio;
+            if (hintSegInicio && data.doc_seguro_inicio && data.doc_seguro_inicio.includes("-")) {
+                hintSegInicio.innerText = `Anterior: ${data.doc_seguro_inicio.split("-").reverse().join("/")}`;
+            }
 
-            const segVenc = formatearFecha(data.doc_seguro_vencimiento);
-            const segVencInput = document.getElementById("doc_seguro_vencimiento");
-            const hintSegVenc = document.getElementById("ant_doc_seguro_vencimiento");
-            if (segVencInput) segVencInput.value = segVenc;
-            if (hintSegVenc) hintSegVenc.innerText = segVenc ? `Anterior: ${segVenc.split("-").reverse().join("/")}` : "Anterior: ---";
+            if (segVencInput && data.doc_seguro_vencimiento) segVencInput.value = data.doc_seguro_vencimiento;
+            if (hintSegVenc && data.doc_seguro_vencimiento && data.doc_seguro_vencimiento.includes("-")) {
+                hintSegVenc.innerText = `Anterior: ${data.doc_seguro_vencimiento.split("-").reverse().join("/")}`;
+            }
 
-            const vtvInsp = formatearFecha(data.doc_vtv_inspeccion);
-            const vtvInspInput = document.getElementById("doc_vtv_inspeccion");
-            const hintVtvInsp = document.getElementById("ant_doc_vtv_inspeccion");
-            if (vtvInspInput) vtvInspInput.value = vtvInsp;
-            if (hintVtvInsp) hintVtvInsp.innerText = vtvInsp ? `Anterior: ${vtvInsp.split("-").reverse().join("/")}` : "Anterior: ---";
+            // VTV / RTO (Paso 10)
+            if (vtvInspInput && data.doc_vtv_inspeccion) vtvInspInput.value = data.doc_vtv_inspeccion;
+            if (hintVtvInsp && data.doc_vtv_inspeccion && data.doc_vtv_inspeccion.includes("-")) {
+                hintVtvInsp.innerText = `Anterior: ${data.doc_vtv_inspeccion.split("-").reverse().join("/")}`;
+            }
 
-            const vtvVenc = formatearFecha(data.doc_vtv_vencimiento);
-            const vtvVencInput = document.getElementById("doc_vtv_vencimiento");
-            const hintVtvVenc = document.getElementById("ant_doc_vtv_vencimiento");
-            if (vtvVencInput) vtvVencInput.value = vtvVenc;
-            if (hintVtvVenc) hintVtvVenc.innerText = vtvVenc ? `Anterior: ${vtvVenc.split("-").reverse().join("/")}` : "Anterior: ---";
+            if (vtvVencInput && data.doc_vtv_vencimiento) vtvVencInput.value = data.doc_vtv_vencimiento;
+            if (hintVtvVenc && data.doc_vtv_vencimiento && data.doc_vtv_vencimiento.includes("-")) {
+                hintVtvVenc.innerText = `Anterior: ${data.doc_vtv_vencimiento.split("-").reverse().join("/")}`;
+            }
 
-        } else {
-            limpiarCamposHistorial();
+        } catch (e) {
+            console.error("Error al parsear datos de mantenimiento:", e);
         }
-    } catch (err) {
-        console.error("Error al obtener datos previos desde Sheets:", err);
-        limpiarCamposHistorial();
     }
 }
 
