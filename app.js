@@ -731,11 +731,34 @@ async function cargarUltimosDatosDesdeSheets() {
         if (json.status === "success" && json.data) {
             const data = json.data;
 
+            // Formateador robusto compatible con DD/MM/YYYY y fechas ISO para inputs type="date"
             const formatearFecha = (f) => {
                 if (!f) return "";
-                const d = new Date(f);
-                if (isNaN(d.getTime())) return f;
-                return d.toISOString().split("T")[0];
+                const str = f.toString().trim();
+
+                // Si ya viene en formato YYYY-MM-DD
+                if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+                    return str.slice(0, 10);
+                }
+
+                // Si viene como DD/MM/YYYY o D/M/YYYY
+                const partes = str.split(",")[0].split("/");
+                if (partes.length === 3) {
+                    const dia = partes[0].padStart(2, "0");
+                    const mes = partes[1].padStart(2, "0");
+                    const anio = partes[2].length === 2 ? `20${partes[2]}` : partes[2];
+                    return `${anio}-${mes}-${dia}`;
+                }
+
+                // Fallback para objetos Date o formatos estándar parseables
+                const d = new Date(str);
+                if (!isNaN(d.getTime())) {
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, "0");
+                    const dd = String(d.getDate()).padStart(2, "0");
+                    return `${yyyy}-${mm}-${dd}`;
+                }
+                return "";
             };
 
             const fBat = formatearFecha(data.fecha_ult_bateria);
