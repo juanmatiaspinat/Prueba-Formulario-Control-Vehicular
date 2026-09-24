@@ -10,6 +10,8 @@ function updateProgress() {
     const progress = (currentStep / total) * 100;
     const bar = document.getElementById("progressBar");
     if (bar) bar.style.width = `${progress}%`;
+    const selector = document.getElementById("quickStepSelector");
+    if (selector) selector.value = currentStep;
 }
 
 function nextStep(step) {
@@ -1297,4 +1299,56 @@ function limpiarPaso1() {
 
     setFechaHoraActual();
     limpiarCamposHistorial();
+}
+
+function irAlPasoDirecto(nuevoPaso) {
+    if (nuevoPaso === currentStep) return;
+
+    // Validación obligatoria si intenta saltar hacia adelante desde el paso 1 sin completar
+    if (currentStep === 1 && nuevoPaso > 1) {
+        const paso1 = document.querySelector('.step[data-step="1"]');
+        if (paso1) {
+            const inputs = paso1.querySelectorAll("input[required], select[required]");
+            for (let inp of inputs) {
+                const val = (inp.value !== undefined && inp.value !== null) ? String(inp.value).trim() : "";
+                if (!val) {
+                    alert("Por favor completá los datos obligatorios del vehículo antes de cambiar de sección.");
+                    const selector = document.getElementById("quickStepSelector");
+                    if (selector) selector.value = currentStep;
+                    inp.focus();
+                    return;
+                }
+            }
+        }
+    }
+
+    // Resguardo de datos si salimos de pasos específicos
+    if (currentStep === 10 || currentStep === 11) {
+        guardarMantenimientoActual();
+    }
+    if (currentStep === 2) {
+        guardarInspeccionGeneralActual();
+    }
+
+    // Ocultar paso actual
+    const pasoActualEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+    if (pasoActualEl) pasoActualEl.classList.remove("active");
+
+    // Activar nuevo paso
+    currentStep = nuevoPaso;
+    const nuevoPasoEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+    if (nuevoPasoEl) {
+        nuevoPasoEl.classList.add("active");
+        updateProgress();
+
+        // Precargas si aplica
+        if (currentStep === 2) {
+            setTimeout(() => { precargarInspeccionGeneralPrevio(); }, 50);
+        }
+        if (currentStep === 10 || currentStep === 11) {
+            setTimeout(() => {
+                try { precargarMantenimientoPrevio(); } catch (e) { }
+            }, 50);
+        }
+    }
 }

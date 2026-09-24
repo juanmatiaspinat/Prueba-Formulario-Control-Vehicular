@@ -64,7 +64,7 @@ body {
     background: var(--border);
     height: 6px;
     border-radius: 999px;
-    margin: 16px 0 24px 0;
+    margin: 14px 0 8px 0;
     overflow: hidden;
 }
 
@@ -103,7 +103,7 @@ h2 {
 
 p.sub {
     color: var(--text-muted);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-size: 0.9rem;
 }
 
@@ -535,7 +535,6 @@ button {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: 14px;
     padding: 0;
 }
 
@@ -766,4 +765,8 @@ button {
     margin: 4px 0 0 0;
     font-size: 0.9rem;
     color: #94a3b8;
+}
+
+#quickStepSelector::-ms-expand {
+    display: none;
 }

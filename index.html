@@ -60,6 +60,43 @@
             <!-- Botón para volver al menú si entraron sin querer -->
             <button type="button" class="btn-nav-back" onclick="volverAlMenu()">← Volver al menú principal</button>
 
+            <!-- Selector Rápido de Vistas Estilizado -->
+            <div class="quick-nav-container" style="position: relative; margin: 12px 0 10px 0;">
+                <select id="quickStepSelector" onchange="irAlPasoDirecto(parseInt(this.value))" style="width: 100%; 
+                   background-color: #172033; 
+                   background-image: none;
+                   color: #ffffff; 
+                   border: 1px solid #2563eb; 
+                   padding: 10px 38px 10px 14px; 
+                   border-radius: 8px; 
+                   font-size: 0.95rem; 
+                   font-weight: 700; 
+                   outline: none; 
+                   cursor: pointer; 
+                   appearance: none; 
+                   -webkit-appearance: none; 
+                   -moz-appearance: none;
+                   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">
+                    <option value="1">1. Datos del Vehículo</option>
+                    <option value="2">2. Inspección General</option>
+                    <option value="3">3. Inspección de Luces</option>
+                    <option value="4">4. Inspección de Frenos</option>
+                    <option value="5">5. Inspección de Cubiertas</option>
+                    <option value="6">6. Inspección de Fluidos</option>
+                    <option value="7">7. Inspección de Elementos de Seguridad</option>
+                    <option value="8">8. Inspección de Elementos de Auxilio</option>
+                    <option value="9">9. Inspección de Otros Elementos</option>
+                    <option value="10">10. Inspección de la Documentación</option>
+                    <option value="11">11. Fechas de Mantenimiento</option>
+                    <option value="12">12. Cierre de Inspección</option>
+                </select>
+                <!-- Flecha indicadora única -->
+                <span
+                    style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #60a5fa; font-size: 0.75rem; user-select: none;">
+                    ▼
+                </span>
+            </div>
+
             <div class="progress-bar-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
@@ -67,7 +104,6 @@
             <form id="vehicleForm" novalidate>
                 <!-- PASO 1: Datos Generales -->
                 <div class="step active" data-step="1">
-                    <h2>Datos del Vehículo</h2>
                     <p class="sub">Identificación de la unidad y responsable.</p>
 
                     <!-- 1. Inspector / Operador -->
@@ -119,7 +155,6 @@
 
                 <!-- PASO 2: Inspección General -->
                 <div class="step" data-step="2">
-                    <h2>Inspección General</h2>
                     <p class="sub">Estado operativo inicial del vehículo.</p>
 
                     <!-- 1. Kilometraje Actual -->
@@ -166,7 +201,6 @@
 
                 <!-- PASO 3: Inspección de Luces -->
                 <div class="step" data-step="3">
-                    <h2>Inspección de Luces</h2>
                     <p class="sub">Revisá cada circuito de iluminación exterior.</p>
 
                     <div class="checklist-grid">
@@ -263,7 +297,6 @@
 
                 <!-- PASO 4: Inspección de Frenos -->
                 <div class="step" data-step="4">
-                    <h2>Inspección de Frenos</h2>
                     <p class="sub">Revisión del sistema de frenado y retención.</p>
 
                     <div class="checklist-grid">
@@ -321,7 +354,6 @@
 
                 <!-- PASO 5: Inspección de Cubiertas -->
                 <div class="step" data-step="5">
-                    <h2>Inspección de Cubiertas</h2>
                     <p class="sub">Revisión de desgaste, presión y estado de cada neumático.</p>
 
                     <div class="checklist-grid">
@@ -418,7 +450,6 @@
 
                 <!-- PASO 6: Inspección de Fluidos -->
                 <div class="step" data-step="6">
-                    <h2>Inspección de Fluidos</h2>
                     <p class="sub">Control de niveles básicos en el vano motor.</p>
 
                     <div class="checklist-grid">
@@ -497,7 +528,6 @@
 
                 <!-- PASO 7: Inspección de Elementos de Seguridad -->
                 <div class="step" data-step="7">
-                    <h2>Inspección de Elementos de Seguridad</h2>
                     <p class="sub">Control del kit reglamentario para circular.</p>
 
                     <div class="checklist-grid">
@@ -558,7 +588,6 @@
 
                 <!-- PASO 8: Inspección de Elementos de Auxilio -->
                 <div class="step" data-step="8">
-                    <h2>Inspección de Elementos de Auxilio</h2>
                     <p class="sub">Control de herramientas y rueda de auxilio.</p>
 
                     <div class="checklist-grid">
@@ -636,7 +665,6 @@
 
                 <!-- PASO 9: Inspección de Otros Elementos -->
                 <div class="step" data-step="9">
-                    <h2>Inspección de Otros Elementos</h2>
                     <p class="sub">Control del estado y barrido de limpiaparabrisas.</p>
 
                     <div class="checklist-grid">
@@ -697,7 +725,6 @@
 
                 <!-- PASO 10: Inspección de la Documentación -->
                 <div class="step" data-step="10">
-                    <h2>Inspección de la Documentación</h2>
                     <p class="sub">Control de papeles reglamentarios para circular.</p>
 
                     <div class="checklist-grid">
@@ -817,7 +844,6 @@
 
                 <!-- PASO 11: Control de Fechas de Mantenimiento -->
                 <div class="step" data-step="11">
-                    <h2>Fechas de Mantenimiento</h2>
                     <p class="sub">Historial y próximos controles programados.</p>
 
                     <!-- Tarjeta 1: Batería -->
@@ -963,7 +989,6 @@
 
                 <!-- PASO 12: Cierre y Observaciones Generales -->
                 <div class="step" data-step="12">
-                    <h2>Cierre de Inspección</h2>
                     <p class="sub">Comentarios adicionales y confirmación final.</p>
 
                     <div class="input-group">
