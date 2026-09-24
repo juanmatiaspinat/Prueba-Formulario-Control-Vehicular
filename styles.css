@@ -735,3 +735,35 @@ button {
         width: 100%;
     }
 }
+
+/* Cabecera con Logo en el Panel de Control */
+.panel-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 14px;
+    margin-bottom: 20px;
+}
+
+.panel-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    flex-shrink: 0;
+}
+
+.panel-titles h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #ffffff;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.panel-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}

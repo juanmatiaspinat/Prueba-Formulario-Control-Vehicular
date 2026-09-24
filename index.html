@@ -20,12 +20,21 @@
 <body>
 
     <div class="form-container">
-        <span class="header-badge">SISTEMA DE CONTROL DE VEHICULOS - DEA</span>
+        <span class="header-badge">SISTEMA DE CONTROL DE VEHICULOS</span>
 
         <!-- ==================== VISTA 0: MENÚ PRINCIPAL ==================== -->
         <div id="homeView">
-            <h2 style="margin-top: 14px; font-size: 1.4rem;">Panel de Control</h2>
-            <p class="sub">Seleccioná una acción para continuar.</p>
+            <div
+                style="display: flex; align-items: center; gap: 13px; margin-top: 6px; margin-bottom: 11px; padding-left: 4px;">
+                <img src="assets/icono-dea.png" alt="Logo DEA"
+                    style="width: 76px; height: 76px; border-radius: 16px; object-fit: cover; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); flex-shrink: 0;">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.35rem; line-height: 1.2; font-weight: 700; color: #ffffff;">Panel
+                        de Control</h2>
+                    <p class="sub" style="margin: 6px 0 0 0; font-size: 0.95rem; color: #94a3b8;">Seleccioná una acción
+                        para continuar.</p>
+                </div>
+            </div>
 
             <!-- Botón 1: Cargar inspección -->
             <button type="button" class="menu-card-btn" onclick="mostrarFormulario()">
