@@ -17,8 +17,21 @@ function nextStep(step) {
     if (currentContainer) {
         const inputs = currentContainer.querySelectorAll("input, select, textarea");
         for (let input of inputs) {
-            if (input.hasAttribute("required") && !input.value.trim()) {
+            // Ignorar elementos deshabilitados o no visibles
+            if (input.disabled || input.offsetParent === null) continue;
+
+            const valor = (input.value !== undefined && input.value !== null) ? String(input.value).trim() : "";
+
+            if (input.hasAttribute("required") && !valor) {
                 input.focus();
+                input.style.outline = "2px solid #ef4444";
+
+                // Quita el borde rojo apenas el usuario interactúa
+                input.addEventListener("input", () => { input.style.outline = ""; }, { once: true });
+                input.addEventListener("change", () => { input.style.outline = ""; }, { once: true });
+
+                const labelText = input.closest(".input-group")?.querySelector("label")?.innerText || input.name || "campo obligatorio";
+                alert(`Por favor completá: ${labelText}`);
                 return;
             }
         }
@@ -1112,20 +1125,51 @@ function limpiarCamposHistorial() {
     });
 }
 
-function resetearValoresVista() {
-    const kmInput = document.getElementById("kilometraje");
-    const combSelect = document.getElementById("combustible");
-    const batSelect = document.getElementById("estado_bateria");
-    const hintKm = document.getElementById("hint_kilometraje");
-    const hintComb = document.getElementById("hint_combustible");
-    const hintBat = document.getElementById("hint_estado_bateria");
+// Restablece la vista actual a su estado por defecto
+function resetearValoresVista(btn) {
+    const pasoActual = btn ? btn.closest(".step") : document.querySelector(".step.active");
+    if (!pasoActual) return;
 
-    if (kmInput) kmInput.value = "";
-    if (hintKm) hintKm.innerText = "";
-    if (combSelect) combSelect.value = "";
-    if (hintComb) hintComb.innerText = "";
-    if (batSelect) batSelect.value = "";
-    if (hintBat) hintBat.innerText = "";
+    // 1. Limpiar el contenido de los textareas sin tocar sus estilos display
+    pasoActual.querySelectorAll("textarea").forEach(txt => {
+        txt.value = "";
+        txt.dispatchEvent(new Event("input"));
+    });
+
+    // 2. Para cada grupo de radios, simular clic en la opción OK
+    const radioNames = new Set();
+    pasoActual.querySelectorAll("input[type='radio']").forEach(r => radioNames.add(r.name));
+
+    radioNames.forEach(name => {
+        const radioOk = pasoActual.querySelector(`input[type='radio'][name='${name}'][value='OK']`);
+        if (radioOk) {
+            // El .click() activa el radio y ejecuta su toggleObsField nativo
+            radioOk.click();
+        }
+    });
+
+    // 3. Limpieza de inputs tradicionales (si hubiera números, fechas o texto en este paso)
+    pasoActual.querySelectorAll("input:not([type='radio']):not([type='checkbox']):not([type='hidden']):not([readonly])").forEach(inp => {
+        inp.value = "";
+        inp.dispatchEvent(new Event("input"));
+    });
+
+    // 4. Checkboxes sueltos (si los hay)
+    pasoActual.querySelectorAll("input[type='checkbox']").forEach(chk => {
+        chk.checked = false;
+        chk.dispatchEvent(new Event("change"));
+    });
+
+    // 5. Selects
+    pasoActual.querySelectorAll("select").forEach(sel => {
+        sel.selectedIndex = 0;
+        sel.dispatchEvent(new Event("change"));
+    });
+
+    // 6. Limpieza de hints previos
+    pasoActual.querySelectorAll("[id^='hint_'], [id^='ant_']").forEach(h => {
+        h.innerText = "";
+    });
 }
 
 function resetearMantenimientoVista() {
@@ -1241,3 +1285,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+function limpiarPaso1() {
+    const selInspector = document.querySelector("[name='inspector']");
+    const selVehiculo = document.getElementById("selectVehiculo");
+    const inPatente = document.getElementById("inputPatente");
+
+    if (selInspector) selInspector.value = "";
+    if (selVehiculo) selVehiculo.value = "";
+    if (inPatente) inPatente.value = "";
+
+    setFechaHoraActual();
+    limpiarCamposHistorial();
+}
