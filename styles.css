@@ -2,7 +2,7 @@
    1. VARIABLES & RESET GENERAL
    ========================================================================== */
 :root {
-    --primary: #2563eb;
+    --primary: #205ad6;
     --primary-hover: #1d4ed8;
     --bg: #0f172a;
     --card-bg: #1e293b;
@@ -10,9 +10,9 @@
     --text: #f8fafc;
     --text-muted: #94a3b8;
     --border: #334155;
-    --ok: #22c55e;
+    --ok: #12853c;
     --warn: #eab308;
-    --danger: #ef4444;
+    --danger: #ce3737;
 }
 
 *,
@@ -519,6 +519,19 @@ button {
     font-size: 0.95rem;
     color: white;
     background-color: var(--danger);
+    transition: background-color 0.2s;
+}
+
+.btn-link-end {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 0.95rem;
+    color: white;
+    background-color: var(--ok);
     transition: background-color 0.2s;
 }
 

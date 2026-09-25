@@ -1099,9 +1099,6 @@ function formatearKmSimple(input) {
 }
 
 function limpiarCamposHistorial() {
-    resetearValoresVista();
-    resetearMantenimientoVista();
-
     const idsDoc = [
         "doc_seguro_inicio",
         "doc_seguro_vencimiento",
@@ -1111,17 +1108,6 @@ function limpiarCamposHistorial() {
     idsDoc.forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = "";
-    });
-
-    const labelsDoc = [
-        "ant_doc_seguro_inicio",
-        "ant_doc_seguro_vencimiento",
-        "ant_doc_vtv_inspeccion",
-        "ant_doc_vtv_vencimiento",
-    ];
-    labelsDoc.forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = "Anterior: ---";
     });
 }
 
@@ -1299,6 +1285,68 @@ function limpiarPaso1() {
     limpiarCamposHistorial();
 }
 
+function limpiarVistaActual() {
+    // Si estás en el Paso 1, ejecuta su función específica
+    if (typeof currentStep !== "undefined" && currentStep === 1) {
+        limpiarPaso1();
+        return;
+    }
+
+    // Ubica el contenedor de la vista actual (por step o active)
+    const pasoActual = (typeof currentStep !== "undefined"
+        ? document.querySelector(`.step[data-step="${currentStep}"]`)
+        : null) || document.querySelector('.step.active');
+
+    if (!pasoActual) return;
+
+    // 1. Limpiar inputs comunes (textos, números, fechas) sin tocar readonly ni leyendas celestes
+    pasoActual.querySelectorAll("input:not([readonly]):not([type='radio']):not([type='checkbox']):not([type='hidden'])").forEach(input => {
+        input.value = "";
+    });
+
+    // 2. Resetear desplegables de la vista (combustible, batería, etc.)
+    pasoActual.querySelectorAll("select:not(#quickStepSelector)").forEach(sel => {
+        sel.selectedIndex = 0;
+    });
+
+    // 3. Resetear todos los ítems de inspección (OK / Revisar)
+    const checkItems = pasoActual.querySelectorAll(".check-item");
+    checkItems.forEach(item => {
+        // A. Seleccionar el radio de OK
+        const radioOk = item.querySelector("input[type='radio'][value='OK']");
+        if (radioOk) {
+            radioOk.checked = true;
+        }
+
+        // B. Desmarcar el radio de Revisar
+        const radioRev = item.querySelector("input[type='radio'][value='Revisar']");
+        if (radioRev) {
+            radioRev.checked = false;
+        }
+
+        // C. Limpiar el textarea de detalle
+        const textarea = item.querySelector("textarea");
+        if (textarea) {
+            textarea.value = "";
+        }
+
+        // D. Ocultar la caja de detalle usando tu función o cerrando el contenedor
+        const obsBox = item.querySelector(".obs-detail-container");
+        if (obsBox) {
+            if (typeof toggleObsField === "function" && obsBox.id) {
+                toggleObsField(obsBox.id, false);
+            } else {
+                obsBox.style.display = "none";
+            }
+        }
+    });
+
+    // 4. Limpiar cualquier textarea suelto fuera de los check-items (ej. observaciones generales)
+    pasoActual.querySelectorAll("textarea:not(.obs-detail-container textarea)").forEach(ta => {
+        ta.value = "";
+    });
+}
+
 function irAlPasoDirecto(nuevoPaso) {
     if (nuevoPaso === currentStep) return;
 
@@ -1348,5 +1396,23 @@ function irAlPasoDirecto(nuevoPaso) {
                 try { precargarMantenimientoPrevio(); } catch (e) { }
             }, 50);
         }
+    }
+}
+
+function limpiarFiltrosReporte() {
+    // 1. Resetear el selector de vehículo a "TODOS"
+    const selVehiculo = document.getElementById("filtroVehiculo");
+    if (selVehiculo) selVehiculo.value = "TODOS";
+
+    // 2. Resetear fechas
+    const selDia = document.getElementById("filtroFechaDia");
+    if (selDia) selDia.selectedIndex = 0;
+
+    const inMes = document.getElementById("filtroFechaMes");
+    if (inMes) inMes.value = "";
+
+    // 3. Volver a la pestaña por defecto "Por Día"
+    if (typeof cambiarTipoReporte === "function") {
+        cambiarTipoReporte("dia");
     }
 }
