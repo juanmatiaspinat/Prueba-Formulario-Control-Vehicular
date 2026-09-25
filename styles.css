@@ -10,7 +10,8 @@
     --text: #f8fafc;
     --text-muted: #94a3b8;
     --border: #334155;
-    --ok: #12853c;
+    --ok: #25ce63;
+    --end: #127c39;
     --warn: #eab308;
     --danger: #ce3737;
 }
@@ -35,7 +36,7 @@ body {
 }
 
 /* ==========================================================================
-   2. CONTENEDOR PRINCIPAL, HEADER & PASOS
+   2. CONTENEDOR PRINCIPAL, CABECERA & VISTAS
    ========================================================================== */
 .form-container {
     background: var(--card-bg);
@@ -58,6 +59,11 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 8px;
+}
+
+/* Ocultamiento utilitario para vistas y elementos dinámicos */
+.view-hidden {
+    display: none;
 }
 
 .progress-bar-container {
@@ -120,7 +126,127 @@ label {
 }
 
 /* ==========================================================================
-   3. INPUTS, SELECTS & CONTROLES BÁSICOS
+   3. MENÚ PRINCIPAL (HOME)
+   ========================================================================== */
+.panel-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-top: 6px;
+    margin-bottom: 11px;
+    padding-left: 4px;
+}
+
+.panel-logo {
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+    object-fit: cover;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    flex-shrink: 0;
+}
+
+.panel-titles h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.panel-subtitle {
+    margin: 6px 0 0 0;
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
+.menu-card-btn {
+    width: 100%;
+    padding: 16px;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
+}
+
+.menu-card-btn:hover {
+    border-color: var(--primary);
+    background: #172033;
+    transform: translateY(-2px);
+}
+
+.menu-icon {
+    font-size: 1.6rem;
+    background: rgba(37, 99, 235, 0.15);
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-info h3 {
+    font-size: 1rem;
+    margin-bottom: 2px;
+    color: #f8fafc;
+}
+
+.menu-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ==========================================================================
+   4. SELECTOR RÁPIDO DE VISTAS (QUICK NAV)
+   ========================================================================== */
+.quick-nav-container {
+    position: relative;
+    margin: 12px 0 10px 0;
+}
+
+#quickStepSelector {
+    width: 100%;
+    background-color: #172033;
+    background-image: none;
+    color: #ffffff;
+    border: 1px solid #2563eb;
+    padding: 10px 38px 10px 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#quickStepSelector::-ms-expand {
+    display: none;
+}
+
+.quick-nav-arrow {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #60a5fa;
+    font-size: 0.75rem;
+    user-select: none;
+}
+
+/* ==========================================================================
+   5. INPUTS, SELECTS & CONTROLES BÁSICOS
    ========================================================================== */
 input,
 select,
@@ -161,7 +287,6 @@ select {
     cursor: pointer;
 }
 
-/* Quita el comportamiento expansivo rígido de WebKit en iOS */
 input[type="date"] {
     display: inline-flex;
     align-items: center;
@@ -172,8 +297,26 @@ input[type="date"]::-webkit-date-and-time-value {
     margin: 0;
 }
 
+.input-action-row {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-inline-action {
+    flex: 0 0 auto;
+    padding: 0 16px;
+    font-size: 0.85rem;
+}
+
+.input-readonly-badge {
+    background: #1e293b;
+    color: #94a3b8;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
 /* ==========================================================================
-   4. CHECKLIST INTERACTIVO & DETALLES
+   6. CHECKLIST INTERACTIVO & DETALLES
    ========================================================================== */
 .checklist-grid {
     display: flex;
@@ -187,6 +330,16 @@ input[type="date"]::-webkit-date-and-time-value {
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.check-item-spaced {
+    margin-top: 12px;
+}
+
+.check-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -270,8 +423,42 @@ input[type="date"]::-webkit-date-and-time-value {
     }
 }
 
+/* Campos de Fechas en Documentación */
+.doc-dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.doc-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.doc-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.input-doc-date {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #fff;
+    font-size: 16px;
+}
+
+.doc-hint {
+    font-size: 0.75rem;
+    color: #38bdf8;
+    font-style: italic;
+}
+
 /* ==========================================================================
-   5. TARJETAS DE MANTENIMIENTO & INPUTS DE FECHA
+   7. TARJETAS DE MANTENIMIENTO & INPUTS DE FECHA
    ========================================================================== */
 .maintenance-card {
     background: var(--card-inner-bg);
@@ -305,7 +492,6 @@ input[type="date"]::-webkit-date-and-time-value {
     margin-bottom: 4px;
 }
 
-/* Fila integrada: Date + Botón Hoy */
 .date-input-row {
     display: flex;
     gap: 8px;
@@ -341,7 +527,6 @@ input[type="date"]::-webkit-date-and-time-value {
     color: var(--text);
 }
 
-/* Sub-bloques y campos de KMS */
 .km-service-group {
     display: flex;
     flex-direction: column;
@@ -406,7 +591,6 @@ input[type="date"]::-webkit-date-and-time-value {
     color: #38bdf8 !important;
 }
 
-/* Input readonly de fecha para alineado y balanceo en escritorio */
 #prox_alineado_fecha {
     width: 100%;
     height: 38px;
@@ -426,7 +610,6 @@ input[type="date"]::-webkit-date-and-time-value {
     font-style: italic;
 }
 
-/* Switches de opciones (NO / SI) */
 .radio-pill-bat,
 .radio-pill-lavado {
     display: none;
@@ -471,7 +654,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 /* ==========================================================================
-   6. BOTONES & NAVEGACIÓN
+   8. BOTONES & NAVEGACIÓN
    ========================================================================== */
 .btn-group {
     display: flex;
@@ -522,6 +705,10 @@ button {
     transition: background-color 0.2s;
 }
 
+.btn-link-clean:hover {
+    background-color: #dc2626;
+}
+
 .btn-link-end {
     flex: 1;
     padding: 12px;
@@ -531,12 +718,12 @@ button {
     border: none;
     font-size: 0.95rem;
     color: white;
-    background-color: var(--ok);
+    background-color: var(--end);
     transition: background-color 0.2s;
 }
 
-.btn-link-clean:hover {
-    background-color: #dc2626;
+.btn-link-end:hover {
+    background-color: #15803d;
 }
 
 .btn-nav-back {
@@ -555,50 +742,37 @@ button {
     color: var(--text);
 }
 
-.menu-card-btn {
+/* ==========================================================================
+   9. VISTA GENERAR REPORTES
+   ========================================================================== */
+.report-toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.select-full {
     width: 100%;
-    padding: 16px;
-    background: #0f172a;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: all 0.2s ease;
-    margin-bottom: 12px;
 }
 
-.menu-card-btn:hover {
-    border-color: var(--primary);
-    background: #172033;
-    transform: translateY(-2px);
+.report-loading-msg {
+    text-align: center;
+    color: #60a5fa;
+    font-size: 0.9rem;
+    padding: 12px 0;
 }
 
-.menu-icon {
-    font-size: 1.6rem;
-    background: rgba(37, 99, 235, 0.15);
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.report-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
 }
 
-.menu-info h3 {
-    font-size: 1rem;
-    margin-bottom: 2px;
-    color: #f8fafc;
-}
-
-.menu-info p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin: 0;
-}
-
+/* ==========================================================================
+   10. FEEDBACK & FOOTER
+   ========================================================================== */
 .feedback {
     text-align: center;
     display: none;
@@ -606,9 +780,19 @@ button {
 }
 
 .feedback h2 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     color: #4ade80;
     margin-bottom: 8px;
+}
+
+.feedback-sub {
+    color: #94a3b8;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+}
+
+.feedback-btn {
+    margin-bottom: 10px;
 }
 
 .card-footer {
@@ -623,7 +807,7 @@ button {
 }
 
 /* ==========================================================================
-   7. RESPONSIVE (MOBILE OPTIMIZATION)
+   11. RESPONSIVE (MOBILE OPTIMIZATION)
    ========================================================================== */
 @media (max-width: 600px) {
     body {
@@ -639,7 +823,6 @@ button {
         margin-bottom: 14px;
     }
 
-    /* Pasa de 2 columnas a 1 sola: el bloque de KMS/Opciones queda abajo de la fecha */
     .dates-grid {
         display: grid !important;
         grid-template-columns: 1fr !important;
@@ -655,7 +838,6 @@ button {
         box-sizing: border-box !important;
     }
 
-    /* Tamaños unificados a ancho completo */
     .sub-km-box input,
     .date-box input[type="date"],
     .date-box input[type="text"],
@@ -667,7 +849,6 @@ button {
         box-sizing: border-box !important;
     }
 
-    /* Fila de fecha + botón Hoy */
     .date-input-row {
         display: flex !important;
         gap: 8px !important;
@@ -675,7 +856,6 @@ button {
         align-items: center !important;
     }
 
-    /* Clave: width: 0 obliga a WebKit a no calcular un ancho mínimo arbitrario */
     .date-input-row input[type="date"] {
         flex: 1 1 auto !important;
         width: 0 !important;
@@ -684,7 +864,6 @@ button {
         font-size: 15px !important;
     }
 
-    /* Botón Hoy con ancho fijo armónico */
     .date-input-row .quick-btn {
         flex: 0 0 65px !important;
         width: 65px !important;
@@ -698,7 +877,6 @@ button {
         justify-content: center !important;
     }
 
-    /* Botones SI / NO con buen área de toque */
     .cambio-bat-group {
         display: flex !important;
         gap: 8px !important;
@@ -710,7 +888,6 @@ button {
         font-size: 0.85rem !important;
     }
 
-    /* Inputs bloqueados (celeste) en columna completa */
     #prox_alineado_fecha,
     #kms_prox_alineado,
     #kms_prox_service {
@@ -726,60 +903,18 @@ button {
         font-weight: 700 !important;
         color: #38bdf8 !important;
     }
-}
-
-/* Bloquear el auto-zoom nativo de iOS al tocar inputs o textareas */
-@media (max-width: 600px) {
 
     input,
     select,
     textarea,
     .obs-detail-container textarea {
         font-size: 16px !important;
-        /* Mínimo requerido por iOS para no disparar zoom */
     }
 
-    /* Evita el rebote y desborde horizontal accidental */
     html,
     body {
         overflow-x: hidden;
         position: relative;
         width: 100%;
     }
-}
-
-/* Cabecera con Logo en el Panel de Control */
-.panel-header-brand {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 14px;
-    margin-bottom: 20px;
-}
-
-.panel-logo {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-    flex-shrink: 0;
-}
-
-.panel-titles h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #ffffff;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.panel-subtitle {
-    margin: 4px 0 0 0;
-    font-size: 0.9rem;
-    color: #94a3b8;
-}
-
-#quickStepSelector::-ms-expand {
-    display: none;
 }
