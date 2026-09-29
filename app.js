@@ -702,52 +702,42 @@ function calcularVencimientoVTV() {
     }
 }
 
+/**
+ * Actualiza el mensaje de Service Mecánico exclusivamente por Kilometraje
+ */
 function actualizarAlertaService() {
     const inputKmActual = document.getElementById("kilometraje");
     const inputKmProx = document.getElementById("kms_prox_service");
-    const inputFechaUlt = document.getElementById("ult_service");
     const label = document.getElementById("alerta_prox_service");
     if (!label) return;
 
-    let mensajeKm = "";
-    if (inputKmActual && inputKmProx && inputKmActual.value.trim() && inputKmProx.value.trim()) {
-        const kmAct = parseInt(inputKmActual.value.replace(/\D/g, ""), 10);
-        const kmPrx = parseInt(inputKmProx.value.replace(/\D/g, ""), 10);
-
-        if (!isNaN(kmAct) && !isNaN(kmPrx)) {
-            const diffKm = kmPrx - kmAct;
-            if (diffKm <= 0) {
-                mensajeKm = `service excedido por ${Math.abs(diffKm).toLocaleString("es-AR")} km`;
-            } else {
-                mensajeKm = `${diffKm.toLocaleString("es-AR")} kilómetros para el próximo service`;
-            }
-        }
-    }
-
-    let mensajeFecha = "";
-    if (inputFechaUlt && inputFechaUlt.value) {
-        const partes = inputFechaUlt.value.split("-");
-        if (partes.length === 3) {
-            const anioProx = parseInt(partes[0], 10) + 1;
-            const fechaEstimadaProx = `${anioProx}-${partes[1]}-${partes[2]}`;
-            const res = calcularDiferenciaMesesDias(fechaEstimadaProx);
-            if (res) {
-                mensajeFecha = res.esVencido ? `tiempo cumplido` : `faltan ${res.textoTiempo}`;
-            }
-        }
-    }
-
-    if (mensajeFecha && mensajeKm) {
-        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)}, o ${mensajeKm}`;
-    } else if (mensajeKm) {
-        label.innerText = `*Faltan ${mensajeKm}`;
-    } else if (mensajeFecha) {
-        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)} para el próximo service`;
-    } else {
+    if (!inputKmActual || !inputKmProx || !inputKmActual.value.trim() || !inputKmProx.value.trim()) {
         label.innerText = "";
+        return;
+    }
+
+    const kmAct = parseInt(inputKmActual.value.replace(/\D/g, ""), 10);
+    const kmPrx = parseInt(inputKmProx.value.replace(/\D/g, ""), 10);
+
+    if (isNaN(kmAct) || isNaN(kmPrx)) {
+        label.innerText = "";
+        return;
+    }
+
+    const diffKm = kmPrx - kmAct;
+
+    if (diffKm <= 0) {
+        const excedido = Math.abs(diffKm).toLocaleString("es-AR");
+        label.innerText = `*Service vencido: excedido por ${excedido} km`;
+    } else {
+        const faltan = diffKm.toLocaleString("es-AR");
+        label.innerText = `*Faltan ${faltan} km para el próximo service mecánico`;
     }
 }
 
+/**
+ * Actualiza el mensaje de Alineado y Balanceo combinando Tiempo y Kilómetros
+ */
 function actualizarAlertaAlineado() {
     const inputKmActual = document.getElementById("kilometraje");
     const inputKmProx = document.getElementById("kms_prox_alineado");
@@ -755,37 +745,58 @@ function actualizarAlertaAlineado() {
     const label = document.getElementById("alerta_prox_alineado");
     if (!label) return;
 
-    let mensajeKm = "";
+    let resFecha = null;
+    if (inputFechaProx && inputFechaProx.value) {
+        resFecha = calcularDiferenciaMesesDias(inputFechaProx.value);
+    }
+
+    let diffKm = null;
     if (inputKmActual && inputKmProx && inputKmActual.value.trim() && inputKmProx.value.trim()) {
         const kmAct = parseInt(inputKmActual.value.replace(/\D/g, ""), 10);
         const kmPrx = parseInt(inputKmProx.value.replace(/\D/g, ""), 10);
-
         if (!isNaN(kmAct) && !isNaN(kmPrx)) {
-            const diffKm = kmPrx - kmAct;
-            if (diffKm <= 0) {
-                mensajeKm = `alineado excedido por ${Math.abs(diffKm).toLocaleString("es-AR")} km`;
-            } else {
-                mensajeKm = `${diffKm.toLocaleString("es-AR")} kilómetros para el próximo alineado y balanceo`;
-            }
+            diffKm = kmPrx - kmAct;
         }
     }
 
-    let mensajeFecha = "";
-    if (inputFechaProx && inputFechaProx.value) {
-        const res = calcularDiferenciaMesesDias(inputFechaProx.value);
-        if (res) {
-            mensajeFecha = res.esVencido ? `tiempo cumplido` : `faltan ${res.textoTiempo}`;
-        }
-    }
-
-    if (mensajeFecha && mensajeKm) {
-        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)}, o ${mensajeKm}`;
-    } else if (mensajeKm) {
-        label.innerText = `*Faltan ${mensajeKm}`;
-    } else if (mensajeFecha) {
-        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)} para el próximo alineado y balanceo`;
-    } else {
+    // Si no hay ninguno cargado
+    if (!resFecha && diffKm === null) {
         label.innerText = "";
+        return;
+    }
+
+    // Caso 1: Ambos están excedidos / vencidos
+    const fechaVencida = resFecha ? resFecha.esVencido : false;
+    const kmVencido = diffKm !== null ? diffKm <= 0 : false;
+
+    if (fechaVencida && kmVencido) {
+        const kmExc = Math.abs(diffKm).toLocaleString("es-AR");
+        label.innerText = `*Alineado vencido hace ${resFecha.textoTiempo} y excedido por ${kmExc} km`;
+        return;
+    }
+
+    // Caso 2: Solo fecha vencida
+    if (fechaVencida) {
+        const kmRest = diffKm !== null ? ` (restan ${diffKm.toLocaleString("es-AR")} km)` : "";
+        label.innerText = `*Alineado vencido por tiempo hace ${resFecha.textoTiempo}${kmRest}`;
+        return;
+    }
+
+    // Caso 3: Solo kilómetros excedidos
+    if (kmVencido) {
+        const kmExc = Math.abs(diffKm).toLocaleString("es-AR");
+        const tiempoRest = resFecha ? ` (quedaban ${resFecha.textoTiempo})` : "";
+        label.innerText = `*Alineado vencido por km: excedido por ${kmExc} km${tiempoRest}`;
+        return;
+    }
+
+    // Caso 4: Ambos vigentes (Normal)
+    if (resFecha && diffKm !== null) {
+        label.innerText = `*Faltan ${resFecha.textoTiempo}, o ${diffKm.toLocaleString("es-AR")} km para el próximo alineado y balanceo`;
+    } else if (resFecha) {
+        label.innerText = `*Faltan ${resFecha.textoTiempo} para el próximo alineado y balanceo`;
+    } else if (diffKm !== null) {
+        label.innerText = `*Faltan ${diffKm.toLocaleString("es-AR")} km para el próximo alineado y balanceo`;
     }
 }
 
