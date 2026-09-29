@@ -20,16 +20,13 @@
    1. CONFIGURACIÓN Y CONSTANTES GLOBALES
    ============================================================================== */
 
-// URL del Web App de Google Apps Script
 const SCRIPT_URL =
     "https://script.google.com/macros/s/AKfycbwoK_DKWL6-1W3cY207i8rsG79flYGsusOaHtczS1djHXbhmLrCCmsDoqsi2kQcDV5Eng/exec";
 
-// Configuración del flujo de inspección
 const totalSteps = 12;
 let currentStep = 1;
 let tipoReporteActual = "dia";
 
-// Diccionario de patentes asociadas por vehículo
 const patentes = {
     "Renault - Duster": "AB299UW",
     "Chevrolet - Montana": "LDU005",
@@ -41,9 +38,6 @@ const patentes = {
    2. NAVEGACIÓN ENTRE VISTAS PRINCIPALES (HOME, FORM, REPORTES)
    ============================================================================== */
 
-/**
- * Muestra el contenedor del formulario y oculta las demás vistas.
- */
 function mostrarFormulario() {
     const home = document.getElementById("homeView");
     const report = document.getElementById("reportContainerView");
@@ -56,9 +50,6 @@ function mostrarFormulario() {
     updateProgress();
 }
 
-/**
- * Muestra la vista de reportes e inicia la carga de inspecciones registradas.
- */
 async function mostrarReportes() {
     const home = document.getElementById("homeView");
     const form = document.getElementById("formContainerView");
@@ -71,9 +62,6 @@ async function mostrarReportes() {
     await cargarFechasDisponiblesReporte();
 }
 
-/**
- * Regresa a la pantalla principal del panel de control.
- */
 function volverAlMenu() {
     const home = document.getElementById("homeView");
     const form = document.getElementById("formContainerView");
@@ -84,9 +72,6 @@ function volverAlMenu() {
     if (report) report.style.display = "none";
 }
 
-/**
- * Cierra la pantalla de confirmación (feedback) y regresa al menú.
- */
 function volverAlMenuDesdeFeedback() {
     const feedback = document.getElementById("feedbackMsg");
     if (feedback) feedback.style.display = "none";
@@ -98,9 +83,6 @@ function volverAlMenuDesdeFeedback() {
    3. CONTROL DE PASOS (STEP WIZARD) Y BARRA DE PROGRESO
    ============================================================================== */
 
-/**
- * Actualiza la barra superior de porcentaje y sincroniza el selector rápido.
- */
 function updateProgress() {
     const total = document.querySelectorAll(".step").length || totalSteps;
     const progress = (currentStep / total) * 100;
@@ -111,15 +93,11 @@ function updateProgress() {
     if (selector) selector.value = currentStep;
 }
 
-/**
- * Avanza al paso siguiente previa validación de campos obligatorios visibles.
- */
 function nextStep(step) {
     const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
     if (currentContainer) {
         const inputs = currentContainer.querySelectorAll("input, select, textarea");
         for (let input of inputs) {
-            // Se ignoran elementos deshabilitados o no visibles en el DOM
             if (input.disabled || input.offsetParent === null) continue;
 
             const valor = (input.value !== undefined && input.value !== null) ? String(input.value).trim() : "";
@@ -127,8 +105,6 @@ function nextStep(step) {
             if (input.hasAttribute("required") && !valor) {
                 input.focus();
                 input.style.outline = "2px solid #ef4444";
-
-                // Se remueve la advertencia visual apenas el usuario interactúa
                 input.addEventListener("input", () => { input.style.outline = ""; }, { once: true });
                 input.addEventListener("change", () => { input.style.outline = ""; }, { once: true });
 
@@ -138,7 +114,6 @@ function nextStep(step) {
             }
         }
 
-        // Resguardo de datos en pasos críticos antes de avanzar
         if (step === 10 || step === 11) {
             guardarMantenimientoActual();
         }
@@ -161,19 +136,12 @@ function nextStep(step) {
         }
         if (currentStep === 10 || currentStep === 11) {
             setTimeout(() => {
-                try {
-                    precargarMantenimientoPrevio();
-                } catch (err) {
-                    console.error("Error al precargar datos:", err);
-                }
+                recalcularTodasLasAlertas();
             }, 50);
         }
     }
 }
 
-/**
- * Retrocede al paso anterior guardando cambios parciales.
- */
 function prevStep(step) {
     const currentContainer = document.querySelector(`.step[data-step="${step}"]`);
     if (currentContainer) {
@@ -191,16 +159,18 @@ function prevStep(step) {
     if (prevContainer) {
         prevContainer.classList.add("active");
         updateProgress();
+
+        if (currentStep === 10 || currentStep === 11) {
+            setTimeout(() => {
+                recalcularTodasLasAlertas();
+            }, 50);
+        }
     }
 }
 
-/**
- * Permite la navegación directa entre pasos desde el menú desplegable.
- */
 function irAlPasoDirecto(nuevoPaso) {
     if (nuevoPaso === currentStep) return;
 
-    // Bloquea el salto si el paso 1 no tiene los datos primarios obligatorios
     if (currentStep === 1 && nuevoPaso > 1) {
         const paso1 = document.querySelector('.step[data-step="1"]');
         if (paso1) {
@@ -239,7 +209,7 @@ function irAlPasoDirecto(nuevoPaso) {
         }
         if (currentStep === 10 || currentStep === 11) {
             setTimeout(() => {
-                try { precargarMantenimientoPrevio(); } catch (e) { }
+                recalcularTodasLasAlertas();
             }, 50);
         }
     }
@@ -249,9 +219,6 @@ function irAlPasoDirecto(nuevoPaso) {
    4. GESTIÓN Y NORMALIZACIÓN DE FECHAS / TIEMPO
    ============================================================================== */
 
-/**
- * Establece la fecha y hora actual en el input datetime-local del Paso 1.
- */
 function setFechaHoraActual() {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -259,36 +226,29 @@ function setFechaHoraActual() {
     if (el) el.value = now.toISOString().slice(0, 16);
 }
 
-/**
- * Asigna la fecha actual en formato YYYY-MM-DD a un input de tipo fecha.
- */
 function setFechaHoy(inputId) {
     const el = document.getElementById(inputId);
     if (!el) return;
     el.value = new Date().toISOString().split("T")[0];
+
+    if (inputId === "ult_service") {
+        actualizarAlertaService();
+    }
 }
 
-/**
- * Asigna la fecha de hoy al campo del filtro de reporte diario.
- */
 function setFechaHoyFiltro() {
     const inputDia = document.getElementById("filtroFechaDia");
     if (inputDia) inputDia.value = new Date().toISOString().split("T")[0];
 }
 
-/**
- * Convierte cualquier formato de fecha a estándar ISO (YYYY-MM-DD).
- */
 function normalizarFecha(val) {
     if (!val) return "";
     const str = val.toString().trim();
 
-    // Formato ISO: YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
         return str.slice(0, 10);
     }
 
-    // Formato DD/MM/YYYY o D/M/YYYY
     const partes = str.split(",")[0].split("/");
     if (partes.length === 3) {
         const dia = partes[0].padStart(2, "0");
@@ -297,7 +257,6 @@ function normalizarFecha(val) {
         return `${anio}-${mes}-${dia}`;
     }
 
-    // Parseo nativo alternativo
     const d = new Date(str);
     if (!isNaN(d.getTime())) {
         const yyyy = d.getFullYear();
@@ -309,9 +268,6 @@ function normalizarFecha(val) {
     return "";
 }
 
-/**
- * Formatea una fecha cruda asegurando compatibilidad con inputs date.
- */
 function formatearFechaParaInput(fechaRaw) {
     if (!fechaRaw) return "";
     const d = new Date(fechaRaw);
@@ -319,54 +275,25 @@ function formatearFechaParaInput(fechaRaw) {
     return d.toISOString().split("T")[0];
 }
 
-/**
- * Suma una cantidad determinada de meses a una fecha origen y escribe en destino.
- */
-function sumarMeses(origenId, destinoId, meses) {
-    const origen = document.getElementById(origenId);
-    const destino = document.getElementById(destinoId);
-    if (!origen || !destino) return;
-
-    const baseVal = origen.value;
-    const fechaBase = baseVal ? new Date(baseVal) : new Date();
-    fechaBase.setMonth(fechaBase.getMonth() + meses);
-    destino.value = fechaBase.toISOString().split("T")[0];
-}
-
-/**
- * Suma una cantidad determinada de días a una fecha origen y escribe en destino.
- */
-function sumarDias(origenId, destinoId, dias) {
-    const origen = document.getElementById(origenId);
-    const destino = document.getElementById(destinoId);
-    if (!origen || !destino) return;
-
-    const baseVal = origen.value;
-    const fechaBase = baseVal ? new Date(baseVal) : new Date();
-    fechaBase.setDate(fechaBase.getDate() + dias);
-    destino.value = fechaBase.toISOString().split("T")[0];
-}
-
 /* ==============================================================================
    5. CÁLCULOS DINÁMICOS Y FORMATEO DE KILOMETRAJES
    ============================================================================== */
 
-/**
- * Aplica formato con separador de miles en tiempo real.
- */
 function formatearKmSimple(input) {
     if (!input) return;
     const valorLimpio = input.value.replace(/\D/g, "");
     if (!valorLimpio) {
         input.value = "";
+        actualizarAlertaService();
+        actualizarAlertaAlineado();
         return;
     }
     input.value = parseInt(valorLimpio, 10).toLocaleString("es-AR");
+
+    actualizarAlertaService();
+    actualizarAlertaAlineado();
 }
 
-/**
- * Formatea kilómetros de Service Mecánico y proyecta automáticamente +10.000 km.
- */
 function formatearYCalcularKm(input) {
     if (!input) return;
     const proxInput = document.getElementById("kms_prox_service");
@@ -375,6 +302,7 @@ function formatearYCalcularKm(input) {
     if (!valorLimpio) {
         input.value = "";
         if (proxInput) proxInput.value = "";
+        actualizarAlertaService();
         return;
     }
 
@@ -384,11 +312,10 @@ function formatearYCalcularKm(input) {
     if (proxInput) {
         proxInput.value = (numero + 10000).toLocaleString("es-AR");
     }
+
+    actualizarAlertaService();
 }
 
-/**
- * Formatea kilómetros de Alineado y proyecta automáticamente +10.000 km.
- */
 function formatearYCalcularKmAlineado(input) {
     if (!input) return;
     const proxInput = document.getElementById("kms_prox_alineado");
@@ -397,6 +324,7 @@ function formatearYCalcularKmAlineado(input) {
     if (!valorLimpio) {
         input.value = "";
         if (proxInput) proxInput.value = "";
+        actualizarAlertaAlineado();
         return;
     }
 
@@ -406,19 +334,22 @@ function formatearYCalcularKmAlineado(input) {
     if (proxInput) {
         proxInput.value = (numero + 10000).toLocaleString("es-AR");
     }
+
+    actualizarAlertaAlineado();
 }
 
-/**
- * Calcula la fecha sugerida para el próximo alineado (+6 meses).
- */
 function calcularProximoAlineadoFecha(fechaStr) {
     const inputProx = document.getElementById("prox_alineado_fecha");
-    if (!fechaStr || !inputProx) return;
+    if (!fechaStr || !inputProx) {
+        if (inputProx) inputProx.value = "";
+        actualizarAlertaAlineado();
+        return;
+    }
 
     const partes = fechaStr.split("-");
     if (partes.length < 3) return;
 
-    const fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+    const fecha = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
     fecha.setMonth(fecha.getMonth() + 6);
 
     const yyyy = fecha.getFullYear();
@@ -426,11 +357,9 @@ function calcularProximoAlineadoFecha(fechaStr) {
     const dd = String(fecha.getDate()).padStart(2, "0");
 
     inputProx.value = `${yyyy}-${mm}-${dd}`;
+    actualizarAlertaAlineado();
 }
 
-/**
- * Asigna la fecha de hoy para el alineado y calcula los 6 meses posteriores.
- */
 function setAlineadoHoy() {
     const inputUlt = document.getElementById("ult_alineado");
     if (!inputUlt) return;
@@ -449,9 +378,6 @@ function setAlineadoHoy() {
    6. CHECKLISTS E INTERACCIÓN DE OBSERVACIONES
    ============================================================================== */
 
-/**
- * Muestra u oculta la caja de observaciones según la selección (OK o Revisar).
- */
 function toggleObsField(boxId, show) {
     const box = document.getElementById(boxId);
     if (!box) return;
@@ -467,9 +393,6 @@ function toggleObsField(boxId, show) {
     }
 }
 
-/**
- * Ajusta ítems especiales del checklist según el modelo (ej. luneta trasera en pick-ups).
- */
 function verificarElementosPorVehiculo() {
     try {
         const selectorVehiculo =
@@ -483,7 +406,6 @@ function verificarElementosPorVehiculo() {
         const valorVehiculo = (selectorVehiculo.value || "").toString().trim().toUpperCase();
         if (!valorVehiculo) return;
 
-        // Pick-ups o vehículos sin limpia luneta trasera
         const sinLimpiaTrasero = valorVehiculo.includes("MONTANA") || valorVehiculo.includes("HILUX");
         const radioOk = document.getElementById("esco_tras_ok");
         const radioRev = document.getElementById("esco_tras_rev");
@@ -520,9 +442,6 @@ function verificarElementosPorVehiculo() {
     }
 }
 
-/**
- * Autocompleta la patente según el vehículo seleccionado en el Paso 1.
- */
 function autocompletarPatente() {
     const select = document.getElementById("selectVehiculo");
     const inputPatente = document.getElementById("inputPatente");
@@ -534,9 +453,6 @@ function autocompletarPatente() {
    7. PERSISTENCIA LOCAL (LOCALSTORAGE) Y PRECARGA DE HISTORIAL
    ============================================================================== */
 
-/**
- * Obtiene la clave única normalizada del vehículo actual para almacenamiento.
- */
 function getVehiculoIdActual() {
     const input =
         document.querySelector("[name='vehiculo']") ||
@@ -552,9 +468,6 @@ function getVehiculoIdActual() {
     return "SIN_VEHICULO";
 }
 
-/**
- * Guarda en localStorage las fechas de Mantenimiento y Documentación editadas.
- */
 function guardarMantenimientoActual() {
     const vehiculoId = getVehiculoIdActual();
     if (!vehiculoId || vehiculoId === "SIN_VEHICULO") return;
@@ -574,9 +487,6 @@ function guardarMantenimientoActual() {
     localStorage.setItem(`mantenimiento_${vehiculoId}`, JSON.stringify(datos));
 }
 
-/**
- * Guarda en localStorage los datos operativos de Inspección General (Paso 2).
- */
 function guardarInspeccionGeneralActual() {
     const vehiculoId = getVehiculoIdActual();
     if (!vehiculoId || vehiculoId === "SIN_VEHICULO") return;
@@ -589,9 +499,6 @@ function guardarInspeccionGeneralActual() {
     localStorage.setItem(`inspeccion_general_${vehiculoId}`, JSON.stringify(datos));
 }
 
-/**
- * Precarga en los inputs del Paso 2 los datos persistidos localmente.
- */
 function precargarInspeccionGeneralPrevio() {
     const vehiculoId = getVehiculoIdActual();
     const kmInput = document.getElementById("kilometraje");
@@ -601,210 +508,298 @@ function precargarInspeccionGeneralPrevio() {
     const batSelect = document.getElementById("estado_bateria");
     const hintBat = document.getElementById("hint_estado_bateria");
 
-    if (vehiculoId === "SIN_VEHICULO") {
-        if (hintKm) hintKm.innerText = "Anterior: ---";
-        if (hintComb) hintComb.innerText = "Anterior: ---";
-        if (hintBat) hintBat.innerText = "Anterior: ---";
-        return;
-    }
+    if (vehiculoId === "SIN_VEHICULO") return;
 
     const rawData = localStorage.getItem(`inspeccion_general_${vehiculoId}`);
     if (rawData) {
         try {
             const data = JSON.parse(rawData);
-            if (kmInput && data.kilometraje) {
+            if (kmInput && data.kilometraje && !kmInput.value) {
                 kmInput.value = data.kilometraje;
-                if (typeof formatearKmSimple === "function") formatearKmSimple(kmInput);
+                formatearKmSimple(kmInput);
             }
-            if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "Anterior: ---";
-            if (combSelect && data.combustible) combSelect.value = data.combustible;
-            if (hintComb) hintComb.innerText = data.combustible ? `Anterior: ${data.combustible}` : "Anterior: ---";
-            if (batSelect && data.estado_bateria) batSelect.value = data.estado_bateria;
-            if (hintBat) hintBat.innerText = data.estado_bateria ? `Anterior: ${data.estado_bateria}` : "Anterior: ---";
+            if (hintKm && data.kilometraje) hintKm.innerText = `Anterior: ${data.kilometraje} km`;
+            if (combSelect && data.combustible && !combSelect.value) combSelect.value = data.combustible;
+            if (hintComb && data.combustible) hintComb.innerText = `Anterior: ${data.combustible}`;
+            if (batSelect && data.estado_bateria && !batSelect.value) batSelect.value = data.estado_bateria;
+            if (hintBat && data.estado_bateria) hintBat.innerText = `Anterior: ${data.estado_bateria}`;
         } catch (err) {
             console.error("Error al parsear datos de inspección general:", err);
-            if (hintKm) hintKm.innerText = "Anterior: ---";
-            if (hintComb) hintComb.innerText = "Anterior: ---";
-            if (hintBat) hintBat.innerText = "Anterior: ---";
         }
-    } else {
-        if (hintKm) hintKm.innerText = "Anterior: ---";
-        if (hintComb) hintComb.innerText = "Anterior: ---";
-        if (hintBat) hintBat.innerText = "Anterior: ---";
     }
 }
 
-/**
- * Precarga en Documentación y Mantenimiento los datos persistidos localmente.
- */
-/**
- * Precarga en Documentación y Mantenimiento los datos persistidos localmente
- * o restablece todo a "Anterior: ---" si el vehículo no tiene historial.
- */
 function precargarMantenimientoPrevio() {
     const vehiculoId = getVehiculoIdActual();
-
-    const batInput = document.getElementById("ult_bateria");
-    const hintBat = document.getElementById("hint_bateria");
-    const lavInput = document.getElementById("ult_lavado");
-    const hintLav = document.getElementById("hint_lavado");
-    const servInput = document.getElementById("ult_service");
-    const hintServ = document.getElementById("hint_service");
-    const kmServInput = document.getElementById("kms_ult_service");
-    const kmProxServ = document.getElementById("kms_prox_service");
-    const alnInput = document.getElementById("ult_alineado");
-    const hintAln = document.getElementById("hint_alineado");
-    const kmAlnInput = document.getElementById("kms_ult_alineado");
-    const kmProxAln = document.getElementById("kms_prox_alineado");
-
-    const segInicioInput = document.getElementById("doc_seguro_inicio");
-    const hintSegInicio = document.getElementById("ant_doc_seguro_inicio");
-    const segVencInput = document.getElementById("doc_seguro_vencimiento");
-    const hintSegVenc = document.getElementById("ant_doc_seguro_vencimiento");
-    const vtvInspInput = document.getElementById("doc_vtv_inspeccion");
-    const hintVtvInsp = document.getElementById("ant_doc_vtv_inspeccion");
-    const vtvVencInput = document.getElementById("doc_vtv_vencimiento");
-    const hintVtvVenc = document.getElementById("ant_doc_vtv_vencimiento");
-
-    // Función auxiliar para resetear esta vista específica
-    const resetearVistaMantenimiento = () => {
-        if (batInput) batInput.value = "";
-        if (hintBat) hintBat.innerText = "Anterior: ---";
-
-        if (lavInput) lavInput.value = "";
-        if (hintLav) hintLav.innerText = "Anterior: ---";
-
-        if (servInput) servInput.value = "";
-        if (hintServ) hintServ.innerText = "Anterior: ---";
-        if (kmServInput) kmServInput.value = "";
-        if (kmProxServ) kmProxServ.value = "";
-
-        if (alnInput) alnInput.value = "";
-        if (hintAln) hintAln.innerText = "Anterior: ---";
-        if (kmAlnInput) kmAlnInput.value = "";
-        if (kmProxAln) kmProxAln.value = "";
-
-        if (segInicioInput) segInicioInput.value = "";
-        if (hintSegInicio) hintSegInicio.innerText = "Anterior: ---";
-        if (segVencInput) segVencInput.value = "";
-        if (hintSegVenc) hintSegVenc.innerText = "Anterior: ---";
-
-        if (vtvInspInput) vtvInspInput.value = "";
-        if (hintVtvInsp) hintVtvInsp.innerText = "Anterior: ---";
-        if (vtvVencInput) vtvVencInput.value = "";
-        if (hintVtvVenc) hintVtvVenc.innerText = "Anterior: ---";
-    };
-
-    if (vehiculoId === "SIN_VEHICULO") {
-        resetearVistaMantenimiento();
-        return;
-    }
+    if (vehiculoId === "SIN_VEHICULO") return;
 
     const rawData = localStorage.getItem(`mantenimiento_${vehiculoId}`);
-
     if (rawData) {
         try {
             const data = JSON.parse(rawData);
 
-            // Batería
-            if (batInput) batInput.value = data.fecha_ult_bateria || "";
-            if (hintBat) {
-                hintBat.innerText = (data.fecha_ult_bateria && data.fecha_ult_bateria.includes("-"))
-                    ? `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const batInput = document.getElementById("ult_bateria");
+            const hintBat = document.getElementById("hint_bateria");
+            if (batInput && !batInput.value) batInput.value = data.fecha_ult_bateria || "";
+            if (hintBat && data.fecha_ult_bateria && data.fecha_ult_bateria.includes("-")) {
+                hintBat.innerText = `Anterior: ${data.fecha_ult_bateria.split("-").reverse().join("/")}`;
             }
 
-            // Lavado
-            if (lavInput) lavInput.value = data.fecha_ult_lavado || "";
-            if (hintLav) {
-                hintLav.innerText = (data.fecha_ult_lavado && data.fecha_ult_lavado.includes("-"))
-                    ? `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const lavInput = document.getElementById("ult_lavado");
+            const hintLav = document.getElementById("hint_lavado");
+            if (lavInput && !lavInput.value) lavInput.value = data.fecha_ult_lavado || "";
+            if (hintLav && data.fecha_ult_lavado && data.fecha_ult_lavado.includes("-")) {
+                hintLav.innerText = `Anterior: ${data.fecha_ult_lavado.split("-").reverse().join("/")}`;
             }
 
-            // Service
-            if (servInput) servInput.value = data.fecha_ult_service || "";
-            if (hintServ) {
-                hintServ.innerText = (data.fecha_ult_service && data.fecha_ult_service.includes("-"))
-                    ? `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const servInput = document.getElementById("ult_service");
+            const hintServ = document.getElementById("hint_service");
+            const kmServInput = document.getElementById("kms_ult_service");
+            if (servInput && !servInput.value) servInput.value = data.fecha_ult_service || "";
+            if (hintServ && data.fecha_ult_service && data.fecha_ult_service.includes("-")) {
+                hintServ.innerText = `Anterior: ${data.fecha_ult_service.split("-").reverse().join("/")}`;
             }
-            if (kmServInput) {
-                kmServInput.value = data.kms_ult_service || "";
-                if (typeof formatearYCalcularKm === "function") formatearYCalcularKm(kmServInput);
+            if (kmServInput && !kmServInput.value && data.kms_ult_service) {
+                kmServInput.value = data.kms_ult_service;
+                formatearYCalcularKm(kmServInput);
             }
 
-            // Alineado
-            if (alnInput) {
+            const alnInput = document.getElementById("ult_alineado");
+            const hintAln = document.getElementById("hint_alineado");
+            const kmAlnInput = document.getElementById("kms_ult_alineado");
+            if (alnInput && !alnInput.value) {
                 alnInput.value = data.fecha_ult_alineado || "";
-                if (typeof calcularProximoAlineadoFecha === "function" && data.fecha_ult_alineado) {
-                    calcularProximoAlineadoFecha(data.fecha_ult_alineado);
-                } else {
-                    const proxAln = document.getElementById("prox_alineado_fecha");
-                    if (proxAln) proxAln.value = "";
-                }
+                if (data.fecha_ult_alineado) calcularProximoAlineadoFecha(data.fecha_ult_alineado);
             }
-            if (hintAln) {
-                hintAln.innerText = (data.fecha_ult_alineado && data.fecha_ult_alineado.includes("-"))
-                    ? `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            if (hintAln && data.fecha_ult_alineado && data.fecha_ult_alineado.includes("-")) {
+                hintAln.innerText = `Anterior: ${data.fecha_ult_alineado.split("-").reverse().join("/")}`;
             }
-            if (kmAlnInput) {
-                kmAlnInput.value = data.kms_ult_alineado || "";
-                if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
+            if (kmAlnInput && !kmAlnInput.value && data.kms_ult_alineado) {
+                kmAlnInput.value = data.kms_ult_alineado;
+                formatearYCalcularKmAlineado(kmAlnInput);
             }
 
-            // Documentación (Seguro y VTV)
-            if (segInicioInput) segInicioInput.value = data.doc_seguro_inicio || "";
-            if (hintSegInicio) {
-                hintSegInicio.innerText = (data.doc_seguro_inicio && data.doc_seguro_inicio.includes("-"))
-                    ? `Anterior: ${data.doc_seguro_inicio.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const segInicioInput = document.getElementById("doc_seguro_inicio");
+            const hintSegInicio = document.getElementById("ant_doc_seguro_inicio");
+            if (segInicioInput && !segInicioInput.value) segInicioInput.value = data.doc_seguro_inicio || "";
+            if (hintSegInicio && data.doc_seguro_inicio && data.doc_seguro_inicio.includes("-")) {
+                hintSegInicio.innerText = `Anterior: ${data.doc_seguro_inicio.split("-").reverse().join("/")}`;
             }
 
-            if (segVencInput) segVencInput.value = data.doc_seguro_vencimiento || "";
-            if (hintSegVenc) {
-                hintSegVenc.innerText = (data.doc_seguro_vencimiento && data.doc_seguro_vencimiento.includes("-"))
-                    ? `Anterior: ${data.doc_seguro_vencimiento.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const segVencInput = document.getElementById("doc_seguro_vencimiento");
+            const hintSegVenc = document.getElementById("ant_doc_seguro_vencimiento");
+            if (segVencInput && !segVencInput.value) segVencInput.value = data.doc_seguro_vencimiento || "";
+            if (hintSegVenc && data.doc_seguro_vencimiento && data.doc_seguro_vencimiento.includes("-")) {
+                hintSegVenc.innerText = `Anterior: ${data.doc_seguro_vencimiento.split("-").reverse().join("/")}`;
             }
 
-            if (vtvInspInput) vtvInspInput.value = data.doc_vtv_inspeccion || "";
-            if (hintVtvInsp) {
-                hintVtvInsp.innerText = (data.doc_vtv_inspeccion && data.doc_vtv_inspeccion.includes("-"))
-                    ? `Anterior: ${data.doc_vtv_inspeccion.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const vtvInspInput = document.getElementById("doc_vtv_inspeccion");
+            const hintVtvInsp = document.getElementById("ant_doc_vtv_inspeccion");
+            if (vtvInspInput && !vtvInspInput.value) vtvInspInput.value = data.doc_vtv_inspeccion || "";
+            if (hintVtvInsp && data.doc_vtv_inspeccion && data.doc_vtv_inspeccion.includes("-")) {
+                hintVtvInsp.innerText = `Anterior: ${data.doc_vtv_inspeccion.split("-").reverse().join("/")}`;
             }
 
-            if (vtvVencInput) vtvVencInput.value = data.doc_vtv_vencimiento || "";
-            if (hintVtvVenc) {
-                hintVtvVenc.innerText = (data.doc_vtv_vencimiento && data.doc_vtv_vencimiento.includes("-"))
-                    ? `Anterior: ${data.doc_vtv_vencimiento.split("-").reverse().join("/")}`
-                    : "Anterior: ---";
+            const vtvVencInput = document.getElementById("doc_vtv_vencimiento");
+            const hintVtvVenc = document.getElementById("ant_doc_vtv_vencimiento");
+            if (vtvVencInput && !vtvVencInput.value) vtvVencInput.value = data.doc_vtv_vencimiento || "";
+            if (hintVtvVenc && data.doc_vtv_vencimiento && data.doc_vtv_vencimiento.includes("-")) {
+                hintVtvVenc.innerText = `Anterior: ${data.doc_vtv_vencimiento.split("-").reverse().join("/")}`;
             }
+
+            recalcularTodasLasAlertas();
         } catch (e) {
             console.error("Error al parsear datos de mantenimiento:", e);
-            resetearVistaMantenimiento();
         }
-    } else {
-        // Si no hay datos para ese vehículo en localStorage, vaciar inputs y setear 'Anterior: ---'
-        resetearVistaMantenimiento();
     }
+}
+
+/* ==============================================================================
+   CÁLCULOS DINÁMICOS DE ALERTAS VISUALES (ROJO)
+   ============================================================================== */
+
+function calcularDiferenciaMesesDias(fechaStr) {
+    if (!fechaStr) return null;
+    const partes = fechaStr.split("-");
+    if (partes.length !== 3) return null;
+
+    const fechaFin = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fechaFin.setHours(0, 0, 0, 0);
+
+    const diffTiempo = fechaFin.getTime() - hoy.getTime();
+    const esVencido = diffTiempo < 0;
+
+    let dInicio = esVencido ? new Date(fechaFin) : new Date(hoy);
+    let dFin = esVencido ? new Date(hoy) : new Date(fechaFin);
+
+    let anios = dFin.getFullYear() - dInicio.getFullYear();
+    let meses = dFin.getMonth() - dInicio.getMonth() + (anios * 12);
+    let dias = dFin.getDate() - dInicio.getDate();
+
+    if (dias < 0) {
+        meses--;
+        const ultimoDiaMesAnterior = new Date(dFin.getFullYear(), dFin.getMonth(), 0).getDate();
+        dias += ultimoDiaMesAnterior;
+    }
+
+    let textoTiempo = "";
+    if (meses > 0 && dias > 0) {
+        textoTiempo = `${meses} ${meses === 1 ? "mes" : "meses"} y ${dias} ${dias === 1 ? "día" : "días"}`;
+    } else if (meses > 0) {
+        textoTiempo = `${meses} ${meses === 1 ? "mes" : "meses"}`;
+    } else if (dias >= 0) {
+        textoTiempo = `${dias} ${dias === 1 ? "día" : "días"}`;
+    }
+
+    return { esVencido, textoTiempo };
+}
+
+function calcularVencimientoSeguro() {
+    const input = document.getElementById("doc_seguro_vencimiento");
+    const label = document.getElementById("alerta_venc_seguro");
+    if (!input || !label) return;
+
+    if (!input.value) {
+        label.innerText = "";
+        return;
+    }
+
+    const res = calcularDiferenciaMesesDias(input.value);
+    if (!res) {
+        label.innerText = "";
+        return;
+    }
+
+    if (res.esVencido) {
+        label.innerText = `*Vencido hace ${res.textoTiempo}`;
+    } else {
+        label.innerText = `*Quedan ${res.textoTiempo} para su vencimiento`;
+    }
+}
+
+function calcularVencimientoVTV() {
+    const input = document.getElementById("doc_vtv_vencimiento");
+    const label = document.getElementById("alerta_venc_vtv");
+    if (!input || !label) return;
+
+    if (!input.value) {
+        label.innerText = "";
+        return;
+    }
+
+    const res = calcularDiferenciaMesesDias(input.value);
+    if (!res) {
+        label.innerText = "";
+        return;
+    }
+
+    if (res.esVencido) {
+        label.innerText = `*Vencido hace ${res.textoTiempo}`;
+    } else {
+        label.innerText = `*Quedan ${res.textoTiempo} para su vencimiento`;
+    }
+}
+
+function actualizarAlertaService() {
+    const inputKmActual = document.getElementById("kilometraje");
+    const inputKmProx = document.getElementById("kms_prox_service");
+    const inputFechaUlt = document.getElementById("ult_service");
+    const label = document.getElementById("alerta_prox_service");
+    if (!label) return;
+
+    let mensajeKm = "";
+    if (inputKmActual && inputKmProx && inputKmActual.value.trim() && inputKmProx.value.trim()) {
+        const kmAct = parseInt(inputKmActual.value.replace(/\D/g, ""), 10);
+        const kmPrx = parseInt(inputKmProx.value.replace(/\D/g, ""), 10);
+
+        if (!isNaN(kmAct) && !isNaN(kmPrx)) {
+            const diffKm = kmPrx - kmAct;
+            if (diffKm <= 0) {
+                mensajeKm = `service excedido por ${Math.abs(diffKm).toLocaleString("es-AR")} km`;
+            } else {
+                mensajeKm = `${diffKm.toLocaleString("es-AR")} kilómetros para el próximo service`;
+            }
+        }
+    }
+
+    let mensajeFecha = "";
+    if (inputFechaUlt && inputFechaUlt.value) {
+        const partes = inputFechaUlt.value.split("-");
+        if (partes.length === 3) {
+            const anioProx = parseInt(partes[0], 10) + 1;
+            const fechaEstimadaProx = `${anioProx}-${partes[1]}-${partes[2]}`;
+            const res = calcularDiferenciaMesesDias(fechaEstimadaProx);
+            if (res) {
+                mensajeFecha = res.esVencido ? `tiempo cumplido` : `faltan ${res.textoTiempo}`;
+            }
+        }
+    }
+
+    if (mensajeFecha && mensajeKm) {
+        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)}, o ${mensajeKm}`;
+    } else if (mensajeKm) {
+        label.innerText = `*Faltan ${mensajeKm}`;
+    } else if (mensajeFecha) {
+        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)} para el próximo service`;
+    } else {
+        label.innerText = "";
+    }
+}
+
+function actualizarAlertaAlineado() {
+    const inputKmActual = document.getElementById("kilometraje");
+    const inputKmProx = document.getElementById("kms_prox_alineado");
+    const inputFechaProx = document.getElementById("prox_alineado_fecha");
+    const label = document.getElementById("alerta_prox_alineado");
+    if (!label) return;
+
+    let mensajeKm = "";
+    if (inputKmActual && inputKmProx && inputKmActual.value.trim() && inputKmProx.value.trim()) {
+        const kmAct = parseInt(inputKmActual.value.replace(/\D/g, ""), 10);
+        const kmPrx = parseInt(inputKmProx.value.replace(/\D/g, ""), 10);
+
+        if (!isNaN(kmAct) && !isNaN(kmPrx)) {
+            const diffKm = kmPrx - kmAct;
+            if (diffKm <= 0) {
+                mensajeKm = `alineado excedido por ${Math.abs(diffKm).toLocaleString("es-AR")} km`;
+            } else {
+                mensajeKm = `${diffKm.toLocaleString("es-AR")} kilómetros para el próximo alineado y balanceo`;
+            }
+        }
+    }
+
+    let mensajeFecha = "";
+    if (inputFechaProx && inputFechaProx.value) {
+        const res = calcularDiferenciaMesesDias(inputFechaProx.value);
+        if (res) {
+            mensajeFecha = res.esVencido ? `tiempo cumplido` : `faltan ${res.textoTiempo}`;
+        }
+    }
+
+    if (mensajeFecha && mensajeKm) {
+        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)}, o ${mensajeKm}`;
+    } else if (mensajeKm) {
+        label.innerText = `*Faltan ${mensajeKm}`;
+    } else if (mensajeFecha) {
+        label.innerText = `*${mensajeFecha.charAt(0).toUpperCase() + mensajeFecha.slice(1)} para el próximo alineado y balanceo`;
+    } else {
+        label.innerText = "";
+    }
+}
+
+function recalcularTodasLasAlertas() {
+    calcularVencimientoSeguro();
+    calcularVencimientoVTV();
+    actualizarAlertaService();
+    actualizarAlertaAlineado();
 }
 
 /* ==============================================================================
    8. COMUNICACIÓN CON GOOGLE APPS SCRIPT (ENVÍO Y CONSULTA)
    ============================================================================== */
 
-/**
- * Consulta la última fila registrada del vehículo y actualiza inputs e hints.
- */
-/**
- * Consulta la última fila registrada del vehículo y actualiza inputs, hints y checklists.
- */
-/**
- * Consulta la última fila registrada del vehículo y actualiza inputs, hints y checklists completos.
- */
 async function cargarUltimosDatosDesdeSheets() {
     const selectVehiculo =
         document.querySelector("[name='vehiculo']") ||
@@ -818,7 +813,6 @@ async function cargarUltimosDatosDesdeSheets() {
     const valorVehiculo = selectVehiculo ? selectVehiculo.value.trim() : "";
     const valorPatente = inputPatente ? inputPatente.value.trim() : "";
 
-    // 1. Limpieza total inmediata: deja todo en OK y borra observaciones
     limpiarCamposHistorial();
 
     if (!valorVehiculo && !valorPatente) return;
@@ -831,7 +825,6 @@ async function cargarUltimosDatosDesdeSheets() {
         const res = await fetch(url);
         const json = await res.json();
 
-        // 2. Validación estricta: debe coincidir exactamente con el vehículo seleccionado
         const tieneDatos = json.status === "success" && json.data && Object.keys(json.data).length > 0;
 
         let vehiculoRecibido = "";
@@ -847,7 +840,6 @@ async function cargarUltimosDatosDesdeSheets() {
         );
 
         if (!coincide) {
-            // Si el vehículo no tiene inspecciones previas registradas, queda 100% limpio en OK
             limpiarCamposHistorial();
             return;
         }
@@ -891,7 +883,6 @@ async function cargarUltimosDatosDesdeSheets() {
 
         const vehiculoId = (valorVehiculo || valorPatente).toUpperCase().replace(/\s+/g, "_");
 
-        // Guardar datos en localStorage para Paso 2 y Paso 10/11
         const objInspeccion = {
             kilometraje: data.kilometraje ? data.kilometraje.toString() : "",
             combustible: data.combustible || "",
@@ -922,7 +913,7 @@ async function cargarUltimosDatosDesdeSheets() {
 
         if (kmInput) {
             kmInput.value = data.kilometraje || "";
-            if (typeof formatearKmSimple === "function") formatearKmSimple(kmInput);
+            formatearKmSimple(kmInput);
         }
         if (hintKm) hintKm.innerText = data.kilometraje ? `Anterior: ${data.kilometraje} km` : "Anterior: ---";
         if (combSelect && data.combustible) combSelect.value = data.combustible;
@@ -948,7 +939,7 @@ async function cargarUltimosDatosDesdeSheets() {
         if (hintServ) hintServ.innerText = fServ ? `Anterior: ${fServ.split("-").reverse().join("/")}` : "Anterior: ---";
         if (kmServInput) {
             kmServInput.value = data.kms_ult_service || "";
-            if (typeof formatearYCalcularKm === "function") formatearYCalcularKm(kmServInput);
+            formatearYCalcularKm(kmServInput);
         }
 
         const alnInput = document.getElementById("ult_alineado");
@@ -956,12 +947,12 @@ async function cargarUltimosDatosDesdeSheets() {
         const kmAlnInput = document.getElementById("kms_ult_alineado");
         if (alnInput) {
             alnInput.value = fAln;
-            if (typeof calcularProximoAlineadoFecha === "function") calcularProximoAlineadoFecha(fAln);
+            calcularProximoAlineadoFecha(fAln);
         }
         if (hintAln) hintAln.innerText = fAln ? `Anterior: ${fAln.split("-").reverse().join("/")}` : "Anterior: ---";
         if (kmAlnInput) {
             kmAlnInput.value = data.kms_ult_alineado || "";
-            if (typeof formatearYCalcularKmAlineado === "function") formatearYCalcularKmAlineado(kmAlnInput);
+            formatearYCalcularKmAlineado(kmAlnInput);
         }
 
         // Radios de Batería y Lavado (SI/NO)
@@ -1006,9 +997,7 @@ async function cargarUltimosDatosDesdeSheets() {
         if (vtvVencInput) vtvVencInput.value = fVtvVenc;
         if (hintVtvVenc) hintVtvVenc.innerText = fVtvVenc ? `Anterior: ${fVtvVenc.split("-").reverse().join("/")}` : "Anterior: ---";
 
-        // ==============================================================
-        // 3. PRECARGA EXACTA DE CHECKLISTS CON IDs Y BOXES DEL HTML
-        // ==============================================================
+        // Checklist
         const aplicarCheckItem = (idOk, idRev, idBox, estado, detalle) => {
             const rOk = document.getElementById(idOk);
             const rRev = document.getElementById(idRev);
@@ -1087,15 +1076,15 @@ async function cargarUltimosDatosDesdeSheets() {
         aplicarCheckItem("seguro_ok", "seguro_rev", "seguro_obs_box", data.doc_seguro_estado, data.doc_seguro_detalle);
         aplicarCheckItem("vtv_ok", "vtv_rev", "vtv_obs_box", data.doc_vtv_estado, data.doc_vtv_detalle);
 
+        // Calcular alertas rojas inmediatamente con los datos inyectados
+        recalcularTodasLasAlertas();
+
     } catch (err) {
         console.error("Error al obtener datos previos desde Sheets:", err);
         limpiarCamposHistorial();
     }
 }
 
-/**
- * Manejador del envío final del formulario al Web App de Google.
- */
 document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = document.getElementById("btnSubmit");
@@ -1108,7 +1097,6 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
     const data = {};
     const elementos = form.querySelectorAll("input, select, textarea");
 
-    // Extracción de datos
     elementos.forEach((el) => {
         if (!el.name) return;
 
@@ -1125,11 +1113,8 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
         }
     });
 
-    // Guardado en localStorage previo al POST
     guardarMantenimientoActual();
     guardarInspeccionGeneralActual();
-
-    console.log("DATOS COMPLETOS SALIENDO A GOOGLE SHEETS:", data);
 
     try {
         await fetch(SCRIPT_URL, {
@@ -1156,9 +1141,6 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
    9. GENERACIÓN Y DESCARGA DE REPORTES PDF
    ============================================================================== */
 
-/**
- * Inicializa valores por defecto (hoy y mes actual) en los campos de filtro.
- */
 function initReportView() {
     const hoy = new Date().toISOString().split("T")[0];
     const mesActual = hoy.slice(0, 7);
@@ -1168,9 +1150,6 @@ function initReportView() {
     if (inputMes) inputMes.value = mesActual;
 }
 
-/**
- * Conmuta entre la vista de reporte por Día y por Mes.
- */
 function cambiarTipoReporte(tipo) {
     tipoReporteActual = tipo;
     const btnDia = document.getElementById("btnTipoDia");
@@ -1191,9 +1170,6 @@ function cambiarTipoReporte(tipo) {
     }
 }
 
-/**
- * Helper promisificado para cargar recursos de imagen antes de inyectar al PDF.
- */
 function cargarImagen(ruta) {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -1203,9 +1179,6 @@ function cargarImagen(ruta) {
     });
 }
 
-/**
- * Consulta a la planilla las fechas de inspecciones disponibles para el dropdown.
- */
 async function cargarFechasDisponiblesReporte() {
     const selectFechas = document.getElementById("filtroFechaDia");
     if (!selectFechas) return;
@@ -1256,22 +1229,16 @@ async function cargarFechasDisponiblesReporte() {
     }
 }
 
-/**
- * Selecciona automáticamente la fecha de hoy en el filtro de reportes diarios
- * o emite una alerta si no se realizaron inspecciones en el día.
- */
 function seleccionarFechaHoyReporte() {
     const selectFechas = document.getElementById("filtroFechaDia");
     if (!selectFechas) return;
 
-    // Obtener la fecha local actual en formato YYYY-MM-DD
     const hoy = new Date();
     const yyyy = hoy.getFullYear();
     const mm = String(hoy.getMonth() + 1).padStart(2, "0");
     const dd = String(hoy.getDate()).padStart(2, "0");
     const fechaHoyIso = `${yyyy}-${mm}-${dd}`;
 
-    // Buscar si existe una opción con la fecha de hoy en el listado cargado
     const opcionExistente = Array.from(selectFechas.options).find(opt => opt.value === fechaHoyIso);
 
     if (opcionExistente) {
@@ -1281,9 +1248,6 @@ function seleccionarFechaHoyReporte() {
     }
 }
 
-/**
- * Descarga y filtra los registros seleccionados generando un PDF con jsPDF y AutoTable.
- */
 async function generarReportePDF() {
     const btn = document.getElementById("btnGenerarPDF");
     const loader = document.getElementById("reportLoading");
@@ -1303,7 +1267,6 @@ async function generarReportePDF() {
         const vehiculoSeleccionado = document.getElementById("filtroVehiculo").value;
         let registros = json.data;
 
-        // Filtrado por fecha diaria o mensual
         if (tipoReporteActual === "dia") {
             const diaBuscado = document.getElementById("filtroFechaDia").value.trim();
             if (!diaBuscado) {
@@ -1328,7 +1291,6 @@ async function generarReportePDF() {
             });
         }
 
-        // Filtrado por vehículo
         if (vehiculoSeleccionado !== "TODOS") {
             registros = registros.filter(
                 (r) => (r["Vehículo"] || r.vehiculo || "").toString().trim() === vehiculoSeleccionado.trim()
@@ -1354,7 +1316,6 @@ async function generarReportePDF() {
             console.warn("Banner no encontrado en assets/banner.png");
         }
 
-        // Helpers de formateo
         const formatearFechaHora = (val) => {
             if (!val) return "-";
             const str = val.toString().trim();
@@ -1393,7 +1354,6 @@ async function generarReportePDF() {
             return `${parseInt(limpio, 10).toLocaleString("es-AR")} km`;
         };
 
-        // Formatea el estado de cada ítem
         const fItem = (estado, detalle) => {
             if (estado === undefined || estado === null) return "-";
             const estRaw = String(estado).trim();
@@ -1411,7 +1371,6 @@ async function generarReportePDF() {
             return estRaw;
         };
 
-        // Helper para leer del registro probando nombres de columnas
         const getProp = (itemObj, ...claves) => {
             for (let c of claves) {
                 if (itemObj[c] !== undefined && itemObj[c] !== null && String(itemObj[c]).trim() !== "") {
@@ -1421,7 +1380,6 @@ async function generarReportePDF() {
             return "";
         };
 
-        // Validador de utilitarios/pickups sin luneta trasera
         const esPickUpSinLuneta = (veh) => {
             const v = (veh || "").toString().toUpperCase();
             return v.includes("MONTANA") || v.includes("HILUX");
@@ -1430,7 +1388,6 @@ async function generarReportePDF() {
         registros.forEach((item, index) => {
             if (index > 0) doc.addPage();
 
-            // Encabezado institucional
             if (bannerImg) {
                 doc.addImage(bannerImg, "PNG", 12, 8, 186, 22);
             }
@@ -1451,7 +1408,6 @@ async function generarReportePDF() {
 
             const nombreVehiculoActual = getProp(item, "Vehículo", "vehiculo") || "-";
 
-            // TABLA 1: Resumen de unidad
             doc.autoTable({
                 startY: 46,
                 margin: { left: 12, right: 12 },
@@ -1494,34 +1450,28 @@ async function generarReportePDF() {
                 },
             });
 
-            // Valor de escobilla trasera automático según tipo de vehículo
             const escobillaTraseraFinal = esPickUpSinLuneta(nombreVehiculoActual)
                 ? "N/A"
                 : fItem(getProp(item, "Escobilla Trasera", "ESCOBILLA TRASERA: ESTADO"), getProp(item, "Detalle Escobilla Tras.", "ESCOBILLA TRASERA: DETALLE"));
 
-            // TABLA 2: Checklist en 2 columnas
             const checklistFilas = [
-                // Fila Cabecera 1
                 [headerSeccion("INSPECCIÓN DE LUCES"), headerSeccion("ELEMENTOS DE SEGURIDAD")],
                 ["Luces Bajas", fItem(getProp(item, "Luces Bajas", "LUCES BAJAS: ESTADO"), getProp(item, "Detalle Luces Bajas", "LUCES BAJAS: DETALLE")), "Matafuego Reglam.", fItem(getProp(item, "Matafuego Reglam.", "MATAFUEGO: ESTADO"), getProp(item, "Detalle Matafuego", "MATAFUEGO: DETALLE"))],
                 ["Luces Altas", fItem(getProp(item, "Luces Altas", "LUCES ALTAS: ESTADO"), getProp(item, "Detalle Luces Altas", "LUCES ALTAS: DETALLE")), "Balizas Portátiles", fItem(getProp(item, "Balizas Portátiles", "BALIZAS EMERGENCIA: ESTADO"), getProp(item, "Detalle Balizas Portátiles", "BALIZAS EMERGENCIA: DETALLE"))],
                 ["Luces de Giro (Guiños)", fItem(getProp(item, "Giros", "GIROS: ESTADO"), getProp(item, "Detalle Giros", "GIROS: DETALLE")), "", ""],
                 ["Balizas (Emergencia)", fItem(getProp(item, "Balizas", "BALIZAS: ESTADO"), getProp(item, "Detalle Balizas", "BALIZAS: DETALLE")), "", ""],
 
-                // Fila Cabecera 2
                 [headerSeccion("INSPECCIÓN DE FRENOS"), headerSeccion("ELEMENTOS DE AUXILIO")],
                 ["Frenos de Servicio (Pedal)", fItem(getProp(item, "Frenos Servicio", "FRENO SERVICIO: ESTADO"), getProp(item, "Detalle Frenos", "FRENO SERVICIO: DETALLE")), "Gato Hidráulico", fItem(getProp(item, "Gato Hidráulico", "AUXILIO GATO: ESTADO"), getProp(item, "Detalle Gato", "AUXILIO GATO: DETALLE"))],
                 ["Freno de Mano", fItem(getProp(item, "Freno Mano", "FRENO MANO: ESTADO"), getProp(item, "Detalle Freno Mano", "FRENO MANO: DETALLE")), "Llave Cruz", fItem(getProp(item, "Llave Cruz", "AUXILIO LLAVE: ESTADO"), getProp(item, "Detalle Llave", "AUXILIO LLAVE: DETALLE"))],
                 ["", "", "Rueda de Auxilio", fItem(getProp(item, "Rueda Auxilio", "AUXILIO RUEDA: ESTADO"), getProp(item, "Detalle Rueda Auxilio", "AUXILIO RUEDA: DETALLE"))],
 
-                // Fila Cabecera 3
                 [headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"), headerSeccion("ESCOBILLAS LIMPIAPARABRISAS")],
                 ["Cubierta Delantera Izq.", fItem(getProp(item, "Cubierta Del. Izq.", "CUBIERTA DEL. IZQ: ESTADO"), getProp(item, "Detalle Del. Izq.", "CUBIERTA DEL. IZQ: DETALLE")), "Escobillas Delanteras", fItem(getProp(item, "Escobillas Delanteras", "ESCOBILLAS DELANTERAS: ESTADO"), getProp(item, "Detalle Escobillas Del.", "ESCOBILLAS DELANTERAS: DETALLE"))],
                 ["Cubierta Delantera Der.", fItem(getProp(item, "Cubierta Del. Der.", "CUBIERTA DEL. DER: ESTADO"), getProp(item, "Detalle Del. Der.", "CUBIERTA DEL. DER: DETALLE")), "Escobilla Trasera", escobillaTraseraFinal],
                 ["Cubierta Trasera Izq.", fItem(getProp(item, "Cubierta Tras. Izq.", "CUBIERTA TRAS. IZQ: ESTADO"), getProp(item, "Detalle Tras. Izq.", "CUBIERTA TRAS. IZQ: DETALLE")), "", ""],
                 ["Cubierta Trasera Der.", fItem(getProp(item, "Cubierta Tras. Der.", "CUBIERTA TRAS. DER: ESTADO"), getProp(item, "Detalle Tras. Der.", "CUBIERTA TRAS. DER: DETALLE")), "", ""],
 
-                // Fila Cabecera 4
                 ["", "", headerSeccion("INSPECCIÓN DE FLUIDOS")],
                 ["", "", "Nivel de Aceite", fItem(getProp(item, "Aceite", "ACEITE: ESTADO"), getProp(item, "Detalle Aceite", "ACEITE: DETALLE"))],
                 ["", "", "Agua / Refrigerante", fItem(getProp(item, "Agua / Refrigerante", "AGUA / REFRIGERANTE: ESTADO"), getProp(item, "Detalle Agua", "AGUA / REFRIGERANTE: DETALLE"))],
@@ -1567,7 +1517,6 @@ async function generarReportePDF() {
                 },
             });
 
-            // TABLA 3: DOCUMENTACIÓN OBLIGATORIA
             const documentacionData = [
                 [
                     "Cédula Vehicular (Verde)",
@@ -1629,7 +1578,6 @@ async function generarReportePDF() {
                 }
             });
 
-            // TABLA 4: CONTROL DE MANTENIMIENTO
             const formatearKmPunto = (val) => {
                 if (!val) return "";
                 const limp = val.toString().replace(/\D/g, "");
@@ -1703,7 +1651,6 @@ async function generarReportePDF() {
                 }
             });
 
-            // TABLA 5: Observaciones Generales
             const yObs = doc.lastAutoTable.finalY + 5.5;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(8);
@@ -1743,9 +1690,6 @@ async function generarReportePDF() {
    10. LIMPIEZA DE FORMULARIOS Y RESIDUALES
    ============================================================================== */
 
-/**
- * Limpia los inputs del Paso 1 (Inspector y Vehículo).
- */
 function limpiarPaso1() {
     const selInspector = document.querySelector("[name='inspector']");
     const selVehiculo = document.getElementById("selectVehiculo");
@@ -1759,11 +1703,7 @@ function limpiarPaso1() {
     limpiarCamposHistorial();
 }
 
-/**
- * Limpia inputs de fechas vinculados a documentación legal.
- */
 function limpiarCamposHistorial() {
-    // 1. Limpiar inputs operativos (Paso 2)
     const kmInput = document.getElementById("kilometraje");
     const combSelect = document.getElementById("combustible");
     const batSelect = document.getElementById("estado_bateria");
@@ -1772,7 +1712,6 @@ function limpiarCamposHistorial() {
     if (combSelect) combSelect.selectedIndex = 0;
     if (batSelect) batSelect.selectedIndex = 0;
 
-    // 2. Limpiar inputs de Documentación y Mantenimiento
     const inputsParaVaciar = [
         "doc_seguro_inicio",
         "doc_seguro_vencimiento",
@@ -1794,7 +1733,6 @@ function limpiarCamposHistorial() {
         if (el) el.value = "";
     });
 
-    // 3. Dejar todas las leyendas de referencia celestes en "Anterior: ---"
     const hintsParaResetear = [
         "hint_kilometraje",
         "hint_combustible",
@@ -1814,36 +1752,27 @@ function limpiarCamposHistorial() {
         if (el) el.innerText = "Anterior: ---";
     });
 
-    // 4. Resetear todos los checklists a 'OK', desmarcar 'Revisar' y vaciar observaciones
     const itemsChecklist = [
-        // Luces
         { ok: "bajas_ok", rev: "bajas_rev", box: "bajas_obs_box" },
         { ok: "altas_ok", rev: "altas_rev", box: "altas_obs_box" },
         { ok: "giros_ok", rev: "giros_rev", box: "giros_obs_box" },
         { ok: "balizas_ok", rev: "balizas_rev", box: "balizas_obs_box" },
-        // Frenos
         { ok: "frenos_ok", rev: "frenos_rev", box: "frenos_obs_box" },
         { ok: "freno_mano_ok", rev: "freno_mano_rev", box: "freno_mano_obs_box" },
-        // Cubiertas
         { ok: "cub_di_ok", rev: "cub_di_rev", box: "cub_di_obs_box" },
         { ok: "cub_dd_ok", rev: "cub_dd_rev", box: "cub_dd_obs_box" },
         { ok: "cub_ti_ok", rev: "cub_ti_rev", box: "cub_ti_obs_box" },
         { ok: "cub_td_ok", rev: "cub_td_rev", box: "cub_td_obs_box" },
-        // Fluidos
         { ok: "aceite_ok", rev: "aceite_rev", box: "aceite_obs_box" },
         { ok: "agua_ok", rev: "agua_rev", box: "agua_obs_box" },
         { ok: "limpiaparabrisas_ok", rev: "limpiaparabrisas_rev", box: "limpiaparabrisas_obs_box" },
-        // Seguridad
         { ok: "matafuego_ok", rev: "matafuego_rev", box: "matafuego_obs_box" },
         { ok: "balizas_seg_ok", rev: "balizas_seg_rev", box: "balizas_seg_obs_box" },
-        // Auxilio
         { ok: "gato_ok", rev: "gato_rev", box: "gato_obs_box" },
         { ok: "llave_ok", rev: "llave_rev", box: "llave_obs_box" },
         { ok: "rueda_aux_ok", rev: "rueda_aux_rev", box: "rueda_aux_obs_box" },
-        // Escobillas
         { ok: "esco_del_ok", rev: "esco_del_rev", box: "esco_del_obs_box" },
         { ok: "esco_tras_ok", rev: "esco_tras_rev", box: "esco_tras_obs_box" },
-        // Documentación
         { ok: "doc_ced_ok", rev: "doc_ced_rev", box: "doc_ced_obs_box" },
         { ok: "seguro_ok", rev: "seguro_rev", box: "seguro_obs_box" },
         { ok: "vtv_ok", rev: "vtv_rev", box: "vtv_obs_box" }
@@ -1863,18 +1792,18 @@ function limpiarCamposHistorial() {
         }
     });
 
-    // 5. Resetear radios de cambio de batería y lavado a "NO"
     const rBatNo = document.getElementById("bat_no");
     if (rBatNo) rBatNo.checked = true;
     const rLavNo = document.getElementById("lavado_no");
     if (rLavNo) rLavNo.checked = true;
+
+    // Limpiar alertas rojas
+    ["alerta_venc_seguro", "alerta_venc_vtv", "alerta_prox_service", "alerta_prox_alineado"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = "";
+    });
 }
 
-/**
- * Limpia la vista activa actual en el flujo de inspección.
- * Deja los checklists en OK, vacía y oculta los detalles de observaciones,
- * sin alterar leyendas de registros anteriores.
- */
 function limpiarVistaActual() {
     if (typeof currentStep !== "undefined" && currentStep === 1) {
         limpiarPaso1();
@@ -1887,17 +1816,14 @@ function limpiarVistaActual() {
 
     if (!pasoActual) return;
 
-    // 1. Limpiar inputs comunes (textos, números, fechas)
     pasoActual.querySelectorAll("input:not([readonly]):not([type='radio']):not([type='checkbox']):not([type='hidden'])").forEach(input => {
         input.value = "";
     });
 
-    // 2. Resetear selectores de la vista (combustible, batería, etc.)
     pasoActual.querySelectorAll("select:not(#quickStepSelector)").forEach(sel => {
         sel.selectedIndex = 0;
     });
 
-    // 3. Resetear check-items de inspección a "OK" y cerrar observaciones
     const checkItems = pasoActual.querySelectorAll(".check-item");
     checkItems.forEach(item => {
         const radioOk = item.querySelector("input[type='radio'][value='OK']");
@@ -1920,15 +1846,15 @@ function limpiarVistaActual() {
         }
     });
 
-    // 4. Limpiar cualquier textarea fuera de un checklist (ej. Paso 12)
     pasoActual.querySelectorAll("textarea:not(.obs-detail-container textarea)").forEach(ta => {
         ta.value = "";
     });
+
+    if (currentStep === 10 || currentStep === 11) {
+        recalcularTodasLasAlertas();
+    }
 }
 
-/**
- * Restablece los filtros del reporte conservando la solapa activa (Por Día o Por Mes).
- */
 function limpiarFiltrosReporte() {
     const selVehiculo = document.getElementById("filtroVehiculo");
     if (selVehiculo) selVehiculo.value = "TODOS";
@@ -1940,37 +1866,6 @@ function limpiarFiltrosReporte() {
     if (inMes) inMes.value = "";
 }
 
-/**
- * Limpia campos de Mantenimiento Programado.
- */
-function resetearMantenimientoVista() {
-    const ids = [
-        "ult_bateria",
-        "hint_bateria",
-        "ult_lavado",
-        "hint_lavado",
-        "ult_service",
-        "hint_service",
-        "kms_ult_service",
-        "kms_prox_service",
-        "ult_alineado",
-        "hint_alineado",
-        "prox_alineado_fecha",
-        "kms_ult_alineado",
-        "kms_prox_alineado",
-    ];
-
-    ids.forEach((id) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (el.tagName === "INPUT") el.value = "";
-        else el.innerText = "";
-    });
-}
-
-/**
- * Limpia la totalidad del formulario general y regresa al Paso 1.
- */
 function resetForm() {
     const form = document.getElementById("vehicleForm");
     if (form) {
@@ -1989,50 +1884,8 @@ function resetForm() {
     const btn = document.getElementById("btnSubmit");
     if (btn) {
         btn.disabled = false;
-        btn.innerText = "Finalizar y Guardar";
+        btn.innerText = "Finalizar Inspección";
     }
-}
-
-/**
- * Restablece los valores y dispara clics en OK simulando acción de usuario.
- */
-function resetearValoresVista(btn) {
-    const pasoActual = btn ? btn.closest(".step") : document.querySelector(".step.active");
-    if (!pasoActual) return;
-
-    pasoActual.querySelectorAll("textarea").forEach(txt => {
-        txt.value = "";
-        txt.dispatchEvent(new Event("input"));
-    });
-
-    const radioNames = new Set();
-    pasoActual.querySelectorAll("input[type='radio']").forEach(r => radioNames.add(r.name));
-
-    radioNames.forEach(name => {
-        const radioOk = pasoActual.querySelector(`input[type='radio'][name='${name}'][value='OK']`);
-        if (radioOk) {
-            radioOk.click();
-        }
-    });
-
-    pasoActual.querySelectorAll("input:not([type='radio']):not([type='checkbox']):not([type='hidden']):not([readonly])").forEach(inp => {
-        inp.value = "";
-        inp.dispatchEvent(new Event("input"));
-    });
-
-    pasoActual.querySelectorAll("input[type='checkbox']").forEach(chk => {
-        chk.checked = false;
-        chk.dispatchEvent(new Event("change"));
-    });
-
-    pasoActual.querySelectorAll("select").forEach(sel => {
-        sel.selectedIndex = 0;
-        sel.dispatchEvent(new Event("change"));
-    });
-
-    pasoActual.querySelectorAll("[id^='hint_'], [id^='ant_']").forEach(h => {
-        h.innerText = "";
-    });
 }
 
 /* ==============================================================================
@@ -2050,27 +1903,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (selectorVehiculo) {
         selectorVehiculo.addEventListener("change", () => {
-            // 1. Limpieza total inmediata de cualquier dato previo en pantalla
+            // 1. Limpieza total inmediata
             limpiarCamposHistorial();
 
-            // 2. Autocompletar la patente de la unidad seleccionada
+            // 2. Autocompletar patente
             autocompletarPatente();
 
             // 3. Verificar elementos especiales (Montana / Hilux)
-            if (typeof verificarElementosPorVehiculo === "function") {
-                verificarElementosPorVehiculo();
-            }
+            verificarElementosPorVehiculo();
 
-            // 4. Intentar precargar sólo si esta unidad tiene datos guardados
-            precargarMantenimientoPrevio();
-            precargarInspeccionGeneralPrevio();
-
-            // 5. Consultar a Sheets por registros históricos remotos
+            // 4. Consultar a Sheets (que a su vez guarda localmente y calcula las alertas al recibir datos)
             cargarUltimosDatosDesdeSheets();
         });
     }
 
-    // Escucha cambios manuales en documentación para que persistan inmediatamente
+    // Escucha cambios manuales en documentación para persistir y recalcular alertas
     const inputsDoc = [
         "doc_seguro_inicio",
         "doc_seguro_vencimiento",
@@ -2083,7 +1930,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (el) {
             el.addEventListener("change", () => {
                 guardarMantenimientoActual();
+                recalcularTodasLasAlertas();
             });
         }
     });
+
+    const inputUltService = document.getElementById("ult_service");
+    if (inputUltService) {
+        inputUltService.addEventListener("change", () => {
+            actualizarAlertaService();
+        });
+    }
 });

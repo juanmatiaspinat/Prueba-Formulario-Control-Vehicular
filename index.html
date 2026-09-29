@@ -745,9 +745,14 @@
                                 <div class="doc-date-field">
                                     <label class="doc-label">Fecha de Vencimiento</label>
                                     <input type="date" id="doc_seguro_vencimiento" name="doc_seguro_vencimiento"
-                                        class="input-doc-date">
+                                        class="input-doc-date" onchange="calcularVencimientoSeguro()">
                                     <span id="ant_doc_seguro_vencimiento" class="doc-hint">Anterior: ---</span>
                                 </div>
+                            </div>
+
+                            <!-- Alerta de Vencimiento Seguro -->
+                            <div class="vencimiento-alerta-box">
+                                <span id="alerta_venc_seguro" class="alerta-vencimiento-text"></span>
                             </div>
 
                             <!-- Detalle desplegable si tocan Revisar -->
@@ -783,9 +788,14 @@
                                 <div class="doc-date-field">
                                     <label class="doc-label">Fecha de Vencimiento</label>
                                     <input type="date" id="doc_vtv_vencimiento" name="doc_vtv_vencimiento"
-                                        class="input-doc-date">
+                                        class="input-doc-date" onchange="calcularVencimientoVTV()">
                                     <span id="ant_doc_vtv_vencimiento" class="doc-hint">Anterior: ---</span>
                                 </div>
+                            </div>
+
+                            <!-- Alerta de Vencimiento VTV -->
+                            <div class="vencimiento-alerta-box">
+                                <span id="alerta_venc_vtv" class="alerta-vencimiento-text"></span>
                             </div>
 
                             <!-- Detalle desplegable si tocan Revisar -->
@@ -898,6 +908,11 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Alerta Próximo Service -->
+                        <div class="vencimiento-alerta-box">
+                            <span id="alerta_prox_service" class="alerta-vencimiento-text"></span>
+                        </div>
                     </div>
 
                     <!-- Tarjeta 4: Alineado y Balanceo -->
@@ -938,6 +953,11 @@
                                         class="input-km input-km-readonly" placeholder="---" readonly>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Alerta Próximo Alineado -->
+                        <div class="vencimiento-alerta-box">
+                            <span id="alerta_prox_alineado" class="alerta-vencimiento-text"></span>
                         </div>
                     </div>
 

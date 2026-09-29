@@ -919,3 +919,16 @@ button {
         width: 100%;
     }
 }
+
+.vencimiento-alerta-box {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.alerta-vencimiento-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ff5252;
+    display: inline-block;
+}
