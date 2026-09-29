@@ -1399,28 +1399,30 @@ async function generarReportePDF() {
         registros.forEach((item, index) => {
             if (index > 0) doc.addPage();
 
+            // Header Banner
             if (bannerImg) {
-                doc.addImage(bannerImg, "PNG", 12, 8, 186, 22);
+                doc.addImage(bannerImg, "PNG", 12, 7, 186, 21);
             }
             doc.setDrawColor(200, 200, 200);
-            doc.line(12, 32, 198, 32);
+            doc.line(12, 30, 198, 30);
 
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(10.5);
+            doc.setFontSize(10);
             doc.setTextColor(30, 41, 59);
-            doc.text("FICHA DE INSPECCIÓN TÉCNICA VEHICULAR", 12, 38);
+            doc.text("FICHA DE INSPECCIÓN TÉCNICA VEHICULAR", 12, 35);
 
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
-            doc.setTextColor(100, 116, 139);
-            doc.text(`Fecha y hora: ${formatearFechaHora(getProp(item, "Fecha y Hora de Inspección", "fecha_hora", "Fecha y Hora", "Fecha de Carga"))}`, 12, 43);
-            doc.text(`Inspector: ${getProp(item, "Inspector", "inspector") || "-"}`, 95, 43);
-            doc.text(`Unidad: ${index + 1} de ${registros.length}`, 172, 43);
+            doc.setFontSize(7.5);
+            doc.setTextColor(30, 41, 59);
+            doc.text(`Fecha y hora: ${formatearFechaHora(getProp(item, "Fecha y Hora de Inspección", "fecha_hora", "Fecha y Hora", "Fecha de Carga"))}`, 12, 39.5);
+            doc.text(`Inspector: ${getProp(item, "Inspector", "inspector") || "-"}`, 95, 39.5);
+            doc.text(`Unidad: ${index + 1} de ${registros.length}`, 172, 39.5);
 
             const nombreVehiculoActual = getProp(item, "Vehículo", "vehiculo") || "-";
 
+            // TABLA 1: Resumen de unidad
             doc.autoTable({
-                startY: 46,
+                startY: 42,
                 margin: { left: 12, right: 12 },
                 tableWidth: 186,
                 head: [["VEHÍCULO", "PATENTE", "KILOMETRAJE", "COMBUSTIBLE", "BATERÍA"]],
@@ -1436,27 +1438,28 @@ async function generarReportePDF() {
                     fillColor: [30, 41, 59],
                     textColor: [255, 255, 255],
                     fontStyle: "bold",
-                    fontSize: 7.5,
+                    fontSize: 7.2,
                     halign: "center",
                 },
                 styles: {
-                    fontSize: 8,
+                    fontSize: 7.5,
                     halign: "center",
                     fontStyle: "bold",
                     textColor: [30, 41, 59],
-                    cellPadding: 2,
+                    cellPadding: 1.8,
                 },
                 tableLineColor: [203, 213, 225],
-                tableLineWidth: 0.2,
+                tableLineWidth: 0.15,
             });
 
             const headerSeccion = (texto) => ({
                 content: texto,
                 colSpan: 2,
                 styles: {
-                    fillColor: [241, 245, 249],
-                    textColor: [30, 41, 59],
+                    fillColor: [226, 232, 240], // Gris pizarra suave para destacar sección
+                    textColor: [15, 23, 42],
                     fontStyle: "bold",
+                    fontSize: 6.8,
                     halign: "left",
                 },
             });
@@ -1465,32 +1468,37 @@ async function generarReportePDF() {
                 ? "N/A"
                 : fItem(getProp(item, "Escobilla Trasera", "ESCOBILLA TRASERA: ESTADO"), getProp(item, "Detalle Escobilla Tras.", "ESCOBILLA TRASERA: DETALLE"));
 
+            // TABLA 2: Checklist estructurado en orden estricto de pasos
             const checklistFilas = [
-                [headerSeccion("INSPECCIÓN DE LUCES"), headerSeccion("ELEMENTOS DE SEGURIDAD")],
-                ["Luces Bajas", fItem(getProp(item, "Luces Bajas", "LUCES BAJAS: ESTADO"), getProp(item, "Detalle Luces Bajas", "LUCES BAJAS: DETALLE")), "Matafuego Reglam.", fItem(getProp(item, "Matafuego Reglam.", "MATAFUEGO: ESTADO"), getProp(item, "Detalle Matafuego", "MATAFUEGO: DETALLE"))],
-                ["Luces Altas", fItem(getProp(item, "Luces Altas", "LUCES ALTAS: ESTADO"), getProp(item, "Detalle Luces Altas", "LUCES ALTAS: DETALLE")), "Balizas Portátiles", fItem(getProp(item, "Balizas Portátiles", "BALIZAS EMERGENCIA: ESTADO"), getProp(item, "Detalle Balizas Portátiles", "BALIZAS EMERGENCIA: DETALLE"))],
-                ["Luces de Giro (Guiños)", fItem(getProp(item, "Giros", "GIROS: ESTADO"), getProp(item, "Detalle Giros", "GIROS: DETALLE")), "", ""],
-                ["Balizas (Emergencia)", fItem(getProp(item, "Balizas", "BALIZAS: ESTADO"), getProp(item, "Detalle Balizas", "BALIZAS: DETALLE")), "", ""],
+                // -------------------------------------------------------------
+                // BLOQUE 1: Paso 3 (Luces) vs Paso 6 (Fluidos) + Paso 7 (Seguridad)
+                // -------------------------------------------------------------
+                [headerSeccion("INSPECCIÓN DE LUCES"), headerSeccion("INSPECCIÓN DE FLUIDOS")],
+                ["Luces Bajas", fItem(getProp(item, "Luces Bajas", "LUCES BAJAS: ESTADO"), getProp(item, "Detalle Luces Bajas", "LUCES BAJAS: DETALLE")), "Nivel de Aceite", fItem(getProp(item, "Aceite", "ACEITE: ESTADO"), getProp(item, "Detalle Aceite", "ACEITE: DETALLE"))],
+                ["Luces Altas", fItem(getProp(item, "Luces Altas", "LUCES ALTAS: ESTADO"), getProp(item, "Detalle Luces Altas", "LUCES ALTAS: DETALLE")), "Agua / Refrigerante", fItem(getProp(item, "Agua / Refrigerante", "AGUA / REFRIGERANTE: ESTADO"), getProp(item, "Detalle Agua", "AGUA / REFRIGERANTE: DETALLE"))],
+                ["Luces de Giro (Guiños)", fItem(getProp(item, "Giros", "GIROS: ESTADO"), getProp(item, "Detalle Giros", "GIROS: DETALLE")), "Líquido Limpiaparabrisas", fItem(getProp(item, "Limpia Parabrisas (Fluido)", "LIMPIAPARABRISAS: ESTADO"), getProp(item, "Detalle Limpia Parabrisas", "LIMPIAPARABRISAS: DETALLE"))],
+                ["Balizas (Emergencia)", fItem(getProp(item, "Balizas", "BALIZAS: ESTADO"), getProp(item, "Detalle Balizas", "BALIZAS: DETALLE")), headerSeccion("ELEMENTOS DE SEGURIDAD"), ""],
 
-                [headerSeccion("INSPECCIÓN DE FRENOS"), headerSeccion("ELEMENTOS DE AUXILIO")],
-                ["Frenos de Servicio (Pedal)", fItem(getProp(item, "Frenos Servicio", "FRENO SERVICIO: ESTADO"), getProp(item, "Detalle Frenos", "FRENO SERVICIO: DETALLE")), "Gato Hidráulico", fItem(getProp(item, "Gato Hidráulico", "AUXILIO GATO: ESTADO"), getProp(item, "Detalle Gato", "AUXILIO GATO: DETALLE"))],
-                ["Freno de Mano", fItem(getProp(item, "Freno Mano", "FRENO MANO: ESTADO"), getProp(item, "Detalle Freno Mano", "FRENO MANO: DETALLE")), "Llave Cruz", fItem(getProp(item, "Llave Cruz", "AUXILIO LLAVE: ESTADO"), getProp(item, "Detalle Llave", "AUXILIO LLAVE: DETALLE"))],
-                ["", "", "Rueda de Auxilio", fItem(getProp(item, "Rueda Auxilio", "AUXILIO RUEDA: ESTADO"), getProp(item, "Detalle Rueda Auxilio", "AUXILIO RUEDA: DETALLE"))],
+                // -------------------------------------------------------------
+                // BLOQUE 2: Paso 4 (Frenos) vs Paso 7 (Seguridad cont.) + Paso 8 (Auxilio)
+                // -------------------------------------------------------------
+                [headerSeccion("INSPECCIÓN DE FRENOS"), "Matafuego Reglam.", fItem(getProp(item, "Matafuego Reglam.", "MATAFUEGO: ESTADO"), getProp(item, "Detalle Matafuego", "MATAFUEGO: DETALLE")), ""],
+                ["Frenos de Servicio (Pedal)", fItem(getProp(item, "Frenos Servicio", "FRENO SERVICIO: ESTADO"), getProp(item, "Detalle Frenos", "FRENO SERVICIO: DETALLE")), "Balizas Portátiles", fItem(getProp(item, "Balizas Portátiles", "BALIZAS EMERGENCIA: ESTADO"), getProp(item, "Detalle Balizas Portátiles", "BALIZAS EMERGENCIA: DETALLE"))],
+                ["Freno de Mano", fItem(getProp(item, "Freno Mano", "FRENO MANO: ESTADO"), getProp(item, "Detalle Freno Mano", "FRENO MANO: DETALLE")), headerSeccion("ELEMENTOS DE AUXILIO"), ""],
+                ["", "", "Gato Hidráulico", fItem(getProp(item, "Gato Hidráulico", "AUXILIO GATO: ESTADO"), getProp(item, "Detalle Gato", "AUXILIO GATO: DETALLE"))],
 
-                [headerSeccion("INSPECCIÓN DE CUBIERTAS (RODADO)"), headerSeccion("ESCOBILLAS LIMPIAPARABRISAS")],
-                ["Cubierta Delantera Izq.", fItem(getProp(item, "Cubierta Del. Izq.", "CUBIERTA DEL. IZQ: ESTADO"), getProp(item, "Detalle Del. Izq.", "CUBIERTA DEL. IZQ: DETALLE")), "Escobillas Delanteras", fItem(getProp(item, "Escobillas Delanteras", "ESCOBILLAS DELANTERAS: ESTADO"), getProp(item, "Detalle Escobillas Del.", "ESCOBILLAS DELANTERAS: DETALLE"))],
-                ["Cubierta Delantera Der.", fItem(getProp(item, "Cubierta Del. Der.", "CUBIERTA DEL. DER: ESTADO"), getProp(item, "Detalle Del. Der.", "CUBIERTA DEL. DER: DETALLE")), "Escobilla Trasera", escobillaTraseraFinal],
-                ["Cubierta Trasera Izq.", fItem(getProp(item, "Cubierta Tras. Izq.", "CUBIERTA TRAS. IZQ: ESTADO"), getProp(item, "Detalle Tras. Izq.", "CUBIERTA TRAS. IZQ: DETALLE")), "", ""],
-                ["Cubierta Trasera Der.", fItem(getProp(item, "Cubierta Tras. Der.", "CUBIERTA TRAS. DER: ESTADO"), getProp(item, "Detalle Tras. Der.", "CUBIERTA TRAS. DER: DETALLE")), "", ""],
-
-                ["", "", headerSeccion("INSPECCIÓN DE FLUIDOS")],
-                ["", "", "Nivel de Aceite", fItem(getProp(item, "Aceite", "ACEITE: ESTADO"), getProp(item, "Detalle Aceite", "ACEITE: DETALLE"))],
-                ["", "", "Agua / Refrigerante", fItem(getProp(item, "Agua / Refrigerante", "AGUA / REFRIGERANTE: ESTADO"), getProp(item, "Detalle Agua", "AGUA / REFRIGERANTE: DETALLE"))],
-                ["", "", "Líquido Limpiaparabrisas", fItem(getProp(item, "Limpia Parabrisas (Fluido)", "LIMPIAPARABRISAS: ESTADO"), getProp(item, "Detalle Limpia Parabrisas", "LIMPIAPARABRISAS: DETALLE"))]
+                // -------------------------------------------------------------
+                // BLOQUE 3: Paso 5 (Cubiertas) vs Paso 8 (Auxilio cont.) + Paso 9 (Escobillas)
+                // -------------------------------------------------------------
+                [headerSeccion("CUBIERTAS (RODADO)"), "Llave Cruz", fItem(getProp(item, "Llave Cruz", "AUXILIO LLAVE: ESTADO"), getProp(item, "Detalle Llave", "AUXILIO LLAVE: DETALLE")), ""],
+                ["Cubierta Delantera Izq.", fItem(getProp(item, "Cubierta Del. Izq.", "CUBIERTA DEL. IZQ: ESTADO"), getProp(item, "Detalle Del. Izq.", "CUBIERTA DEL. IZQ: DETALLE")), "Rueda de Auxilio", fItem(getProp(item, "Rueda Auxilio", "AUXILIO RUEDA: ESTADO"), getProp(item, "Detalle Rueda Auxilio", "AUXILIO RUEDA: DETALLE"))],
+                ["Cubierta Delantera Der.", fItem(getProp(item, "Cubierta Del. Der.", "CUBIERTA DEL. DER: ESTADO"), getProp(item, "Detalle Del. Der.", "CUBIERTA DEL. DER: DETALLE")), headerSeccion("ESCOBILLAS LIMPIAPARABRISAS"), ""],
+                ["Cubierta Trasera Izq.", fItem(getProp(item, "Cubierta Tras. Izq.", "CUBIERTA TRAS. IZQ: ESTADO"), getProp(item, "Detalle Tras. Izq.", "CUBIERTA TRAS. IZQ: DETALLE")), "Escobillas Delanteras", fItem(getProp(item, "Escobillas Delanteras", "ESCOBILLAS DELANTERAS: ESTADO"), getProp(item, "Detalle Escobillas Del.", "ESCOBILLAS DELANTERAS: DETALLE"))],
+                ["Cubierta Trasera Der.", fItem(getProp(item, "Cubierta Tras. Der.", "CUBIERTA TRAS. DER: ESTADO"), getProp(item, "Detalle Tras. Der.", "CUBIERTA TRAS. DER: DETALLE")), "Escobilla Trasera", escobillaTraseraFinal]
             ];
 
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 3,
+                startY: doc.lastAutoTable.finalY + 2.5,
                 margin: { left: 12, right: 12 },
                 tableWidth: 186,
                 head: [["COMPONENTE / SISTEMA", "ESTADO", "COMPONENTE / SISTEMA", "ESTADO"]],
@@ -1500,9 +1508,9 @@ async function generarReportePDF() {
                     fillColor: [30, 41, 59],
                     textColor: [255, 255, 255],
                     fontStyle: "bold",
-                    fontSize: 7.2,
+                    fontSize: 6.8,
                 },
-                styles: { fontSize: 6.8, cellPadding: 1.2, textColor: [30, 41, 59] },
+                styles: { fontSize: 6.5, cellPadding: 1.1, textColor: [30, 41, 59] },
                 tableLineColor: [226, 232, 240],
                 tableLineWidth: 0.15,
                 columnStyles: {
@@ -1528,6 +1536,76 @@ async function generarReportePDF() {
                 },
             });
 
+            // ==============================================================
+            // CÁLCULO DE ALERTAS DE DOCUMENTACIÓN Y MANTENIMIENTO
+            // ==============================================================
+            const fVencSeguroRaw = normalizarFecha(getProp(item, "Seguro Vencimiento", "SEGURO: VENCIMIENTO"));
+            let alertaSeguroPdf = "";
+            if (fVencSeguroRaw) {
+                const resSeg = calcularDiferenciaMesesDias(fVencSeguroRaw);
+                if (resSeg) {
+                    alertaSeguroPdf = resSeg.esVencido
+                        ? `*Vencido hace ${resSeg.textoTiempo}`
+                        : (resSeg.textoTiempo === "0 días" || resSeg.textoTiempo === "" ? `*Vence hoy` : `*Quedan ${resSeg.textoTiempo}`);
+                }
+            }
+
+            const fVencVtvRaw = normalizarFecha(getProp(item, "VTV Vencimiento", "VTV: VENCIMIENTO"));
+            let alertaVtvPdf = "";
+            if (fVencVtvRaw) {
+                const resVtv = calcularDiferenciaMesesDias(fVencVtvRaw);
+                if (resVtv) {
+                    alertaVtvPdf = resVtv.esVencido
+                        ? `*Vencido hace ${resVtv.textoTiempo}`
+                        : (resVtv.textoTiempo === "0 días" || resVtv.textoTiempo === "" ? `*Vence hoy` : `*Quedan ${resVtv.textoTiempo}`);
+                }
+            }
+
+            const kmActualVehiculo = parseInt(String(getProp(item, "Kilometraje", "kilometraje")).replace(/\D/g, ""), 10);
+            const kmProxServRaw = parseInt(String(getProp(item, "Kms Próx. Service", "SERVICE: PRÓXIMO KM")).replace(/\D/g, ""), 10);
+            let alertaServicePdf = "";
+            if (!isNaN(kmActualVehiculo) && !isNaN(kmProxServRaw)) {
+                const diffKmServ = kmProxServRaw - kmActualVehiculo;
+                if (diffKmServ <= 0) {
+                    alertaServicePdf = `*Excedido por ${Math.abs(diffKmServ).toLocaleString("es-AR")} km`;
+                } else {
+                    alertaServicePdf = `*Faltan ${diffKmServ.toLocaleString("es-AR")} km`;
+                }
+            }
+
+            const fProxAlnRaw = normalizarFecha(getProp(item, "Próx. Alineado (Fecha)", "ALINEADO: PRÓXIMA FECHA"));
+            const kmProxAlnRaw = parseInt(String(getProp(item, "Kms Próx. Alineado", "ALINEADO: PRÓXIMO KM")).replace(/\D/g, ""), 10);
+            let alertaAlineadoPdf = "";
+            let resAlnFecha = fProxAlnRaw ? calcularDiferenciaMesesDias(fProxAlnRaw) : null;
+            let diffKmAln = (!isNaN(kmActualVehiculo) && !isNaN(kmProxAlnRaw)) ? (kmProxAlnRaw - kmActualVehiculo) : null;
+
+            if (resAlnFecha && diffKmAln !== null) {
+                if (resAlnFecha.esVencido && diffKmAln <= 0) {
+                    alertaAlineadoPdf = `*Vencido (${Math.abs(diffKmAln).toLocaleString("es-AR")} km exc.)`;
+                } else if (resAlnFecha.esVencido) {
+                    alertaAlineadoPdf = `*Vencido por tiempo`;
+                } else if (diffKmAln <= 0) {
+                    alertaAlineadoPdf = `*Excedido por ${Math.abs(diffKmAln).toLocaleString("es-AR")} km`;
+                } else {
+                    alertaAlineadoPdf = `*Faltan ${resAlnFecha.textoTiempo} o ${diffKmAln.toLocaleString("es-AR")} km`;
+                }
+            } else if (diffKmAln !== null) {
+                alertaAlineadoPdf = diffKmAln <= 0 ? `*Excedido por ${Math.abs(diffKmAln).toLocaleString("es-AR")} km` : `*Faltan ${diffKmAln.toLocaleString("es-AR")} km`;
+            } else if (resAlnFecha) {
+                alertaAlineadoPdf = resAlnFecha.esVencido ? `*Vencido hace ${resAlnFecha.textoTiempo}` : `*Faltan ${resAlnFecha.textoTiempo}`;
+            }
+
+            // TABLA 3: DOCUMENTACIÓN OBLIGATORIA
+            const fechaSeguroVencFormateada = formatearFechaCorta(getProp(item, "Seguro Vencimiento", "SEGURO: VENCIMIENTO"));
+            const celdaVencSeguro = alertaSeguroPdf
+                ? `${fechaSeguroVencFormateada}\n${alertaSeguroPdf}`
+                : (fechaSeguroVencFormateada || "-");
+
+            const fechaVtvVencFormateada = formatearFechaCorta(getProp(item, "VTV Vencimiento", "VTV: VENCIMIENTO"));
+            const celdaVencVtv = alertaVtvPdf
+                ? `${fechaVtvVencFormateada}\n${alertaVtvPdf}`
+                : (fechaVtvVencFormateada || "-");
+
             const documentacionData = [
                 [
                     "Cédula Vehicular (Verde)",
@@ -1536,59 +1614,79 @@ async function generarReportePDF() {
                     "-"
                 ],
                 [
-                    "Comprobante de Seguro",
+                    "Comprobante de Seguro (Póliza / Tarjeta)",
                     fItem(getProp(item, "Seguro Estado", "SEGURO: ESTADO"), getProp(item, "Detalle Seguro", "SEGURO: DETALLE")),
                     formatearFechaCorta(getProp(item, "Seguro Vigencia Inicio", "SEGURO: INICIO VIGENCIA")) || "-",
-                    formatearFechaCorta(getProp(item, "Seguro Vencimiento", "SEGURO: VENCIMIENTO")) || "-"
+                    celdaVencSeguro
                 ],
                 [
-                    "VTV / RTO Vigente",
+                    "Verificación Técnica Vehicular (VTV / RTO)",
                     fItem(getProp(item, "VTV Estado", "VTV: ESTADO"), getProp(item, "Detalle VTV", "VTV: DETALLE")),
                     formatearFechaCorta(getProp(item, "VTV Inspección", "VTV: FECHA INSPECCIÓN")) || "-",
-                    formatearFechaCorta(getProp(item, "VTV Vencimiento", "VTV: VENCIMIENTO")) || "-"
+                    celdaVencVtv
                 ]
             ];
 
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 3,
+                startY: doc.lastAutoTable.finalY + 3.5,
                 margin: { left: 12, right: 12 },
                 tableWidth: 186,
-                head: [["DOCUMENTACIÓN OBLIGATORIA", "ESTADO", "VIGENCIA / INSPECCIÓN", "VENCIMIENTO"]],
+                head: [["DOCUMENTACIÓN OBLIGATORIA", "ESTADO", "INICIO / INSPECCIÓN", "VENCIMIENTO / ALERTA"]],
                 body: documentacionData,
-                theme: "plain",
+                theme: "grid", // Cuadrícula prolija para delimitar filas
                 headStyles: {
                     fillColor: [30, 41, 59],
                     textColor: [255, 255, 255],
                     fontStyle: "bold",
                     fontSize: 7.2,
+                    halign: "center",
+                    valign: "middle",
+                    cellPadding: 2,
                 },
-                styles: { fontSize: 7, cellPadding: 1.4, textColor: [30, 41, 59] },
-                tableLineColor: [203, 213, 225],
-                tableLineWidth: 0.15,
+                styles: {
+                    fontSize: 7,
+                    cellPadding: { top: 2.2, bottom: 2.2, left: 2, right: 2 },
+                    textColor: [30, 41, 59],
+                    valign: "middle", // Centrado vertical de todo el contenido
+                    lineColor: [226, 232, 240], // Línea divisoria nítida entre filas
+                    lineWidth: 0.25,
+                },
                 columnStyles: {
-                    0: { fontStyle: "bold", cellWidth: 66, halign: "left" },
-                    1: { cellWidth: 30, halign: "left" },
-                    2: { cellWidth: 45, halign: "center" },
-                    3: { cellWidth: 45, halign: "center" }
+                    0: { fontStyle: "bold", cellWidth: 58, halign: "left" },
+                    1: { cellWidth: 30, halign: "center" },
+                    2: { cellWidth: 44, halign: "center" },
+                    3: { cellWidth: 54, halign: "center" }
                 },
                 didParseCell: function (dataCell) {
-                    if (dataCell.section === "head" && (dataCell.column.index === 2 || dataCell.column.index === 3)) {
-                        dataCell.cell.styles.halign = "center";
+                    if (dataCell.section === "head" && dataCell.column.index === 0) {
+                        dataCell.cell.styles.halign = "left";
                     }
 
-                    if (dataCell.section === "body" && dataCell.column.index === 1 && dataCell.cell.raw && typeof dataCell.cell.raw === "string") {
-                        const val = dataCell.cell.raw.trim();
-                        if (val.startsWith("REVISAR")) {
-                            dataCell.cell.styles.textColor = [185, 28, 28];
-                            dataCell.cell.styles.fontStyle = "bold";
-                        } else if (val === "OK") {
-                            dataCell.cell.styles.textColor = [21, 128, 61];
-                            dataCell.cell.styles.fontStyle = "bold";
+                    if (dataCell.section === "body") {
+                        // Estado OK / REVISAR
+                        if (dataCell.column.index === 1 && dataCell.cell.raw && typeof dataCell.cell.raw === "string") {
+                            const val = dataCell.cell.raw.trim();
+                            if (val.startsWith("REVISAR")) {
+                                dataCell.cell.styles.textColor = [185, 28, 28];
+                                dataCell.cell.styles.fontStyle = "bold";
+                            } else if (val === "OK") {
+                                dataCell.cell.styles.textColor = [21, 128, 61];
+                                dataCell.cell.styles.fontStyle = "bold";
+                            }
+                        }
+
+                        // Columna Vencimiento / Alerta
+                        if (dataCell.column.index === 3 && typeof dataCell.cell.raw === "string") {
+                            if (dataCell.cell.raw.includes("*")) {
+                                dataCell.cell.styles.textColor = [220, 38, 38];
+                                dataCell.cell.styles.fontStyle = "bold";
+                            }
                         }
                     }
                 }
             });
 
+            // TABLA 4: CONTROL DE MANTENIMIENTO
             const formatearKmPunto = (val) => {
                 if (!val) return "";
                 const limp = val.toString().replace(/\D/g, "");
@@ -1600,37 +1698,62 @@ async function generarReportePDF() {
             const kmUltAln = formatearKmPunto(getProp(item, "Kms Últ. Alineado", "ALINEADO: ÚLTIMO KM"));
             const kmProxAln = formatearKmPunto(getProp(item, "Kms Próx. Alineado", "ALINEADO: PRÓXIMO KM"));
 
+            const prefijoAbc = "Último: "; // Modificá acá el texto que quieras poner adelante
+
             const fechaUltServ = formatearFechaCorta(getProp(item, "Últ. Service", "SERVICE: ÚLTIMA FECHA"));
-            const textoUltServ = fechaUltServ !== "-" ? `${fechaUltServ}${kmUltServ}` : (kmUltServ ? kmUltServ.trim() : "-");
+            const valorServLimpio = fechaUltServ !== "-" ? `${fechaUltServ}${kmUltServ}` : (kmUltServ ? kmUltServ.trim() : "-");
+            const textoUltServ = valorServLimpio !== "-" ? `${prefijoAbc}${valorServLimpio}` : "-";
 
             const fechaUltAln = formatearFechaCorta(getProp(item, "Últ. Alineado", "ALINEADO: ÚLTIMA FECHA"));
-            const textoUltAln = fechaUltAln !== "-" ? `${fechaUltAln}${kmUltAln}` : (kmUltAln ? kmUltAln.trim() : "-");
+            const valorAlnLimpio = fechaUltAln !== "-" ? `${fechaUltAln}${kmUltAln}` : (kmUltAln ? kmUltAln.trim() : "-");
+            const textoUltAln = valorAlnLimpio !== "-" ? `${prefijoAbc}${valorAlnLimpio}` : "-";
 
             const fechaProxAln = formatearFechaCorta(getProp(item, "Próx. Alineado (Fecha)", "ALINEADO: PRÓXIMA FECHA"));
-            const proxAlineadoTexto = fechaProxAln !== "-"
+
+            const prefijoProx = "Próximo: "; // Altere aqui para o texto que deseja exibir na frente
+
+            // Próximo Service com alerta e prefixo
+            let celdaProxServ = kmProxServ ? `${prefijoProx}Próx.${kmProxServ}` : "-";
+            if (alertaServicePdf) {
+                celdaProxServ = `${celdaProxServ}\n${alertaServicePdf}`;
+            }
+
+            // Próximo Alineado com alerta e prefixo
+            let baseAln = fechaProxAln !== "-"
                 ? `${fechaProxAln}${kmProxAln ? " " + kmProxAln.trim() : ""}`
                 : (kmProxAln ? kmProxAln.trim() : "-");
+
+            let celdaProxAln = baseAln !== "-" ? `${prefijoProx}${baseAln}` : "-";
+            if (alertaAlineadoPdf) {
+                celdaProxAln = `${celdaProxAln}\n${alertaAlineadoPdf}`;
+            }
 
             const mantenimientos = [
                 [
                     "Control de Batería",
-                    formatearFechaCorta(getProp(item, "Últ. Batería", "BATERÍA: ÚLTIMO CAMBIO")),
-                    getProp(item, "Batería Necesita Cambio?", "BATERÍA: NECESITA CAMBIO") ? `Cambio: ${getProp(item, "Batería Necesita Cambio?", "BATERÍA: NECESITA CAMBIO")}` : "-"
+                    (() => {
+                        const f = formatearFechaCorta(getProp(item, "Últ. Batería", "BATERÍA: ÚLTIMO CAMBIO"));
+                        return (f && f !== "-") ? `Fecha Compra: ${f}` : "-";
+                    })(),
+                    getProp(item, "Batería Necesita Cambio?", "BATERÍA: NECESITA CAMBIO") ? `Necesita cambio: ${getProp(item, "Batería Necesita Cambio?", "BATERÍA: NECESITA CAMBIO")}` : "-"
                 ],
                 [
                     "Lavado de Unidad",
-                    formatearFechaCorta(getProp(item, "Últ. Lavado", "LAVADO: ÚLTIMA FECHA")),
-                    getProp(item, "Unidad Necesita Lavado?", "LAVADO: NECESITA LAVADO") ? `Lavado: ${getProp(item, "Unidad Necesita Lavado?", "LAVADO: NECESITA LAVADO")}` : "-"
+                    (() => {
+                        const f = formatearFechaCorta(getProp(item, "Últ. Lavado", "LAVADO: ÚLTIMA FECHA"));
+                        return (f && f !== "-") ? `Fecha ultimo lavado: ${f}` : "-";
+                    })(),
+                    getProp(item, "Unidad Necesita Lavado?", "LAVADO: NECESITA LAVADO") ? `Necesita lavado: ${getProp(item, "Unidad Necesita Lavado?", "LAVADO: NECESITA LAVADO")}` : "-"
                 ],
                 [
                     "Service Mecánico",
                     textoUltServ,
-                    kmProxServ ? `Próx.${kmProxServ}` : "-"
+                    celdaProxServ
                 ],
                 [
                     "Alineado y Balanceo",
                     textoUltAln,
-                    proxAlineadoTexto
+                    celdaProxAln
                 ]
             ];
 
@@ -1638,33 +1761,49 @@ async function generarReportePDF() {
                 startY: doc.lastAutoTable.finalY + 3,
                 margin: { left: 12, right: 12 },
                 tableWidth: 186,
-                head: [["CONTROL DE MANTENIMIENTO", "ÚLTIMO REALIZADO", "PRÓXIMO PROGRAMADO"]],
+                head: [["CONTROL DE MANTENIMIENTO", "ÚLTIMO REALIZADO", "PRÓXIMO PROGRAMADO / ESTADO"]],
                 body: mantenimientos,
-                theme: "plain",
+                theme: "grid", // Cuadrícula prolija idéntica a Documentación
                 headStyles: {
                     fillColor: [30, 41, 59],
                     textColor: [255, 255, 255],
                     fontStyle: "bold",
                     fontSize: 7.2,
+                    halign: "center",
+                    valign: "middle",
+                    cellPadding: 2,
                 },
-                styles: { fontSize: 7, cellPadding: 1.4, textColor: [30, 41, 59] },
-                tableLineColor: [203, 213, 225],
-                tableLineWidth: 0.15,
+                styles: {
+                    fontSize: 7,
+                    cellPadding: { top: 2.2, bottom: 2.2, left: 2, right: 2 },
+                    textColor: [30, 41, 59],
+                    valign: "middle", // Nivelación vertical de todas las celdas
+                    lineColor: [226, 232, 240], // Línea divisoria sutil entre filas
+                    lineWidth: 0.25,
+                },
                 columnStyles: {
-                    0: { fontStyle: "bold", cellWidth: 56, halign: "left" },
-                    1: { cellWidth: 65, halign: "center" },
-                    2: { cellWidth: 65, halign: "center" }
+                    0: { fontStyle: "bold", cellWidth: 54, halign: "left" },
+                    1: { cellWidth: 62, halign: "center" },
+                    2: { cellWidth: 70, halign: "center" }
                 },
                 didParseCell: function (dataCell) {
-                    if (dataCell.section === "head" && (dataCell.column.index === 1 || dataCell.column.index === 2)) {
-                        dataCell.cell.styles.halign = "center";
+                    if (dataCell.section === "head" && dataCell.column.index === 0) {
+                        dataCell.cell.styles.halign = "left";
+                    }
+
+                    if (dataCell.section === "body" && dataCell.column.index === 2) {
+                        if (typeof dataCell.cell.raw === "string" && dataCell.cell.raw.includes("*")) {
+                            dataCell.cell.styles.textColor = [220, 38, 38];
+                            dataCell.cell.styles.fontStyle = "bold";
+                        }
                     }
                 }
             });
 
-            const yObs = doc.lastAutoTable.finalY + 5.5;
+            // TABLA 5: Observaciones Generales
+            const yObs = doc.lastAutoTable.finalY + 4;
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(8);
+            doc.setFontSize(7.5);
             doc.setTextColor(30, 41, 59);
             doc.text("Observaciones Generales / Novedades del Vehículo", 12, yObs);
 
@@ -1673,12 +1812,12 @@ async function generarReportePDF() {
                 : "Sin observaciones reportadas.";
 
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(7.5);
+            doc.setFontSize(7);
             doc.setTextColor(71, 85, 105);
             doc.setDrawColor(203, 213, 225);
             doc.setFillColor(248, 250, 252);
-            doc.roundedRect(12, yObs + 2.5, 186, 16, 1, 1, "FD");
-            doc.text(obsFinal, 14, yObs + 7, { maxWidth: 182 });
+            doc.roundedRect(12, yObs + 1.8, 186, 12, 1, 1, "FD");
+            doc.text(obsFinal, 14, yObs + 5.5, { maxWidth: 182 });
         });
 
         const ahora = new Date();
