@@ -728,7 +728,7 @@ function actualizarAlertaService() {
 
     if (diffKm <= 0) {
         const excedido = Math.abs(diffKm).toLocaleString("es-AR");
-        label.innerText = `*Service vencido: excedido por ${excedido} km`;
+        label.innerText = `*Vencido: excedido por ${excedido} km`;
     } else {
         const faltan = diffKm.toLocaleString("es-AR");
         label.innerText = `*Faltan ${faltan} km para el próximo service mecánico`;
@@ -786,7 +786,7 @@ function actualizarAlertaAlineado() {
     if (kmVencido) {
         const kmExc = Math.abs(diffKm).toLocaleString("es-AR");
         const tiempoRest = resFecha ? ` (quedaban ${resFecha.textoTiempo})` : "";
-        label.innerText = `*Alineado vencido por km: excedido por ${kmExc} km${tiempoRest}`;
+        label.innerText = `*Vencido: excedido por ${kmExc} km${tiempoRest}`;
         return;
     }
 
@@ -1633,7 +1633,7 @@ async function generarReportePDF() {
                 tableWidth: 186,
                 head: [["DOCUMENTACIÓN OBLIGATORIA", "ESTADO", "INICIO / INSPECCIÓN", "VENCIMIENTO / ALERTA"]],
                 body: documentacionData,
-                theme: "grid", // Cuadrícula prolija para delimitar filas
+                theme: "grid",
                 headStyles: {
                     fillColor: [30, 41, 59],
                     textColor: [255, 255, 255],
@@ -1645,10 +1645,10 @@ async function generarReportePDF() {
                 },
                 styles: {
                     fontSize: 7,
-                    cellPadding: { top: 2.2, bottom: 2.2, left: 2, right: 2 },
+                    cellPadding: { top: 2.5, bottom: 2.5, left: 2, right: 2 },
                     textColor: [30, 41, 59],
-                    valign: "middle", // Centrado vertical de todo el contenido
-                    lineColor: [226, 232, 240], // Línea divisoria nítida entre filas
+                    valign: "middle",
+                    lineColor: [226, 232, 240],
                     lineWidth: 0.25,
                 },
                 columnStyles: {
@@ -1663,8 +1663,7 @@ async function generarReportePDF() {
                     }
 
                     if (dataCell.section === "body") {
-                        // Estado OK / REVISAR
-                        if (dataCell.column.index === 1 && dataCell.cell.raw && typeof dataCell.cell.raw === "string") {
+                        if (dataCell.column.index === 1 && typeof dataCell.cell.raw === "string") {
                             const val = dataCell.cell.raw.trim();
                             if (val.startsWith("REVISAR")) {
                                 dataCell.cell.styles.textColor = [185, 28, 28];
@@ -1675,13 +1674,29 @@ async function generarReportePDF() {
                             }
                         }
 
-                        // Columna Vencimiento / Alerta
-                        if (dataCell.column.index === 3 && typeof dataCell.cell.raw === "string") {
-                            if (dataCell.cell.raw.includes("*")) {
-                                dataCell.cell.styles.textColor = [220, 38, 38];
-                                dataCell.cell.styles.fontStyle = "bold";
-                            }
+                        // Si tiene salto de línea (fecha + alerta), vaciamos el texto nativo para evitar superposición
+                        if (dataCell.column.index === 3 && typeof dataCell.cell.raw === "string" && dataCell.cell.raw.includes("\n")) {
+                            dataCell.cell.text = [];
                         }
+                    }
+                },
+                didDrawCell: function (dataCell) {
+                    if (dataCell.section === "body" && dataCell.column.index === 3 && typeof dataCell.cell.raw === "string" && dataCell.cell.raw.includes("\n")) {
+                        const partes = dataCell.cell.raw.split("\n");
+                        const x = dataCell.cell.x + (dataCell.cell.width / 2);
+                        const yCentro = dataCell.cell.y + (dataCell.cell.height / 2);
+
+                        // Línea 1: Fecha (texto normal, sin negrita)
+                        doc.setFont("helvetica", "normal");
+                        doc.setFontSize(6.8);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text(partes[0].trim(), x, yCentro - 1.2, { align: "center" });
+
+                        // Línea 2: Alerta (rojo y en negrita)
+                        doc.setFont("helvetica", "bold");
+                        doc.setFontSize(6.5);
+                        doc.setTextColor(220, 38, 38);
+                        doc.text(partes[1].trim(), x, yCentro + 2.4, { align: "center" });
                     }
                 }
             });
@@ -1698,7 +1713,7 @@ async function generarReportePDF() {
             const kmUltAln = formatearKmPunto(getProp(item, "Kms Últ. Alineado", "ALINEADO: ÚLTIMO KM"));
             const kmProxAln = formatearKmPunto(getProp(item, "Kms Próx. Alineado", "ALINEADO: PRÓXIMO KM"));
 
-            const prefijoAbc = "Último: "; // Modificá acá el texto que quieras poner adelante
+            const prefijoAbc = "Fecha y kilometros último: ";
 
             const fechaUltServ = formatearFechaCorta(getProp(item, "Últ. Service", "SERVICE: ÚLTIMA FECHA"));
             const valorServLimpio = fechaUltServ !== "-" ? `${fechaUltServ}${kmUltServ}` : (kmUltServ ? kmUltServ.trim() : "-");
@@ -1713,7 +1728,7 @@ async function generarReportePDF() {
             const prefijoProx = "Próximo: "; // Altere aqui para o texto que deseja exibir na frente
 
             // Próximo Service com alerta e prefixo
-            let celdaProxServ = kmProxServ ? `${prefijoProx}Próx.${kmProxServ}` : "-";
+            let celdaProxServ = kmProxServ ? `${prefijoProx}${kmProxServ}` : "-";
             if (alertaServicePdf) {
                 celdaProxServ = `${celdaProxServ}\n${alertaServicePdf}`;
             }
@@ -1733,7 +1748,7 @@ async function generarReportePDF() {
                     "Control de Batería",
                     (() => {
                         const f = formatearFechaCorta(getProp(item, "Últ. Batería", "BATERÍA: ÚLTIMO CAMBIO"));
-                        return (f && f !== "-") ? `Fecha Compra: ${f}` : "-";
+                        return (f && f !== "-") ? `Fecha compra: ${f}` : "-";
                     })(),
                     getProp(item, "Batería Necesita Cambio?", "BATERÍA: NECESITA CAMBIO") ? `Necesita cambio: ${getProp(item, "Batería Necesita Cambio?", "BATERÍA: NECESITA CAMBIO")}` : "-"
                 ],
@@ -1741,7 +1756,7 @@ async function generarReportePDF() {
                     "Lavado de Unidad",
                     (() => {
                         const f = formatearFechaCorta(getProp(item, "Últ. Lavado", "LAVADO: ÚLTIMA FECHA"));
-                        return (f && f !== "-") ? `Fecha ultimo lavado: ${f}` : "-";
+                        return (f && f !== "-") ? `Fecha ultimo: ${f}` : "-";
                     })(),
                     getProp(item, "Unidad Necesita Lavado?", "LAVADO: NECESITA LAVADO") ? `Necesita lavado: ${getProp(item, "Unidad Necesita Lavado?", "LAVADO: NECESITA LAVADO")}` : "-"
                 ],
@@ -1763,7 +1778,7 @@ async function generarReportePDF() {
                 tableWidth: 186,
                 head: [["CONTROL DE MANTENIMIENTO", "ÚLTIMO REALIZADO", "PRÓXIMO PROGRAMADO / ESTADO"]],
                 body: mantenimientos,
-                theme: "grid", // Cuadrícula prolija idéntica a Documentación
+                theme: "grid",
                 headStyles: {
                     fillColor: [30, 41, 59],
                     textColor: [255, 255, 255],
@@ -1775,10 +1790,10 @@ async function generarReportePDF() {
                 },
                 styles: {
                     fontSize: 7,
-                    cellPadding: { top: 2.2, bottom: 2.2, left: 2, right: 2 },
+                    cellPadding: { top: 2.5, bottom: 2.5, left: 2, right: 2 },
                     textColor: [30, 41, 59],
-                    valign: "middle", // Nivelación vertical de todas las celdas
-                    lineColor: [226, 232, 240], // Línea divisoria sutil entre filas
+                    valign: "middle",
+                    lineColor: [226, 232, 240],
                     lineWidth: 0.25,
                 },
                 columnStyles: {
@@ -1791,11 +1806,28 @@ async function generarReportePDF() {
                         dataCell.cell.styles.halign = "left";
                     }
 
-                    if (dataCell.section === "body" && dataCell.column.index === 2) {
-                        if (typeof dataCell.cell.raw === "string" && dataCell.cell.raw.includes("*")) {
-                            dataCell.cell.styles.textColor = [220, 38, 38];
-                            dataCell.cell.styles.fontStyle = "bold";
-                        }
+                    // Vaciamos el texto nativo para que solo pinte el bloque en didDrawCell
+                    if (dataCell.section === "body" && dataCell.column.index === 2 && typeof dataCell.cell.raw === "string" && dataCell.cell.raw.includes("\n")) {
+                        dataCell.cell.text = [];
+                    }
+                },
+                didDrawCell: function (dataCell) {
+                    if (dataCell.section === "body" && dataCell.column.index === 2 && typeof dataCell.cell.raw === "string" && dataCell.cell.raw.includes("\n")) {
+                        const partes = dataCell.cell.raw.split("\n");
+                        const x = dataCell.cell.x + (dataCell.cell.width / 2);
+                        const yCentro = dataCell.cell.y + (dataCell.cell.height / 2);
+
+                        // Línea 1: Próximo programado (texto normal, sin negrita)
+                        doc.setFont("helvetica", "normal");
+                        doc.setFontSize(6.8);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text(partes[0].trim(), x, yCentro - 1.2, { align: "center" });
+
+                        // Línea 2: Advertencia/Aviso (rojo y en negrita)
+                        doc.setFont("helvetica", "bold");
+                        doc.setFontSize(6.5);
+                        doc.setTextColor(220, 38, 38);
+                        doc.text(partes[1].trim(), x, yCentro + 2.4, { align: "center" });
                     }
                 }
             });
